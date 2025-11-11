@@ -32,9 +32,10 @@ reviews:
     - Reconoce cuando el código está bien hecho
 
 # Base branches to monitor
+# Solo se revisan PRs hacia 'dev' para mantener el flujo de desarrollo estándar
+# PRs hacia 'main' se hacen desde 'dev' después de validación completa
 base_branches:
   - dev
-  - main
 
 # Path filters
 path_filters:
