@@ -1,0 +1,168 @@
+# CodeRabbit Configuration for ReparaYa
+# https://docs.coderabbit.ai/guides/configure-coderabbit
+
+# Language
+language: es-ES
+
+# Review settings
+reviews:
+  # Request changes workflow
+  request_changes_workflow: true
+
+  # Review level (concise, normal, detailed)
+  review_level: normal
+
+  # Auto-approve PRs (disabled for safety)
+  auto_approve: false
+
+  # Review profile
+  profile: chill  # Options: chill, assertive
+
+  # High level summary
+  high_level_summary: true
+
+  # Poem style review (disabled for professional context)
+  poem: false
+
+  # Review tone
+  tone_instructions: |
+    - Usa un tono profesional pero amigable
+    - Proporciona sugerencias constructivas
+    - Enfócate en mejoras de código, no solo en errores
+    - Reconoce cuando el código está bien hecho
+
+# Base branches to monitor
+base_branches:
+  - dev
+  - main
+
+# Path filters
+path_filters:
+  # Review these paths
+  include:
+    - "apps/web/**/*.ts"
+    - "apps/web/**/*.tsx"
+    - "apps/web/**/*.js"
+    - "apps/web/**/*.jsx"
+    - "openspec/**/*.md"
+    - "docs/md/**/*.md"
+
+  # Ignore these paths
+  exclude:
+    - "**/*.test.ts"
+    - "**/*.test.tsx"
+    - "**/*.spec.ts"
+    - "**/node_modules/**"
+    - "**/dist/**"
+    - "**/build/**"
+    - "**/.next/**"
+    - "**/coverage/**"
+    - "package-lock.json"
+    - "pnpm-lock.yaml"
+
+# Code review focus areas
+checks:
+  # Code quality
+  code_quality:
+    enabled: true
+    severity: warning
+
+  # Security
+  security:
+    enabled: true
+    severity: error
+
+  # Performance
+  performance:
+    enabled: true
+    severity: warning
+
+  # Best practices
+  best_practices:
+    enabled: true
+    severity: warning
+
+  # Documentation
+  documentation:
+    enabled: true
+    severity: info
+
+  # Error handling
+  error_handling:
+    enabled: true
+    severity: warning
+
+# Custom instructions for ReparaYa
+project_context: |
+  ReparaYa es una plataforma de marketplace para servicios de reparación y mantenimiento.
+
+  Stack:
+  - Frontend y Backend: Next.js 14 (App Router) + TypeScript
+  - Base de datos: PostgreSQL + Prisma
+  - Autenticación: Clerk
+  - Pagos: Stripe
+  - Cloud: AWS (S3, SES, Location Service)
+  - Hosting: Vercel
+
+  Arquitectura:
+  - Monolito modular organizado por dominios (auth, users, services, booking, payments, messaging, ratings, admin)
+  - Arquitectura de 3 capas (presentación, negocio, datos)
+
+  Enfoque especial en:
+  - Seguridad (OWASP Top 10, autorización por rol)
+  - Performance (P95/P99 targets definidos en SRS)
+  - Testing (cobertura ≥ 70%)
+  - Trazabilidad (requisitos → specs → código → tests)
+
+# Review instructions
+review_instructions: |
+  Al revisar PRs de ReparaYa, presta atención a:
+
+  1. **Seguridad**:
+     - Autorización correcta (verificar roles: client, contractor, admin)
+     - Sanitización de inputs (especialmente en mensajería)
+     - No exponer datos sensibles en APIs públicas
+     - Verificación de firmas en webhooks (Stripe, Clerk)
+
+  2. **Performance**:
+     - Queries eficientes (usar includes de Prisma selectivamente)
+     - Índices apropiados en búsquedas
+     - No hacer llamadas a DB en loops
+
+  3. **Arquitectura**:
+     - Separación de capas (presentación → servicios → repositorios)
+     - Lógica de negocio en servicios, no en API routes
+     - DTOs y validaciones con Zod
+
+  4. **Testing**:
+     - Tests unitarios para lógica de negocio
+     - Tests de integración para endpoints
+     - Verificar que se mantiene cobertura ≥ 70%
+
+  5. **Código limpio**:
+     - Nombres descriptivos (camelCase para variables, PascalCase para componentes)
+     - No usar `any` (TypeScript strict mode)
+     - Comentarios útiles (TODO, FIXME, explicaciones de lógica compleja)
+     - Seguir convenciones de Conventional Commits
+
+  6. **Documentación**:
+     - READMEs actualizados en módulos nuevos
+     - Comentarios JSDoc en funciones públicas
+     - Actualizar specs de OpenSpec si hay cambios arquitectónicos
+
+# Labels to add
+labels:
+  - name: "needs-review"
+    description: "PR esperando revisión"
+  - name: "security"
+    description: "Cambios relacionados con seguridad"
+  - name: "performance"
+    description: "Cambios relacionados con performance"
+  - name: "breaking-change"
+    description: "Cambio que rompe compatibilidad"
+
+# Ignore certain types of changes
+ignore:
+  - "**/*.md"  # Solo advertencias en markdown, no bloquear
+  - "**/package-lock.json"
+  - "**/pnpm-lock.yaml"
