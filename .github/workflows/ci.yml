@@ -25,13 +25,11 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          # Cache deshabilitado temporalmente hasta que se genere package-lock.json
-          # cache: 'npm'
+          cache: 'npm'
+          cache-dependency-path: apps/web/package-lock.json
 
       - name: Install dependencies
-        # Usando 'npm install' en lugar de 'npm ci' porque no existe package-lock.json
-        # Para generar package-lock.json, ejecutar 'npm install' localmente y commitear el archivo
-        run: npm install
+        run: npm ci
 
       - name: Run linter
         run: npm run lint
@@ -71,13 +69,11 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          # Cache deshabilitado temporalmente hasta que se genere package-lock.json
-          # cache: 'npm'
+          cache: 'npm'
+          cache-dependency-path: apps/web/package-lock.json
 
       - name: Install dependencies
-        # Usando 'npm install' en lugar de 'npm ci' porque no existe package-lock.json
-        # Para generar package-lock.json, ejecutar 'npm install' localmente y commitear el archivo
-        run: npm install
+        run: npm ci
 
       - name: Build application
         run: npm run build
