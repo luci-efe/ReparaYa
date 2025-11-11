@@ -9,8 +9,11 @@ Instructions for AI coding assistants using OpenSpec for spec-driven development
 - Pick a unique `change-id`: kebab-case, verb-led (`add-`, `update-`, `remove-`, `refactor-`)
 - Scaffold: `proposal.md`, `tasks.md`, `design.md` (only if needed), and delta specs per affected capability
 - Write deltas: use `## ADDED|MODIFIED|REMOVED|RENAMED Requirements`; include at least one `#### Scenario:` per requirement
+- **🔴 CRITICAL**: Include "Testing Plan" section in `proposal.md` (see Testing Requirements below)
+- **🔴 CRITICAL**: Update `/docs/md/STP-ReparaYa.md` BEFORE implementing
 - Validate: `openspec validate [change-id] --strict` and fix issues
 - Request approval: Do not start implementation until proposal is approved
+- **🔴 CRITICAL**: Do NOT archive until all tests pass and STP is updated
 
 ## Three-Stage Workflow
 
@@ -62,6 +65,188 @@ After deployment, create separate PR to:
 - Update `specs/` if capabilities changed
 - Use `openspec archive <change-id> --skip-specs --yes` for tooling-only changes (always pass the change ID explicitly)
 - Run `openspec validate --strict` to confirm the archived change passes checks
+
+## 🔴 CRITICAL: Testing Requirements (ReparaYa Project)
+
+**NINGÚN proposal es válido sin un plan de testing completo.**
+
+This project has a strict testing mandate. ALL changes must follow this cycle:
+
+### Mandatory Testing Cycle
+
+```
+┌─────────────────────────────────────────────────────┐
+│ 1. /openspec:proposal                               │
+│    → MUST include "Testing Plan" section           │
+└─────────────────────────────────────────────────────┘
+                        ↓
+┌─────────────────────────────────────────────────────┐
+│ 2. Update /docs/md/STP-ReparaYa.md                  │
+│    → Add test cases BEFORE coding                  │
+│    → Document in section 4.1.X of STP              │
+└─────────────────────────────────────────────────────┘
+                        ↓
+┌─────────────────────────────────────────────────────┐
+│ 3. Implementation (code + tests in parallel)       │
+│    → Write functional code                         │
+│    → Write tests according to plan                 │
+└─────────────────────────────────────────────────────┘
+                        ↓
+┌─────────────────────────────────────────────────────┐
+│ 4. Verification                                     │
+│    → npm run test -- src/modules/XXX               │
+│    → npm run test:coverage                         │
+│    → Verify coverage ≥ 70%                         │
+└─────────────────────────────────────────────────────┘
+                        ↓
+┌─────────────────────────────────────────────────────┐
+│ 5. /openspec:apply                                  │
+│    → Only when tests pass                          │
+└─────────────────────────────────────────────────────┘
+                        ↓
+┌─────────────────────────────────────────────────────┐
+│ 6. PR and Merge to dev                              │
+│    → CodeRabbit reviews                            │
+│    → CI/CD must pass                               │
+└─────────────────────────────────────────────────────┘
+                        ↓
+┌─────────────────────────────────────────────────────┐
+│ 7. /openspec:archive                                │
+│    ONLY IF:                                         │
+│    ✅ All tests pass                               │
+│    ✅ Coverage ≥ 70%                               │
+│    ✅ STP updated with results                     │
+│    ✅ CI/CD passing                                │
+│    ✅ PR merged                                    │
+└─────────────────────────────────────────────────────┘
+```
+
+### Required "Testing Plan" Section in proposal.md
+
+Every `proposal.md` MUST include:
+
+```markdown
+## Testing Plan
+
+### Test Cases to Add to STP:
+
+| ID | Description | Type | Priority | Requirement |
+|----|-------------|------|----------|-------------|
+| TC-RF-XXX-01 | Specific test description | Unit | High | RF-XXX |
+| TC-RF-XXX-02 | ... | Integration | High | RF-XXX |
+| TC-RF-XXX-03 | ... | E2E | Medium | RF-XXX |
+
+**Test ID Format:**
+- `TC-RF-XXX-YY`: Functional requirements
+- `TC-RNF-XXX-YY`: Non-functional requirements
+- `TC-BR-XXX-YY`: Business rules
+
+### Acceptance Criteria:
+
+- ✅ Code coverage ≥ 70% in the module
+- ✅ All test cases pass
+- ✅ Performance meets objectives (if applicable: P95 ≤ X ms)
+- ✅ Security tests (authorization by role, input sanitization)
+- ✅ CI/CD passes without errors
+
+### Test Implementation Strategy:
+
+**Test files to create:**
+- `src/modules/XXX/__tests__/service.test.ts`
+- `src/modules/XXX/__tests__/repository.test.ts`
+- `tests/integration/api/XXX.test.ts`
+
+**Mocks and fixtures:**
+- Mock Clerk for authentication
+- Mock Stripe in test mode
+- Test data fixtures
+
+**External integrations:**
+- Stripe: Use test mode with test keys
+- AWS: Use Localstack or mocks
+- Clerk: Use test environment
+```
+
+### What Must Be Tested
+
+**EVERYTHING** requires tests:
+
+- ✅ **Features**: All new functionality
+- ✅ **Database changes**: Schema migrations, data integrity
+- ✅ **Infrastructure (Terraform)**: Use `terraform plan` and validation tests
+- ✅ **DevOps changes**: CI/CD pipeline changes must be validated
+- ✅ **API endpoints**: Integration tests with auth
+- ✅ **Business logic**: Unit tests for services
+- ✅ **Security**: Authorization, input validation
+
+### Test Types by Change Type
+
+| Change Type | Required Tests |
+|-------------|----------------|
+| New feature | Unit + Integration + E2E |
+| Database schema | Migration tests + data integrity |
+| API endpoint | Integration tests + auth tests |
+| Infrastructure (Terraform) | `terraform validate` + `terraform plan` |
+| Security change | Security tests + penetration tests |
+| Performance optimization | k6 load tests + benchmarks |
+| Bug fix | Regression test for the bug |
+
+### ❌ NOT Allowed
+
+**NEVER do this:**
+
+- ❌ Create proposal without "Testing Plan" section
+- ❌ Implement code without tests
+- ❌ Archive change without passing tests
+- ❌ Ignore STP updates
+- ❌ Accept coverage < 70% in core modules
+- ❌ Skip tests for "simple" changes (Terraform, config, etc.)
+
+### ✅ Correct Proposal Example
+
+```markdown
+# Proposal: Implement authentication module
+
+## Why
+Need to implement user authentication according to openspec/specs/auth/spec.md
+
+## What Changes
+- Configure Clerk Provider
+- Implement webhook handler
+- Create requireAuth middleware
+- Write comprehensive tests
+
+## Testing Plan
+
+### Test Cases to Add to STP:
+
+| ID | Description | Type | Priority | Requirement |
+|----|-------------|------|----------|-------------|
+| TC-RF-003-01 | Successful user registration | E2E | High | RF-003 |
+| TC-RF-003-02 | Login with valid credentials | E2E | High | RF-003 |
+| TC-RF-003-03 | Authorization by role | Integration | High | RF-003 |
+| TC-RF-003-04 | Webhook processes user.created | Integration | High | RF-003 |
+
+### Acceptance Criteria:
+- ✅ Coverage ≥ 75% in src/modules/auth
+- ✅ All TC-RF-003-* cases pass
+- ✅ Middleware blocks unauthorized access
+- ✅ Webhook is idempotent
+
+### Test Implementation Strategy:
+
+**Test files:**
+- `src/modules/auth/__tests__/authService.test.ts`
+- `src/modules/auth/__tests__/requireAuth.test.ts`
+- `tests/integration/api/webhooks/clerk.test.ts`
+
+**Mocks:**
+- Mock Clerk SDK for session verification
+- Test user fixtures
+
+**Environment:**
+- Clerk test environment with test users
+```
 
 ## Before Any Task
 
