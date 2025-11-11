@@ -175,6 +175,28 @@ El proposal DEBE incluir una sección "Testing Plan" con:
 - ❌ Archivar cambio sin que tests pasen
 - ❌ Ignorar actualización del STP
 - ❌ Aceptar cobertura < 70% en módulos core
+- ❌ Pensar que "cambios simples" no necesitan tests
+
+### 🔴 TODO Requiere Tests
+
+**Sin excepciones. Esto incluye:**
+
+| Tipo de Cambio | Tests Requeridos |
+|----------------|------------------|
+| Nueva feature | Unit + Integration + E2E |
+| Cambio de schema DB | Tests de migración + integridad de datos |
+| API endpoint | Integration tests + auth tests |
+| **Infraestructura (Terraform)** | `terraform validate` + `terraform plan` + smoke tests |
+| **Cambio DevOps (CI/CD)** | Validación del pipeline en PR |
+| Cambio de seguridad | Security tests + penetration tests |
+| Optimización performance | k6 load tests + benchmarks (P95/P99) |
+| Bug fix | Regression test que reproduzca el bug |
+| Configuración | Tests de que la config funciona |
+
+**Ejemplos concretos:**
+- **Terraform**: Nuevo bucket S3 → `terraform validate` + `terraform plan` en CI + smoke test de subir archivo
+- **CI/CD**: Nuevo step de linting → PR debe ejecutar el nuevo step exitosamente
+- **DB Migration**: Nueva tabla → tests de migración up/down + constraints + datos de prueba
 
 ### ✅ Ejemplo de Proposal Correcto
 
