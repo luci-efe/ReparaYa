@@ -1,169 +1,165 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+
+# ==============================================================================
 # CodeRabbit Configuration for ReparaYa
-# https://docs.coderabbit.ai/guides/configure-coderabbit
+# ==============================================================================
+# Documentación: https://docs.coderabbit.ai/reference/configuration
+# Schema v2: https://coderabbit.ai/integrations/schema.v2.json
+# ==============================================================================
 
-# Language
+# ------------------------------------------------------------------------------
+# CONFIGURACIÓN GENERAL
+# ------------------------------------------------------------------------------
 language: es-ES
+early_access: false
+enable_free_tier: true
 
-# Review settings
+# Instrucciones de tono personalizadas
+tone_instructions: |
+  - Usa un tono profesional pero amigable
+  - Proporciona sugerencias constructivas
+  - Enfócate en mejoras de código, no solo en errores
+  - Reconoce cuando el código está bien hecho
+
+# ------------------------------------------------------------------------------
+# CONFIGURACIÓN DE REVIEWS
+# ------------------------------------------------------------------------------
 reviews:
-  # Request changes workflow
-  request_changes_workflow: true
+  # Perfil de revisión (chill = menos estricto, assertive = más estricto)
+  profile: chill
 
-  # Review level (concise, normal, detailed)
-  review_level: normal
-
-  # Auto-approve PRs (disabled for safety)
-  auto_approve: false
-
-  # Review profile
-  profile: chill  # Options: chill, assertive
-
-  # High level summary
+  # Generar resumen de alto nivel
   high_level_summary: true
+  high_level_summary_in_walkthrough: false
 
-  # Poem style review (disabled for professional context)
-  poem: false
-
-  # Review tone
-  tone_instructions: |
-    - Usa un tono profesional pero amigable
-    - Proporciona sugerencias constructivas
-    - Enfócate en mejoras de código, no solo en errores
-    - Reconoce cuando el código está bien hecho
-
-# Base branches to monitor
-# Solo se revisan PRs hacia 'dev' para mantener el flujo de desarrollo estándar
-# PRs hacia 'main' se hacen desde 'dev' después de validación completa
-base_branches:
-  - dev
-
-# Path filters
-path_filters:
-  # Review these paths
-  include:
-    - "apps/web/**/*.ts"
-    - "apps/web/**/*.tsx"
-    - "apps/web/**/*.js"
-    - "apps/web/**/*.jsx"
-    - "openspec/**/*.md"
-    - "docs/md/**/*.md"
-
-  # Ignore these paths
-  exclude:
-    - "**/*.test.ts"
-    - "**/*.test.tsx"
-    - "**/*.spec.ts"
-    - "**/node_modules/**"
-    - "**/dist/**"
-    - "**/build/**"
-    - "**/.next/**"
-    - "**/coverage/**"
-    - "package-lock.json"
-    - "pnpm-lock.yaml"
-
-# Code review focus areas
-checks:
-  # Code quality
-  code_quality:
+  # Configuración de auto-review
+  auto_review:
     enabled: true
-    severity: warning
+    auto_incremental_review: true
+    drafts: false
 
-  # Security
-  security:
+    # Palabras clave en título para ignorar review automático
+    ignore_title_keywords:
+      - "wip"
+      - "draft"
+      - "do not review"
+
+    # Solo revisar PRs hacia la rama 'dev'
+    # PRs hacia 'main' se hacen desde 'dev' después de validación completa
+    base_branches:
+      - dev
+
+  # Filtros de rutas (formato glob negativo con !)
+  path_filters:
+    # Excluir archivos de node_modules, builds y tests
+    - "!**/node_modules/**"
+    - "!**/dist/**"
+    - "!**/build/**"
+    - "!**/.next/**"
+    - "!**/coverage/**"
+    - "!**/*.test.ts"
+    - "!**/*.test.tsx"
+    - "!**/*.spec.ts"
+    - "!**/package-lock.json"
+    - "!**/pnpm-lock.yaml"
+
+  # Instrucciones personalizadas por ruta
+  path_instructions:
+    - path: "apps/web/**/*.ts"
+      instructions: |
+        ReparaYa - Contexto del proyecto:
+        - Stack: Next.js 14 + TypeScript + Prisma + PostgreSQL
+        - Autenticación: Clerk
+        - Pagos: Stripe (Checkout + Connect)
+        - Cloud: AWS (S3, SES, Location Service)
+
+        Al revisar código TypeScript, verifica:
+
+        **Seguridad:**
+        - Autorización correcta (roles: client, contractor, admin)
+        - Sanitización de inputs (especialmente en mensajería)
+        - No exponer datos sensibles en APIs públicas
+        - Verificación de firmas en webhooks (Stripe, Clerk)
+
+        **Performance:**
+        - Queries eficientes (usar includes de Prisma selectivamente)
+        - Índices apropiados en búsquedas
+        - No hacer llamadas a DB en loops
+
+        **Arquitectura:**
+        - Separación de capas (presentación → servicios → repositorios)
+        - Lógica de negocio en servicios, no en API routes
+        - DTOs y validaciones con Zod
+
+        **Código limpio:**
+        - Nombres descriptivos (camelCase para variables, PascalCase para componentes)
+        - No usar `any` (TypeScript strict mode)
+        - Comentarios útiles para lógica compleja
+
+    - path: "apps/web/**/*.tsx"
+      instructions: |
+        Al revisar componentes React:
+        - Verificar uso correcto de hooks (useEffect, useState, etc.)
+        - Componentes deben ser reutilizables y modulares
+        - Manejar estados de loading y error
+        - Accesibilidad (aria-labels, roles semánticos)
+        - Performance (memoización cuando sea necesario)
+
+    - path: "openspec/**/*.md"
+      instructions: |
+        Al revisar especificaciones de OpenSpec:
+        - Verificar que los contratos estén bien definidos
+        - Asegurar trazabilidad con requisitos (RF-XXX, RNF-XXX)
+        - Validar que el plan de testing esté incluido
+        - Coherencia con la arquitectura del proyecto
+
+    - path: "docs/md/**/*.md"
+      instructions: |
+        Al revisar documentación:
+        - Verificar claridad y coherencia
+        - Asegurar que ejemplos de código sean válidos
+        - Links internos y externos funcionales
+
+  # Herramientas de análisis estático
+  tools:
+    eslint:
+      enabled: true
+
+    gitleaks:
+      enabled: true
+
+    markdownlint:
+      enabled: true
+
+# ------------------------------------------------------------------------------
+# CONFIGURACIÓN DE CHAT
+# ------------------------------------------------------------------------------
+chat:
+  auto_reply: true
+
+# ------------------------------------------------------------------------------
+# BASE DE CONOCIMIENTO
+# ------------------------------------------------------------------------------
+knowledge_base:
+  # No opt-out de la base de conocimiento
+  opt_out: false
+
+  # Guidelines de código del proyecto
+  code_guidelines:
     enabled: true
-    severity: error
+    filePatterns:
+      - "**/CLAUDE.md"
+      - "**/openspec/project.md"
+      - "**/docs/md/architecture-overview.md"
 
-  # Performance
-  performance:
+  # Búsqueda web para contexto adicional
+  web_search:
     enabled: true
-    severity: warning
 
-  # Best practices
-  best_practices:
-    enabled: true
-    severity: warning
+  # Scope de learnings
+  learnings:
+    scope: auto
 
-  # Documentation
-  documentation:
-    enabled: true
-    severity: info
-
-  # Error handling
-  error_handling:
-    enabled: true
-    severity: warning
-
-# Custom instructions for ReparaYa
-project_context: |
-  ReparaYa es una plataforma de marketplace para servicios de reparación y mantenimiento.
-
-  Stack:
-  - Frontend y Backend: Next.js 14 (App Router) + TypeScript
-  - Base de datos: PostgreSQL + Prisma
-  - Autenticación: Clerk
-  - Pagos: Stripe
-  - Cloud: AWS (S3, SES, Location Service)
-  - Hosting: Vercel
-
-  Arquitectura:
-  - Monolito modular organizado por dominios (auth, users, services, booking, payments, messaging, ratings, admin)
-  - Arquitectura de 3 capas (presentación, negocio, datos)
-
-  Enfoque especial en:
-  - Seguridad (OWASP Top 10, autorización por rol)
-  - Performance (P95/P99 targets definidos en SRS)
-  - Testing (cobertura ≥ 70%)
-  - Trazabilidad (requisitos → specs → código → tests)
-
-# Review instructions
-review_instructions: |
-  Al revisar PRs de ReparaYa, presta atención a:
-
-  1. **Seguridad**:
-     - Autorización correcta (verificar roles: client, contractor, admin)
-     - Sanitización de inputs (especialmente en mensajería)
-     - No exponer datos sensibles en APIs públicas
-     - Verificación de firmas en webhooks (Stripe, Clerk)
-
-  2. **Performance**:
-     - Queries eficientes (usar includes de Prisma selectivamente)
-     - Índices apropiados en búsquedas
-     - No hacer llamadas a DB en loops
-
-  3. **Arquitectura**:
-     - Separación de capas (presentación → servicios → repositorios)
-     - Lógica de negocio en servicios, no en API routes
-     - DTOs y validaciones con Zod
-
-  4. **Testing**:
-     - Tests unitarios para lógica de negocio
-     - Tests de integración para endpoints
-     - Verificar que se mantiene cobertura ≥ 70%
-
-  5. **Código limpio**:
-     - Nombres descriptivos (camelCase para variables, PascalCase para componentes)
-     - No usar `any` (TypeScript strict mode)
-     - Comentarios útiles (TODO, FIXME, explicaciones de lógica compleja)
-     - Seguir convenciones de Conventional Commits
-
-  6. **Documentación**:
-     - READMEs actualizados en módulos nuevos
-     - Comentarios JSDoc en funciones públicas
-     - Actualizar specs de OpenSpec si hay cambios arquitectónicos
-
-# Labels to add
-labels:
-  - name: "needs-review"
-    description: "PR esperando revisión"
-  - name: "security"
-    description: "Cambios relacionados con seguridad"
-  - name: "performance"
-    description: "Cambios relacionados con performance"
-  - name: "breaking-change"
-    description: "Cambio que rompe compatibilidad"
-
-# Ignore certain types of changes
-ignore:
-  - "**/*.md"  # Solo advertencias en markdown, no bloquear
-  - "**/package-lock.json"
-  - "**/pnpm-lock.yaml"
+  # Scope de issues
+  issues:
+    scope: auto
