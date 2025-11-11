@@ -404,13 +404,52 @@ git push origin main
 
 Este es un proyecto académico de la materia de Ingeniería de Software.
 
-### Guidelines
+### 🔴 IMPORTANTE: Política de Testing Obligatorio
 
-1. Leer [`CLAUDE.md`](./CLAUDE.md) y [`openspec/project.md`](./openspec/project.md)
-2. Seguir convenciones de código y commits
-3. Escribir tests para nuevas funcionalidades
-4. Actualizar documentación relevante
-5. Asegurar que CI pasa antes de solicitar merge
+**TODO el código debe tener tests. Sin excepciones.**
+
+- ✅ Cobertura mínima: **70%** en módulos core
+- ✅ Tests para features, cambios de DB, Terraform, DevOps, configuración
+- ✅ Documentar casos de prueba en `/docs/md/STP-ReparaYa.md` ANTES de implementar
+- ✅ NO se puede mergear sin que todos los tests pasen
+
+### Guía Completa de Contribución
+
+**Lee [`CONTRIBUTING.md`](./CONTRIBUTING.md)** para la guía completa (compatible con Claude Code, GitHub Copilot y otros asistentes de IA).
+
+### Quick Guidelines
+
+1. **Leer documentación clave**:
+   - [`CONTRIBUTING.md`](./CONTRIBUTING.md) - Guía completa para desarrolladores
+   - [`CLAUDE.md`](./CLAUDE.md) - Instrucciones para Claude Code
+   - [`openspec/project.md`](./openspec/project.md) - Contexto del proyecto
+   - [`openspec/README.md`](./openspec/README.md) - Workflow de OpenSpec
+
+2. **Crear feature branch desde `dev`**:
+   ```bash
+   git checkout dev && git pull origin dev
+   git checkout -b feature/nombre-descriptivo
+   ```
+
+3. **Para cambios significativos, crear propuesta OpenSpec**:
+   - DEBE incluir sección "Testing Plan"
+   - Actualizar STP ANTES de implementar
+   - Ver ejemplos en `CONTRIBUTING.md`
+
+4. **Escribir tests** (cobertura ≥ 70%):
+   ```bash
+   npm run test              # Ejecutar tests
+   npm run test:coverage     # Verificar cobertura
+   npm run lint              # Linter
+   npm run type-check        # TypeScript
+   ```
+
+5. **Crear PR hacia `dev`**:
+   - El template de PR se autocompleta con checklist
+   - CodeRabbit revisará automáticamente
+   - Requiere al menos 1 aprobación humana
+
+6. **Asegurar CI/CD pasa completamente** antes de merge
 
 ---
 
