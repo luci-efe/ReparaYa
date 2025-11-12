@@ -1,9 +1,20 @@
 # Variables de configuración para Terraform
 
 variable "aws_region" {
-  description = "AWS region donde se desplegarán los recursos"
+  description = "AWS region donde se desplegarán los recursos (deprecated, use regions)"
   type        = string
   default     = "us-west-2"
+}
+
+variable "regions" {
+  description = "List of AWS regions to deploy resources to"
+  type        = list(string)
+  default     = ["us-west-2"]
+
+  validation {
+    condition     = length(var.regions) > 0
+    error_message = "At least one region must be specified."
+  }
 }
 
 variable "environment" {
@@ -43,4 +54,35 @@ variable "location_route_calculator_name" {
   description = "Nombre del Route Calculator para cálculo de distancias"
   type        = string
   default     = "reparaya-routes"
+}
+
+# Multi-region configuration
+variable "enable_ses" {
+  description = "Enable SES email service provisioning"
+  type        = bool
+  default     = true
+}
+
+variable "enable_location_service" {
+  description = "Enable Amazon Location Service provisioning"
+  type        = bool
+  default     = true
+}
+
+variable "enable_crr" {
+  description = "Enable S3 Cross-Region Replication between primary and secondary buckets"
+  type        = bool
+  default     = false
+}
+
+variable "primary_region" {
+  description = "Primary region for CRR source (defaults to first region in list)"
+  type        = string
+  default     = ""
+}
+
+variable "replica_region" {
+  description = "Replica region for CRR destination (defaults to second region in list if available)"
+  type        = string
+  default     = ""
 }

@@ -34,7 +34,59 @@ provider "aws" {
   }
 }
 
-# TODO: Descomentar y configurar cuando se creen los recursos
-# module "s3" {
-#   source = "./aws"
-# }
+# Dynamic provider aliases for multi-region support
+provider "aws" {
+  alias  = "us-west-2"
+  region = "us-west-2"
+
+  default_tags {
+    tags = {
+      Project     = "ReparaYa"
+      Environment = var.environment
+      ManagedBy   = "Terraform"
+    }
+  }
+}
+
+provider "aws" {
+  alias  = "eu-central-1"
+  region = "eu-central-1"
+
+  default_tags {
+    tags = {
+      Project     = "ReparaYa"
+      Environment = var.environment
+      ManagedBy   = "Terraform"
+    }
+  }
+}
+
+provider "aws" {
+  alias  = "ap-southeast-1"
+  region = "ap-southeast-1"
+
+  default_tags {
+    tags = {
+      Project     = "ReparaYa"
+      Environment = var.environment
+      ManagedBy   = "Terraform"
+    }
+  }
+}
+
+# Multi-region infrastructure module instantiation
+module "infra_region" {
+  source   = "./modules/infra-region"
+  for_each = toset(var.regions)
+
+  region                  = each.key
+  environment             = var.environment
+  project_name            = var.project_name
+  ses_sender_email        = var.ses_sender_email
+  enable_ses              = var.enable_ses
+  enable_location_service = var.enable_location_service
+
+  providers = {
+    aws = aws
+  }
+}

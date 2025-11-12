@@ -1,0 +1,25 @@
+# Example Terraform variables configuration
+# Copy this file to terraform.tfvars and customize for your environment
+# DO NOT commit terraform.tfvars if it contains sensitive values
+
+# Multi-region configuration
+regions = ["us-west-2", "eu-central-1"]
+
+# Environment
+environment  = "dev"
+project_name = "reparaya"
+
+# SES Configuration
+ses_sender_email = "noreply@reparaya.com"
+
+# Feature flags
+enable_ses              = true
+enable_location_service = true
+
+# Cross-Region Replication (optional)
+enable_crr      = false
+primary_region  = "us-west-2"
+replica_region  = "eu-central-1"
+
+# Legacy variable (deprecated, kept for backward compatibility)
+aws_region = "us-west-2"
