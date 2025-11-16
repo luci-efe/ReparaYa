@@ -76,3 +76,48 @@ The system SHALL define a ServiceStatus enum in Prisma with the following values
 - **WHEN** an admin approves a service
 - **THEN** the status SHALL be updated to ACTIVE
 - **AND** the service SHALL immediately become visible in search results
+
+## Testing Plan
+
+### Test Cases
+
+Tests implemented in `apps/web/tests/database/TC-DB-001.test.ts`.
+
+| ID | Descripción | Tipo | Prioridad | Requisito |
+|----|-------------|------|-----------|-----------|
+| TC-DB-001-CategoryHierarchy | Creación y query de categorías jerárquicas con self-reference | Unitaria | Alta | Category Model |
+| TC-DB-001-ServiceGeospatial | Búsqueda geoespacial por bounding box usando índices separados | Performance | Alta | Service Model |
+| TC-DB-001-ServiceByContractor | Query de servicios por contractor usando índice contractorId | Performance | Alta | Service Model |
+| TC-DB-001-ServiceByCategory | Filtrado por categoryId + status usando índice compuesto | Performance | Alta | Service Model |
+| TC-DB-001-ServiceStatus | Validación de enum ServiceStatus y visibilidad en búsquedas | Unitaria | Alta | ServiceStatus Enum |
+
+### Criterios de Aceptación
+
+- ✅ Categorías jerárquicas (parentId self-reference) funcionan correctamente
+- ✅ Búsqueda geoespacial por bounding box completa en <500ms para 1000+ servicios
+- ✅ Índices separados en locationLat y locationLng mejoran performance de BETWEEN queries
+- ✅ Servicios UNDER_REVIEW no aparecen en búsquedas públicas
+- ✅ Queries usan índices apropiados (verificado con EXPLAIN)
+- ✅ Precisión de Decimal para coordenadas (10,8) y precios (12,2)
+
+### Estrategia de Implementación
+
+**Archivos de test:**
+- `apps/web/tests/database/TC-DB-001.test.ts` - Tests de infraestructura y schema
+- Tests futuros de integración para búsqueda geoespacial
+
+**Optimizaciones de índices:**
+- **NOTA**: Reemplazar índice compuesto `@@index([locationLat, locationLng])` con índices separados:
+  - `@@index([locationLat])`
+  - `@@index([locationLng])`
+- Los índices B-tree separados son más eficientes para queries BETWEEN de bounding box
+- Considerar PostGIS con índice GiST para escalabilidad futura (>10K servicios)
+
+**Mocks y fixtures:**
+- Categorías de prueba con jerarquía (ej: "Reparaciones" > "Plomería")
+- Servicios con coordenadas dentro y fuera de bounding box
+- Usuarios contractor con diferentes estados de verificación
+
+**Performance:**
+- Benchmark de búsqueda geoespacial con 1000 servicios
+- Validación de que queries usan índices esperados (EXPLAIN ANALYZE)

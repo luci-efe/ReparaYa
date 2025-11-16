@@ -222,7 +222,7 @@ T=120+72h: Dinero llega a cuenta bancaria del contratista
 
 ## Archivo de Documentación Completa
 
-**Ubicación:** `/home/fr/School/7mo-sem/sistemas-escalables/reparaya/ReparaYa/docs/md/`
+**Ubicación:** `docs/md/`
 
 Documento generado: `modelo_datos_reparaya.md` (1,200+ líneas)
 
@@ -245,6 +245,6 @@ Contiene:
 
 ---
 
-**Documento Generado:** 2025-11-11  
+**Documento Generado:** 2025-11-16  
 **Fuentes:** SRS 1.1, SDD (Modelo de datos), Architecture Overview  
 **Estado:** Completo y listo para implementación

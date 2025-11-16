@@ -15,6 +15,17 @@ describe('TC-DB-001: Infraestructura y Schema de Base de Datos', () => {
   let prisma: PrismaClient;
 
   beforeAll(() => {
+    // Verificar que estamos en ambiente de testing
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error('TC-DB-001: ABORTED - Cannot run infrastructure tests in production');
+    }
+
+    // Verificar que DATABASE_URL apunta a DB de testing
+    const dbUrl = process.env.DATABASE_URL;
+    if (!dbUrl || (!dbUrl.includes('test') && !dbUrl.includes('localhost'))) {
+      console.warn('⚠️ DATABASE_URL might not be a test database:', dbUrl?.substring(0, 30) + '...');
+    }
+
     prisma = new PrismaClient();
   });
 
@@ -234,6 +245,7 @@ describe('TC-DB-001: Infraestructura y Schema de Base de Datos', () => {
         'ON_SITE',
         'IN_PROGRESS',
         'COMPLETED',
+        'NO_SHOW',
         'CANCELLED',
         'DISPUTED',
       ];
