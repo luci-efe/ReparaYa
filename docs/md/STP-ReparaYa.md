@@ -115,14 +115,95 @@ Donde:
 
 ### 4.1 Casos de prueba por módulo
 
-#### 4.1.1 Autenticación (Auth)
+#### 4.1.1 Autenticación y Autorización (Auth - Clerk Integration)
 
-| ID | Descripción | Requisito | Prioridad | Estado |
-|----|-------------|-----------|-----------|--------|
-| TC-RF-003-01 | Registro exitoso de usuario | RF-003 | Alta | Pendiente |
-| TC-RF-003-02 | Login con credenciales válidas | RF-003 | Alta | Pendiente |
-| TC-RF-003-03 | Autorización por rol (cliente accede a ruta de cliente) | RF-003 | Alta | Pendiente |
-| TC-RF-003-04 | Webhook de Clerk procesa correctamente user.created | RF-003 | Alta | Pendiente |
+**Referencia de spec:** `/openspec/changes/2025-11-16-auth-clerk-integration/specs/auth-clerk-integration/spec.md`
+
+**Criterios de aceptación generales:**
+- Cobertura de código ≥ 70% en módulo `src/modules/auth`
+- Todos los tests unitarios, integración y E2E deben pasar
+- Webhook debe procesar eventos con idempotencia garantizada
+- Performance de verificación de sesión: P95 < 100ms, P99 < 200ms
+
+**Casos de prueba:**
+
+| ID | Descripción | Tipo | Requisito | Prioridad | Estado | Notas |
+|----|-------------|------|-----------|-----------|--------|-------|
+| TC-AUTH-001 | Registro exitoso con email y contraseña válidos | E2E | AUTH-002 | Alta | Pendiente | Flujo completo: /sign-up → dashboard |
+| TC-AUTH-002 | Registro fallido - email duplicado | E2E | AUTH-002 | Alta | Pendiente | Validar mensaje de error de Clerk |
+| TC-AUTH-003 | Registro fallido - contraseña débil | E2E | AUTH-002 | Media | Pendiente | Contraseña < 8 caracteres |
+| TC-AUTH-004 | Login exitoso con credenciales válidas | E2E | AUTH-003 | Alta | Pendiente | Flujo completo: /sign-in → dashboard |
+| TC-AUTH-005 | Login fallido - credenciales inválidas | E2E | AUTH-003 | Alta | Pendiente | Validar mensaje de error |
+| TC-AUTH-006 | Middleware bloquea ruta protegida sin sesión | Integración | AUTH-004 | Alta | Pendiente | GET /dashboard sin sesión → 302 /sign-in |
+| TC-AUTH-007 | Middleware permite ruta protegida con sesión | Integración | AUTH-004 | Alta | Pendiente | GET /dashboard con sesión → 200 OK |
+| TC-AUTH-008 | Middleware permite ruta pública sin sesión | Integración | AUTH-004 | Media | Pendiente | GET /servicios sin sesión → 200 OK |
+| TC-AUTH-009 | Webhook procesa user.created y crea usuario en DB | Integración | AUTH-005 | Alta | Pendiente | Validar insert en tabla users |
+| TC-AUTH-010 | Webhook actualiza usuario con user.updated | Integración | AUTH-005 | Alta | Pendiente | Validar update de email/nombre |
+| TC-AUTH-011 | Webhook es idempotente (evento duplicado) | Integración | AUTH-005 | Alta | Pendiente | Mismo evento 2+ veces, no duplica |
+| TC-AUTH-012 | Webhook rechaza firma inválida | Integración | AUTH-010 | Crítica | Pendiente | Sin svix-signature → 401 Unauthorized |
+| TC-AUTH-013 | getCurrentUser retorna usuario autenticado | Unitaria | AUTH-006 | Alta | Pendiente | Mock Clerk auth() con userId válido |
+| TC-AUTH-014 | getCurrentUser retorna null sin sesión | Unitaria | AUTH-006 | Alta | Pendiente | Mock Clerk auth() sin userId |
+| TC-AUTH-015 | requireRole lanza error si rol no coincide | Unitaria | AUTH-008 | Alta | Pendiente | Usuario CLIENT, requireRole('ADMIN') → 403 |
+| TC-AUTH-016 | requireRole retorna usuario si rol coincide | Unitaria | AUTH-008 | Alta | Pendiente | Usuario ADMIN, requireRole('ADMIN') → User |
+| TC-AUTH-017 | Cierre de sesión invalida sesión y redirige | E2E | AUTH-009 | Media | Pendiente | Click sign-out → redirect a / |
+
+**Procedimientos de prueba detallados:**
+
+**TC-AUTH-001: Registro exitoso**
+1. Navegar a http://localhost:3000/sign-up
+2. Ingresar email único: `test-{timestamp}@example.com`
+3. Ingresar nombre: "Juan", apellido: "Test"
+4. Ingresar contraseña: "SecurePass123"
+5. Hacer clic en "Sign Up"
+6. **Esperado:** Redirect a /dashboard
+7. **Esperado:** Sesión activa (verificar cookies)
+8. **Esperado:** Usuario creado en DB con role=CLIENT
+
+**TC-AUTH-009: Webhook procesa user.created**
+1. Configurar webhook en Clerk dashboard apuntando a ambiente local (ngrok)
+2. Registrar usuario nuevo en UI de Clerk
+3. Verificar que Clerk envía evento `user.created`
+4. Verificar logs del webhook endpoint
+5. **Esperado:** Webhook retorna 200 OK
+6. **Esperado:** Registro creado en tabla `users` con datos correctos
+7. Query DB: `SELECT * FROM users WHERE clerk_user_id = 'user_xxx'`
+
+**TC-AUTH-012: Webhook rechaza firma inválida**
+1. Crear POST request a /api/webhooks/clerk
+2. Incluir payload válido de Clerk pero con firma incorrecta
+3. Enviar request
+4. **Esperado:** Respuesta 401 Unauthorized
+5. **Esperado:** Log de warning con IP de origen
+6. **Esperado:** NO se crea registro en DB
+
+**Datos de prueba:**
+
+Usuarios de prueba en Clerk:
+- `test-client@reparaya.dev` - Rol: CLIENT - Contraseña: TestPass123
+- `test-contractor@reparaya.dev` - Rol: CONTRACTOR - Contraseña: TestPass123
+- `test-admin@reparaya.dev` - Rol: ADMIN - Contraseña: TestPass123
+
+Fixtures para tests unitarios:
+```typescript
+const mockClerkUser = {
+  id: 'user_2test123',
+  email: 'test@example.com',
+  firstName: 'Test',
+  lastName: 'User',
+};
+
+const mockDbUser = {
+  id: 'uuid-test-123',
+  clerkUserId: 'user_2test123',
+  email: 'test@example.com',
+  firstName: 'Test',
+  lastName: 'User',
+  role: 'CLIENT',
+  status: 'ACTIVE',
+  createdAt: new Date(),
+  updatedAt: new Date(),
+};
+```
 
 #### 4.1.2 Búsqueda de servicios (Catalog)
 

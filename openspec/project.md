@@ -332,3 +332,22 @@ El proyecto se desarrolla como parte de una materia universitaria de Ingeniería
   - Motor de especificaciones y asistente de desarrollo:
     - Specs describen comportamiento esperado y requisitos.
     - Claude Code opera dentro del repo siguiendo este `project.md`, los documentos en `/docs/md/` y la estructura de `openspec/`.
+
+## Module Specifications
+
+Las especificaciones de módulos están en `/openspec/specs/`. Cada spec define requisitos funcionales y no funcionales, interfaces, modelo de datos y plan de testing para su módulo.
+
+### Active Specifications
+
+- **auth** (`/openspec/specs/auth/`):
+  - `auth-clerk-integration` - Integración de Clerk para autenticación, sesiones, roles y sincronización de usuarios
+
+- **users** (`/openspec/specs/users/`) - _Pendiente de definición_
+- **services** (`/openspec/specs/catalog-search/`) - _Pendiente de definición_
+- **booking** (`/openspec/specs/booking-checkout/`) - _Pendiente de definición_
+- **payments** (`/openspec/specs/payments-webhooks/`) - _Pendiente de definición_
+- **messaging** (`/openspec/specs/reservation-lifecycle-messaging/`) - _Pendiente de definición_
+- **ratings** (`/openspec/specs/ratings-reviews/`) - _Pendiente de definición_
+- **admin** (`/openspec/specs/admin-moderation/`) - _Pendiente de definición_
+
+**Nota:** Los specs vacíos se completarán conforme se vayan implementando los módulos siguiendo el flujo de OpenSpec.
