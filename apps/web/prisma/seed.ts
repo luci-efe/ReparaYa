@@ -65,7 +65,7 @@ async function main() {
   console.log('👥 Creating test users...');
 
   // Admin
-  const admin = await prisma.user.create({
+  await prisma.user.create({
     data: {
       clerkUserId: 'user_admin_test_001',
       email: 'admin@reparaya.test',
