@@ -7,7 +7,7 @@
 // Ejecutar con: npm run prisma:seed
 // (definido en package.json como "prisma": { "seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts" })
 
-import { PrismaClient, UserRole, ServiceStatus, BookingStatus } from '@prisma/client';
+import { PrismaClient, UserRole, ServiceStatus } from '@prisma/client';
 import { Decimal } from '@prisma/client/runtime/library';
 
 const prisma = new PrismaClient();
