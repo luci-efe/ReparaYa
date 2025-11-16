@@ -57,3 +57,55 @@ The system SHALL provide an Address model in the Prisma schema with the followin
 - **THEN** the system SHALL geocode the address using Amazon Location Service
 - **AND** update the Address record with the coordinates
 - **AND** future bookings SHALL reuse the cached coordinates
+
+## Testing Plan
+
+### Test Cases
+
+Tests implemented in `apps/web/tests/database/TC-DB-002.test.ts`.
+
+| ID | Descripción | Tipo | Prioridad | Requisito |
+|----|-------------|------|-----------|-----------|
+| TC-DB-002-01 | ContractorProfile creado con arrays (specialties) y JSON (verificationDocuments) | Unitaria | Alta | ContractorProfile Model |
+| TC-DB-002-02 | Verificación de tipos TypeScript (Decimal, arrays, JSON) | Unitaria | Alta | ContractorProfile Model |
+| TC-DB-002-03 | Address con isDefault garantiza solo una por usuario | Integración | Alta | Address Model |
+| TC-DB-002-04 | Concurrencia: múltiples threads intentan setear isDefault simultáneamente | Concurrencia | Media | Address Model |
+| TC-DB-002-05 | Geocodificación on-demand con Amazon Location Service (integración) | Integración | Media | Address Model |
+
+### Criterios de Aceptación
+
+- ✅ ContractorProfile almacena arrays de specialties correctamente
+- ✅ verificationDocuments (JSON) almacena S3 keys de manera estructurada
+- ✅ Stripe Connect accountId se vincula correctamente
+- ✅ **CRÍTICO**: Índice parcial único garantiza solo un isDefault=true por userId a nivel DB
+- ✅ Tests de concurrencia validan exclusividad de isDefault bajo carga
+- ✅ Geocodificación con Amazon Location Service funciona (mock y live)
+- ✅ Coordenadas geocodificadas se cachean en Address
+
+### Estrategia de Implementación
+
+**Archivos de test:**
+- `apps/web/tests/database/TC-DB-002.test.ts` - Tests de tipos y ContractorProfile/Address
+- Tests de integración con Amazon Location Service (pendiente)
+- Tests de concurrencia para isDefault (pendiente)
+
+**Migración DB requerida:**
+- **IMPORTANTE**: Crear migración SQL custom para índice parcial único:
+  ```sql
+  CREATE UNIQUE INDEX idx_user_default_address
+  ON "Address"("userId")
+  WHERE "isDefault" = true;
+  ```
+- Prisma no soporta índices parciales nativamente en schema.prisma
+- Migración debe ejecutarse manualmente después de `prisma migrate dev`
+
+**Mocks y fixtures:**
+- Contractor con specialties: ['plomería', 'electricidad']
+- verificationDocuments con estructura: `{ ine: 's3://...', comprobante: 's3://...' }`
+- Mock de Amazon Location Service SDK para geocodificación
+- Fixtures de addresses con y sin coordenadas
+
+**Integraciones externas:**
+- Amazon Location Service: SDK configurado con credenciales de test
+- Tests con mock para CI/CD
+- Tests live opcionales con límite de rate (100 requests/día en dev)

@@ -59,3 +59,41 @@ The system SHALL define a UserStatus enum in Prisma with the following values:
 - **WHEN** a contractor signs up and uploads KYC documents
 - **THEN** their status SHALL be set to PENDING_VERIFICATION
 - **AND** they SHALL NOT be able to publish services until status becomes ACTIVE
+
+## Testing Plan
+
+### Test Cases
+
+Tests implemented in `apps/web/tests/database/TC-DB-001.test.ts` and `apps/web/tests/database/TC-DB-002.test.ts`.
+
+| ID | Descripción | Tipo | Prioridad | Requisito |
+|----|-------------|------|-----------|-----------|
+| TC-DB-001-CreateFromClerk | User record creado desde webhook de Clerk con clerkUserId válido | Integración | Alta | User Model |
+| TC-DB-001-LookupByClerkId | Búsqueda de User usando índice clerkUserId completa en <50ms | Performance | Alta | User Model |
+| TC-DB-001-RoleFilterWithStatus | Filtrado de users por rol + status usando índice compuesto | Unitaria | Alta | User Model |
+| TC-DB-001-EnumValidation | Validación de enums UserRole y UserStatus rechaza valores inválidos | Unitaria | Alta | Enums |
+| TC-DB-001-IndexPerformance | Verificación de índices únicos (clerkUserId, email) y compuestos (role+status) | Unitaria | Alta | User Model |
+
+### Criterios de Aceptación
+
+- ✅ Todos los enums (UserRole, UserStatus) validados en DB
+- ✅ Índices únicos en clerkUserId y email funcionan correctamente
+- ✅ Índice compuesto role+status mejora performance de queries
+- ✅ Queries con índices completan en <50ms
+- ✅ Validación de Prisma rechaza valores inválidos de enums
+- ✅ Tests de infraestructura incluyen safety checks contra ejecución en producción
+
+### Estrategia de Implementación
+
+**Archivos de test:**
+- `apps/web/tests/database/TC-DB-001.test.ts` - Tests de infraestructura y schema
+- `apps/web/tests/database/TC-DB-002.test.ts` - Tests de cliente Prisma y tipos TypeScript
+
+**Mocks y fixtures:**
+- Clerk webhook payload con signature verification (mock)
+- Usuarios de prueba con diferentes roles y estados
+
+**Validaciones:**
+- Verificación de que DATABASE_URL apunta a DB de testing
+- Safety check contra ejecución en ambiente de producción
+- Cleanup automático de datos de prueba con manejo de errores

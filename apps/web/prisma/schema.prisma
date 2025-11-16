@@ -7,8 +7,8 @@
 
 datasource db {
   provider  = "postgresql"
-  url       = env("DATABASE_URL")       // Conexión pooled para runtime (con -pooler)
-  directUrl = env("DIRECT_URL")         // Conexión directa para migraciones (sin -pooler)
+  url       = env("DATABASE_URL") // Conexión pooled para runtime (con -pooler)
+  directUrl = env("DIRECT_URL") // Conexión directa para migraciones (sin -pooler)
 }
 
 generator client {
@@ -50,6 +50,7 @@ enum BookingStatus {
   ON_SITE
   IN_PROGRESS
   COMPLETED
+  NO_SHOW
   CANCELLED
   DISPUTED
 }
@@ -75,8 +76,8 @@ enum ModerationStatus {
 
 enum DisputeStatus {
   OPEN
-  RESOLVED_REFUND_CLIENT
-  RESOLVED_PAYOUT_CONTRACTOR
+  RESOLVED_UPHOLD_CLIENT
+  RESOLVED_UPHOLD_CONTRACTOR
   RESOLVED_PARTIAL
 }
 
@@ -203,7 +204,8 @@ model Service {
 
   @@index([contractorId])
   @@index([categoryId, status])
-  @@index([locationLat, locationLng]) // Búsqueda geoespacial
+  @@index([locationLat]) // Búsqueda geoespacial - índice separado para BETWEEN queries
+  @@index([locationLng]) // Búsqueda geoespacial - índice separado para BETWEEN queries
   @@index([status])
 }
 

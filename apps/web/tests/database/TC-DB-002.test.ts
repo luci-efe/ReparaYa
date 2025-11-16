@@ -10,6 +10,19 @@ import { PrismaClient } from '@prisma/client';
 import { db } from '../../src/lib/db';
 
 describe('TC-DB-002: Cliente Prisma y TypeScript', () => {
+  beforeAll(() => {
+    // Verificar que estamos en ambiente de testing
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error('TC-DB-002: ABORTED - Cannot run infrastructure tests in production');
+    }
+
+    // Verificar que DATABASE_URL apunta a DB de testing
+    const dbUrl = process.env.DATABASE_URL;
+    if (!dbUrl || (!dbUrl.includes('test') && !dbUrl.includes('localhost'))) {
+      console.warn('⚠️ DATABASE_URL might not be a test database:', dbUrl?.substring(0, 30) + '...');
+    }
+  });
+
   describe('TC-DB-002-01: Cliente Prisma singleton no crea múltiples instancias', () => {
     it('debe retornar la misma instancia de PrismaClient en múltiples imports', () => {
       const db1 = db;
@@ -121,9 +134,9 @@ describe('TC-DB-002: Cliente Prisma y TypeScript', () => {
       expect(priceValue).toBeGreaterThan(0);
 
       // Limpiar
-      await prisma.service.delete({ where: { id: service.id } });
-      await prisma.user.delete({ where: { id: contractor.id } });
-      await prisma.category.delete({ where: { id: category.id } });
+      await prisma.service.delete({ where: { id: service.id } }).catch(() => {});
+      await prisma.user.delete({ where: { id: contractor.id } }).catch(() => {});
+      await prisma.category.delete({ where: { id: category.id } }).catch(() => {});
     });
 
     it('debe manejar arrays correctamente (Text[], JSON)', async () => {
@@ -158,8 +171,8 @@ describe('TC-DB-002: Cliente Prisma y TypeScript', () => {
       expect(profile.verificationDocuments).toHaveProperty('ine');
 
       // Limpiar
-      await prisma.contractorProfile.delete({ where: { id: profile.id } });
-      await prisma.user.delete({ where: { id: contractor.id } });
+      await prisma.contractorProfile.delete({ where: { id: profile.id } }).catch(() => {});
+      await prisma.user.delete({ where: { id: contractor.id } }).catch(() => {});
     });
 
     it('debe manejar enums correctamente con type-safety', async () => {
