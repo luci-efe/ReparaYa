@@ -182,13 +182,18 @@ Cobertura: 75% ✅
 ## Relación con Documentación Formal
 
 Las specs de OpenSpec son **documentación técnica viva** que complementa:
-- **SRS** (`docs/md/SRS.md`): Requisitos de negocio y funcionales
-- **SDD** (`docs/md/SDD.md`): Diseño arquitectónico detallado
-- **STP** (`docs/md/STP.md`): Plan de pruebas
+- **SRS** (docs/md) - Requisitos de negocio y funcionales (baseline congelada, NO leer)
+- **SDD** (docs/md) - Diseño arquitectónico detallado (baseline congelada, NO leer)
+- **STP** (`docs/md/STP-ReparaYa.md`) - Plan de pruebas (**DEBE actualizarse**)
+
+**🔴 IMPORTANTE:**
+- La información del SRS y SDD ya está consolidada en `openspec/project.md` y specs de módulos
+- Los agentes NO deben leer archivos grandes de `/docs/md/` (excepto el STP)
+- El STP es el ÚNICO archivo de `/docs/md/` que se actualiza regularmente
 
 **Flujo:**
 ```
-SRS (qué) → OpenSpec (cómo, interfaces) → Código (implementación) → STP (validación)
+[SRS baseline] → openspec/project.md + specs/* (fuente de verdad) → Código → STP (validación)
 ```
 
 ## Comandos Disponibles

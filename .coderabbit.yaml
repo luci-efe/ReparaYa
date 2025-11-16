@@ -1,121 +1,17 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
 # CodeRabbit Configuration for ReparaYa
-# https://docs.coderabbit.ai/guides/configure-coderabbit
+# https://docs.coderabbit.ai/reference/configuration
 
 # Language
 language: es-ES
 
-# Review settings
-reviews:
-  # Request changes workflow
-  request_changes_workflow: true
-
-  # Review level (concise, normal, detailed)
-  review_level: normal
-
-  # Auto-approve PRs (disabled for safety)
-  auto_approve: false
-
-  # Review profile
-  profile: chill  # Options: chill, assertive
-
-  # High level summary
-  high_level_summary: true
-
-  # Poem style review (disabled for professional context)
-  poem: false
-
-  # Review tone
-  tone_instructions: |
-    - Usa un tono profesional pero amigable
-    - Proporciona sugerencias constructivas
-    - Enfócate en mejoras de código, no solo en errores
-    - Reconoce cuando el código está bien hecho
-
-# Base branches to monitor
-base_branches:
-  - dev
-  - main
-
-# Path filters
-path_filters:
-  # Review these paths
-  include:
-    - "apps/web/**/*.ts"
-    - "apps/web/**/*.tsx"
-    - "apps/web/**/*.js"
-    - "apps/web/**/*.jsx"
-    - "openspec/**/*.md"
-    - "docs/md/**/*.md"
-
-  # Ignore these paths
-  exclude:
-    - "**/*.test.ts"
-    - "**/*.test.tsx"
-    - "**/*.spec.ts"
-    - "**/node_modules/**"
-    - "**/dist/**"
-    - "**/build/**"
-    - "**/.next/**"
-    - "**/coverage/**"
-    - "package-lock.json"
-    - "pnpm-lock.yaml"
-
-# Code review focus areas
-checks:
-  # Code quality
-  code_quality:
-    enabled: true
-    severity: warning
-
-  # Security
-  security:
-    enabled: true
-    severity: error
-
-  # Performance
-  performance:
-    enabled: true
-    severity: warning
-
-  # Best practices
-  best_practices:
-    enabled: true
-    severity: warning
-
-  # Documentation
-  documentation:
-    enabled: true
-    severity: info
-
-  # Error handling
-  error_handling:
-    enabled: true
-    severity: warning
-
-# Custom instructions for ReparaYa
-project_context: |
+# Review tone - instructions for all reviews
+tone_instructions: |
   ReparaYa es una plataforma de marketplace para servicios de reparación y mantenimiento.
 
-  Stack:
-  - Frontend y Backend: Next.js 14 (App Router) + TypeScript
-  - Base de datos: PostgreSQL + Prisma
-  - Autenticación: Clerk
-  - Pagos: Stripe
-  - Cloud: AWS (S3, SES, Location Service)
-  - Hosting: Vercel
+  Stack: Next.js 14 + TypeScript + PostgreSQL + Prisma + Clerk + Stripe
+  Arquitectura: Monolito modular organizado por dominios
 
-  Arquitectura:
-  - Monolito modular organizado por dominios (auth, users, services, booking, payments, messaging, ratings, admin)
-  - Arquitectura de 3 capas (presentación, negocio, datos)
-
-  Enfoque especial en:
-  - Seguridad (OWASP Top 10, autorización por rol)
-  - Performance (P95/P99 targets definidos en SRS)
-  - Testing (cobertura ≥ 70%)
-  - Trazabilidad (requisitos → specs → código → tests)
-
-# Review instructions
-review_instructions: |
   Al revisar PRs de ReparaYa, presta atención a:
 
   1. **Seguridad**:
@@ -142,7 +38,7 @@ review_instructions: |
   5. **Código limpio**:
      - Nombres descriptivos (camelCase para variables, PascalCase para componentes)
      - No usar `any` (TypeScript strict mode)
-     - Comentarios útiles (TODO, FIXME, explicaciones de lógica compleja)
+     - Comentarios útiles (TODO, FIXME)
      - Seguir convenciones de Conventional Commits
 
   6. **Documentación**:
@@ -150,19 +46,90 @@ review_instructions: |
      - Comentarios JSDoc en funciones públicas
      - Actualizar specs de OpenSpec si hay cambios arquitectónicos
 
-# Labels to add
-labels:
-  - name: "needs-review"
-    description: "PR esperando revisión"
-  - name: "security"
-    description: "Cambios relacionados con seguridad"
-  - name: "performance"
-    description: "Cambios relacionados con performance"
-  - name: "breaking-change"
-    description: "Cambio que rompe compatibilidad"
+  Usa un tono profesional pero amigable. Proporciona sugerencias constructivas. Reconoce cuando el código está bien hecho.
 
-# Ignore certain types of changes
-ignore:
-  - "**/*.md"  # Solo advertencias en markdown, no bloquear
-  - "**/package-lock.json"
-  - "**/pnpm-lock.yaml"
+# Review settings
+reviews:
+  # Review profile
+  profile: chill  # Options: chill, assertive
+
+  # Request changes workflow
+  request_changes_workflow: true
+
+  # High level summary
+  high_level_summary: true
+
+  # Review status
+  review_status: true
+
+  # Auto-review configuration
+  auto_review:
+    enabled: true
+    base_branches:
+      - dev
+      - main
+    drafts: false
+    auto_incremental_review: true
+
+  # Path-specific instructions
+  path_instructions:
+    - path: "apps/web/src/modules/**/*.ts"
+      instructions: |
+        Este es código de lógica de negocio de ReparaYa. Verifica:
+        - Validaciones con Zod correctas
+        - Manejo de errores robusto
+        - Queries de Prisma optimizadas
+        - No usar `any` en TypeScript
+
+    - path: "apps/web/src/app/**/*.ts"
+      instructions: |
+        Este es código de API routes. Verifica:
+        - Autenticación y autorización por rol
+        - Validación de inputs sanitizados
+        - Respuestas de error apropiadas
+        - No exponer datos sensibles
+
+    - path: "apps/web/**/*.test.ts"
+      instructions: |
+        Código de tests. Verifica:
+        - Mocks apropiados de dependencias externas
+        - Casos de prueba completos
+        - Nombres descriptivos de tests
+        - No usar datos reales en tests
+
+    - path: "docs/md/**/*.md"
+      instructions: |
+        Documentación del proyecto. Verifica:
+        - Claridad y precisión
+        - Actualizaciones con cambios de código
+        - Enlaces correctos a specs
+        - Ejemplos completos y funcionales
+
+    - path: "openspec/**/*.md"
+      instructions: |
+        Especificaciones de OpenSpec. Verifica:
+        - Consistencia con el código implementado
+        - Testing plan completo
+        - Requisitos bien definidos
+        - No hay conflictos con specs existentes
+
+    - path: "apps/web/prisma/**"
+      instructions: |
+        Schema de base de datos. Verifica:
+        - Nombres en camelCase para campos
+        - Índices en campos de búsqueda frecuente
+        - Relaciones bidireccionales correctas
+        - Tipos apropiados (Decimal para dinero, UUID para IDs)
+
+  # Pre-merge checks
+  pre_merge_checks:
+    title: warning
+    description: warning
+    docstrings: warning
+
+  # Tools configuration
+  tools:
+    eslint:
+      enabled: true
+    markdownlint:
+      enabled: false
