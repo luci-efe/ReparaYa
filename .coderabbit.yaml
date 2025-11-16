@@ -1,165 +1,102 @@
 # yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
-
-# ==============================================================================
 # CodeRabbit Configuration for ReparaYa
-# ==============================================================================
-# Documentación: https://docs.coderabbit.ai/reference/configuration
-# Schema v2: https://coderabbit.ai/integrations/schema.v2.json
-# ==============================================================================
+# https://docs.coderabbit.ai/reference/configuration
+#
+# NOTA: tone_instructions tiene límite de 250 caracteres.
+# Las instrucciones detalladas están en path_instructions (línea 35+)
 
-# ------------------------------------------------------------------------------
-# CONFIGURACIÓN GENERAL
-# ------------------------------------------------------------------------------
+# Language
 language: es-ES
-early_access: false
-enable_free_tier: true
 
-# Instrucciones de tono personalizadas
-tone_instructions: |
-  - Usa un tono profesional pero amigable
-  - Proporciona sugerencias constructivas
-  - Enfócate en mejoras de código, no solo en errores
-  - Reconoce cuando el código está bien hecho
+# Review tone - instructions for all reviews (max 250 chars)
+tone_instructions: "ReparaYa marketplace: Next.js + TS + Prisma. Prioriza seguridad (auth/roles), performance (Prisma queries), arquitectura modular, testing ≥70%, TypeScript strict. Tono profesional y constructivo."
 
-# ------------------------------------------------------------------------------
-# CONFIGURACIÓN DE REVIEWS
-# ------------------------------------------------------------------------------
+# Review settings
 reviews:
-  # Perfil de revisión (chill = menos estricto, assertive = más estricto)
-  profile: chill
+  # Review profile
+  profile: chill  # Options: chill, assertive
 
-  # Generar resumen de alto nivel
+  # Request changes workflow
+  request_changes_workflow: true
+
+  # High level summary
   high_level_summary: true
-  high_level_summary_in_walkthrough: false
 
-  # Configuración de auto-review
+  # Review status
+  review_status: true
+
+  # Auto-review configuration
   auto_review:
     enabled: true
-    auto_incremental_review: true
-    drafts: false
-
-    # Palabras clave en título para ignorar review automático
-    ignore_title_keywords:
-      - "wip"
-      - "draft"
-      - "do not review"
-
-    # Solo revisar PRs hacia la rama 'dev'
-    # PRs hacia 'main' se hacen desde 'dev' después de validación completa
     base_branches:
       - dev
+      - main
+    drafts: false
+    auto_incremental_review: true
 
-  # Filtros de rutas (formato glob negativo con !)
-  path_filters:
-    # Excluir archivos de node_modules, builds y tests
-    - "!**/node_modules/**"
-    - "!**/dist/**"
-    - "!**/build/**"
-    - "!**/.next/**"
-    - "!**/coverage/**"
-    - "!**/*.test.ts"
-    - "!**/*.test.tsx"
-    - "!**/*.spec.ts"
-    - "!**/package-lock.json"
-    - "!**/pnpm-lock.yaml"
-
-  # Instrucciones personalizadas por ruta
+  # Path-specific instructions
   path_instructions:
-    - path: "apps/web/**/*.ts"
+    - path: "apps/web/src/modules/**/*.ts"
       instructions: |
-        ReparaYa - Contexto del proyecto:
-        - Stack: Next.js 14 + TypeScript + Prisma + PostgreSQL
-        - Autenticación: Clerk
-        - Pagos: Stripe (Checkout + Connect)
-        - Cloud: AWS (S3, SES, Location Service)
+        Este es código de lógica de negocio de ReparaYa. Verifica:
+        - Validaciones con Zod correctas
+        - Manejo de errores robusto
+        - Queries de Prisma optimizadas
+        - No usar `any` en TypeScript
 
-        Al revisar código TypeScript, verifica:
-
-        **Seguridad:**
-        - Autorización correcta (roles: client, contractor, admin)
-        - Sanitización de inputs (especialmente en mensajería)
-        - No exponer datos sensibles en APIs públicas
-        - Verificación de firmas en webhooks (Stripe, Clerk)
-
-        **Performance:**
-        - Queries eficientes (usar includes de Prisma selectivamente)
-        - Índices apropiados en búsquedas
-        - No hacer llamadas a DB en loops
-
-        **Arquitectura:**
-        - Separación de capas (presentación → servicios → repositorios)
-        - Lógica de negocio en servicios, no en API routes
-        - DTOs y validaciones con Zod
-
-        **Código limpio:**
-        - Nombres descriptivos (camelCase para variables, PascalCase para componentes)
-        - No usar `any` (TypeScript strict mode)
-        - Comentarios útiles para lógica compleja
-
-    - path: "apps/web/**/*.tsx"
+    - path: "apps/web/src/app/**/*.ts"
       instructions: |
-        Al revisar componentes React:
-        - Verificar uso correcto de hooks (useEffect, useState, etc.)
-        - Componentes deben ser reutilizables y modulares
-        - Manejar estados de loading y error
-        - Accesibilidad (aria-labels, roles semánticos)
-        - Performance (memoización cuando sea necesario)
+        Este es código de API routes. Verifica:
+        - Autenticación y autorización por rol
+        - Validación de inputs sanitizados
+        - Respuestas de error apropiadas
+        - No exponer datos sensibles
 
-    - path: "openspec/**/*.md"
+    - path: "apps/web/**/*.test.ts"
       instructions: |
-        Al revisar especificaciones de OpenSpec:
-        - Verificar que los contratos estén bien definidos
-        - Asegurar trazabilidad con requisitos (RF-XXX, RNF-XXX)
-        - Validar que el plan de testing esté incluido
-        - Coherencia con la arquitectura del proyecto
+        Código de tests. Verifica:
+        - Mocks apropiados de dependencias externas
+        - Casos de prueba completos
+        - Nombres descriptivos de tests
+        - No usar datos reales en tests
 
     - path: "docs/md/**/*.md"
       instructions: |
-        Al revisar documentación:
-        - Verificar claridad y coherencia
-        - Asegurar que ejemplos de código sean válidos
-        - Links internos y externos funcionales
+        Documentación del proyecto. Verifica:
+        - Claridad y precisión
+        - Actualizaciones con cambios de código
+        - Enlaces correctos a specs
+        - Ejemplos completos y funcionales
 
-  # Herramientas de análisis estático
+    - path: "openspec/**/*.md"
+      instructions: |
+        Especificaciones de OpenSpec. Verifica:
+        - Consistencia con el código implementado
+        - Testing plan completo
+        - Requisitos bien definidos
+        - No hay conflictos con specs existentes
+
+    - path: "apps/web/prisma/**"
+      instructions: |
+        Schema de base de datos. Verifica:
+        - Nombres en camelCase para campos
+        - Índices en campos de búsqueda frecuente
+        - Relaciones bidireccionales correctas
+        - Tipos apropiados (Decimal para dinero, UUID para IDs)
+
+  # Pre-merge checks
+  pre_merge_checks:
+    title:
+      mode: warning
+    description:
+      mode: warning
+    docstrings:
+      mode: warning
+      threshold: 70
+
+  # Tools configuration
   tools:
     eslint:
       enabled: true
-
-    gitleaks:
-      enabled: true
-
     markdownlint:
-      enabled: true
-
-# ------------------------------------------------------------------------------
-# CONFIGURACIÓN DE CHAT
-# ------------------------------------------------------------------------------
-chat:
-  auto_reply: true
-
-# ------------------------------------------------------------------------------
-# BASE DE CONOCIMIENTO
-# ------------------------------------------------------------------------------
-knowledge_base:
-  # No opt-out de la base de conocimiento
-  opt_out: false
-
-  # Guidelines de código del proyecto
-  code_guidelines:
-    enabled: true
-    filePatterns:
-      - "**/CLAUDE.md"
-      - "**/openspec/project.md"
-      - "**/docs/md/architecture-overview.md"
-
-  # Búsqueda web para contexto adicional
-  web_search:
-    enabled: true
-
-  # Scope de learnings
-  learnings:
-    scope: auto
-
-  # Scope de issues
-  issues:
-    scope: auto
+      enabled: false

@@ -34,13 +34,29 @@ ReparaYa es una plataforma de marketplace para servicios de reparación y manten
 
 ## Documentación Clave
 
-**Lee SIEMPRE estos archivos antes de cualquier tarea significativa:**
+**🔴 IMPORTANTE - Optimización de Tokens:**
 
-1. **`openspec/project.md`** - Contexto completo del proyecto (stack, arquitectura, convenciones)
+Los archivos grandes de `/docs/md/` (SRS, SPMP, SDD, modelo_datos_reparaya.md) son **documentación baseline congelada**. Su contenido YA está consolidado en `openspec/project.md` y specs de módulos. **NO los leas** durante operaciones normales.
+
+**Archivos que DEBES leer:**
+
+1. **`openspec/project.md`** ⭐ - Fuente única de verdad (stack, arquitectura, convenciones, dominio)
 2. **`openspec/README.md`** - Flujo de OpenSpec y testing obligatorio
-3. **`docs/md/SRS.md`** - Requisitos funcionales y no funcionales
-4. **`docs/md/STP-ReparaYa.md`** - Plan de pruebas y casos de prueba
-5. **`docs/md/architecture-overview.md`** - Arquitectura del sistema
+3. **`openspec/specs/[modulo]/spec.md`** - Especificación del módulo en el que trabajas
+
+**Archivo que DEBES actualizar en cada implementación:**
+
+4. **`docs/md/STP-ReparaYa.md`** ⚠️ - Plan de pruebas (OBLIGATORIO actualizar con casos TC-*)
+
+**❌ NO leas estos archivos (gastan muchos tokens innecesariamente):**
+
+- ❌ `docs/md/1. Especificación de Requerimientos de Software (SRS).md` (17K)
+- ❌ `docs/md/2. Plan de Gestión del Proyecto de Software (SPMP).md` (8.8K)
+- ❌ `docs/md/3. Software Development Design (SDD).md` (68K)
+- ❌ `docs/md/modelo_datos_reparaya.md` (40K)
+- ❌ `docs/md/architecture-overview.md` (7.6K)
+
+**Excepción:** Solo léelos si el usuario explícitamente te pide información específica que NO encuentres en `openspec/project.md` o specs de módulos.
 
 ## Ramas y Workflow
 
@@ -319,14 +335,14 @@ Conventional Commits:
 
 ## Recordatorios Finales
 
-1. **SIEMPRE lee `openspec/project.md` antes de empezar**
-2. **SIEMPRE incluye plan de testing en proposals**
-3. **SIEMPRE actualiza STP antes de implementar**
-4. **NUNCA archiva sin tests completos**
-5. **Cobertura ≥ 70%** es obligatoria en módulos core
-6. **Trabaja en rama `dev`**, crea feature branches para cambios
-7. **CodeRabbit revisará** todos los PRs automáticamente
+1. ⭐ **SIEMPRE lee `openspec/project.md` al inicio** - Es tu fuente única de verdad
+2. ❌ **NUNCA leas archivos grandes de `/docs/md/`** salvo que el usuario lo pida explícitamente
+3. ⚠️ **SIEMPRE actualiza `STP-ReparaYa.md`** antes de implementar cualquier funcionalidad
+4. ✅ **SIEMPRE incluye plan de testing completo** en proposals de OpenSpec
+5. 🧪 **NUNCA archiva sin tests completos** - Cobertura ≥ 70% es obligatoria
+6. 🌿 **Trabaja en rama `dev`**, crea feature branches para cambios
+7. 🤖 **CodeRabbit revisará** todos los PRs automáticamente
 
 ---
 
-**Este proyecto tiene un enfoque fuerte en calidad, testing y trazabilidad. No tomes atajos con las pruebas.**
+**Este proyecto tiene un enfoque fuerte en calidad, testing y trazabilidad. No tomes atajos con las pruebas ni desperdicies tokens leyendo documentación consolidada.**
