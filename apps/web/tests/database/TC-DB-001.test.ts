@@ -24,7 +24,7 @@ describe('TC-DB-001: Infraestructura y Schema de Base de Datos', () => {
 
   describe('TC-DB-001-01: Conexión a base de datos Supabase exitosa', () => {
     it('debe conectarse a Supabase y ejecutar una query simple', async () => {
-      const result = await prisma.$queryRaw`SELECT version()`;
+      const result = await prisma.$queryRaw`SELECT version()` as unknown[];
       expect(result).toBeDefined();
       expect(Array.isArray(result)).toBe(true);
       expect(result.length).toBeGreaterThan(0);
