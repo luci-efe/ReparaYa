@@ -217,25 +217,28 @@ Donde:
 
 ---
 
-###### TC-DB-001-02: Migración inicial genera todas las tablas
+###### TC-DB-001-02: Sincronización de schema genera todas las tablas
 
-**Objetivo:** Validar que la migración inicial de Prisma crea correctamente todas las tablas del schema.
+**Objetivo:** Validar que el schema de Prisma se sincroniza correctamente y crea todas las tablas esperadas.
+
+**Nota sobre estrategia:** Este proyecto usa `prisma db push` durante desarrollo inicial. La transición a `prisma migrate dev` ocurrirá al estabilizar el schema (ver Sección 12: Estrategia de Migraciones).
 
 **Precondiciones:**
-- Base de datos vacía o en estado de reset
+- Base de datos accesible
 - Schema en `/prisma/schema.prisma` actualizado
 
 **Procedimiento:**
-1. Ejecutar: `npx prisma migrate reset --skip-seed`
-2. Verificar que no hay errores durante la migración
+1. Ejecutar: `npx prisma db push` (o `npx prisma migrate reset --skip-seed` si ya se usa migrate)
+2. Verificar que no hay errores durante la sincronización
 3. Ejecutar test: `npm run test -- src/database/__tests__/schema.test.ts`
 4. Validar existencia de todas las tablas esperadas
 
 **Criterios de aceptación:**
-- ✅ Migración completa sin errores
-- ✅ Todas las tablas existen: users, services, bookings, messages, ratings, payments, etc.
+- ✅ Sincronización completa sin errores
+- ✅ Todas las tablas existen: User, Service, Booking, Message, Rating, Payment, etc. (15 tablas totales)
 - ✅ Campos obligatorios/opcionales según schema
 - ✅ Timestamps (createdAt, updatedAt) están presentes
+- ⚠️ Tabla `_prisma_migrations` es opcional (solo existe si se usa `migrate dev`)
 
 **Ambiente:** Local
 
@@ -246,7 +249,7 @@ Donde:
 **Objetivo:** Validar que los índices de performance están creados y son funcionales.
 
 **Precondiciones:**
-- Migración completada (TC-DB-001-02 pasado)
+- Sincronización de schema completada (TC-DB-001-02 pasado)
 - Base de datos con tablas pobladas
 
 **Procedimiento:**
@@ -668,7 +671,107 @@ El test TC-DB-001-02 espera que exista la tabla `_prisma_migrations` que Prisma 
 
 **Recomendación:** Opción A - Actualizar el test para ser agnóstico al método de sincronización.
 
-### 11.6 Conclusiones
+---
+
+## 12. Estrategia de Migraciones de Base de Datos
+
+### 12.1 Contexto y Decisión
+
+Este proyecto utiliza **Prisma ORM** para gestionar el schema de la base de datos PostgreSQL (Supabase). Prisma ofrece dos enfoques principales para sincronizar el schema:
+
+1. **`prisma migrate dev`**: Crea archivos de migración versionados y mantiene historial en tabla `_prisma_migrations`
+2. **`prisma db push`**: Sincroniza el schema directamente sin crear archivos de migración ni tabla de tracking
+
+### 12.2 Enfoque Actual: `db push` en Desarrollo
+
+**Decisión:** El proyecto actualmente usa `prisma db push` para sincronización en desarrollo.
+
+**Justificación:**
+- **Rapidez en iteración**: Durante la fase inicial de desarrollo, el schema cambia frecuentemente. `db push` permite iterar rápidamente sin generar múltiples archivos de migración.
+- **Simplicidad**: No requiere gestionar archivos de migración durante el prototipado.
+- **Estado del proyecto**: Como se indica en `proposal.md` (línea 139): "NO ejecutar `prisma migrate` aún (el equipo lo hará después de aprobar la propuesta)".
+
+**Implicaciones:**
+- ✅ Schema sincronizado correctamente (15/15 tablas creadas)
+- ✅ Funcionalidad completa de la aplicación
+- ⚠️ No existe tabla `_prisma_migrations` (comportamiento esperado)
+- ⚠️ No hay historial versionado de cambios al schema
+
+### 12.3 Transición a `migrate dev` (Futuro)
+
+**Cuándo migrar:**
+El equipo planea transicionar a `prisma migrate dev` cuando:
+1. ✅ El schema alcance estabilidad (primera versión funcional completada)
+2. ✅ Se apruebe formalmente la propuesta de base de datos
+3. ✅ Se prepare para despliegue en ambientes staging/producción
+
+**Proceso de transición:**
+```bash
+# 1. Asegurar que el schema está sincronizado
+npx prisma db push
+
+# 2. Crear migración inicial "baselining" el estado actual
+npx prisma migrate dev --name init --create-only
+
+# 3. Aplicar la migración (esto creará _prisma_migrations)
+npx prisma migrate deploy
+
+# 4. Verificar estado
+npx prisma migrate status
+```
+
+**Beneficios post-transición:**
+- 📝 Historial completo de cambios al schema
+- 🔄 Migraciones reproducibles en todos los ambientes
+- 🛡️ Rollback seguro a versiones anteriores
+- 📊 Trazabilidad completa de evolución del schema
+
+### 12.4 Impacto en Testing
+
+**Estado actual de TC-DB-001-02:**
+- El test case espera tabla `_prisma_migrations`, causando estado "⚠️ Parcial"
+- **Esto es comportamiento esperado** dado el uso de `db push`
+- **No representa un fallo funcional** del schema o aplicación
+
+**Actualización necesaria:**
+El test TC-DB-001-02 debe actualizarse para:
+1. Verificar existencia de tablas del schema (✅ ya valida correctamente)
+2. Hacer opcional la verificación de `_prisma_migrations`
+3. Adaptar criterios según variable de ambiente o configuración
+
+**Código sugerido para test actualizado:**
+```typescript
+// Verificar tablas del schema (siempre obligatorio)
+expect(tables).toContain('User');
+expect(tables).toContain('Service');
+// ... resto de tablas
+
+// Verificar _prisma_migrations solo si se usa migrate dev
+if (process.env.PRISMA_MIGRATION_MODE !== 'db_push') {
+  expect(tables).toContain('_prisma_migrations');
+}
+```
+
+### 12.5 Recomendaciones
+
+**Para desarrollo actual:**
+1. ✅ Continuar usando `db push` hasta estabilización del schema
+2. ✅ Documentar todos los cambios significativos al schema en commits
+3. ✅ Mantener `schema.prisma` como fuente única de verdad
+
+**Para producción futura:**
+1. ⚠️ **NUNCA** usar `db push` en ambientes de producción
+2. ✅ Usar `prisma migrate deploy` para aplicar migraciones en staging/prod
+3. ✅ Versionar todos los archivos de migración en Git
+4. ✅ Implementar proceso de revisión de migraciones antes de deploy
+
+**Referencias:**
+- Propuesta original: `openspec/changes/archive/2025-11-16-setup-prisma-database-schema/proposal.md`
+- Documentación Prisma: https://www.prisma.io/docs/concepts/components/prisma-migrate
+
+---
+
+## 13. Conclusiones
 
 **✅ ESTADO GENERAL: APTO PARA ARCHIVE**
 
