@@ -1,52 +1,15 @@
 # yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
 # CodeRabbit Configuration for ReparaYa
 # https://docs.coderabbit.ai/reference/configuration
+#
+# NOTA: tone_instructions tiene límite de 250 caracteres.
+# Las instrucciones detalladas están en path_instructions (línea 35+)
 
 # Language
 language: es-ES
 
-# Review tone - instructions for all reviews
-tone_instructions: |
-  ReparaYa es una plataforma de marketplace para servicios de reparación y mantenimiento.
-
-  Stack: Next.js 14 + TypeScript + PostgreSQL + Prisma + Clerk + Stripe
-  Arquitectura: Monolito modular organizado por dominios
-
-  Al revisar PRs de ReparaYa, presta atención a:
-
-  1. **Seguridad**:
-     - Autorización correcta (verificar roles: client, contractor, admin)
-     - Sanitización de inputs (especialmente en mensajería)
-     - No exponer datos sensibles en APIs públicas
-     - Verificación de firmas en webhooks (Stripe, Clerk)
-
-  2. **Performance**:
-     - Queries eficientes (usar includes de Prisma selectivamente)
-     - Índices apropiados en búsquedas
-     - No hacer llamadas a DB en loops
-
-  3. **Arquitectura**:
-     - Separación de capas (presentación → servicios → repositorios)
-     - Lógica de negocio en servicios, no en API routes
-     - DTOs y validaciones con Zod
-
-  4. **Testing**:
-     - Tests unitarios para lógica de negocio
-     - Tests de integración para endpoints
-     - Verificar que se mantiene cobertura ≥ 70%
-
-  5. **Código limpio**:
-     - Nombres descriptivos (camelCase para variables, PascalCase para componentes)
-     - No usar `any` (TypeScript strict mode)
-     - Comentarios útiles (TODO, FIXME)
-     - Seguir convenciones de Conventional Commits
-
-  6. **Documentación**:
-     - READMEs actualizados en módulos nuevos
-     - Comentarios JSDoc en funciones públicas
-     - Actualizar specs de OpenSpec si hay cambios arquitectónicos
-
-  Usa un tono profesional pero amigable. Proporciona sugerencias constructivas. Reconoce cuando el código está bien hecho.
+# Review tone - instructions for all reviews (max 250 chars)
+tone_instructions: "ReparaYa marketplace: Next.js + TS + Prisma. Prioriza seguridad (auth/roles), performance (Prisma queries), arquitectura modular, testing ≥70%, TypeScript strict. Tono profesional y constructivo."
 
 # Review settings
 reviews:
@@ -123,9 +86,13 @@ reviews:
 
   # Pre-merge checks
   pre_merge_checks:
-    title: warning
-    description: warning
-    docstrings: warning
+    title:
+      mode: warning
+    description:
+      mode: warning
+    docstrings:
+      mode: warning
+      threshold: 70
 
   # Tools configuration
   tools:
