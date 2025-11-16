@@ -6,12 +6,14 @@ The system SHALL provide an Availability model in the Prisma schema with the fol
 - Primary key `id` as UUID
 - Foreign key `serviceId` linking to Service (N:1 relationship)
 - Optional foreign key `bookingId` linking to Booking (1:1 when booked)
-- Time fields: `date` (DateTime), `startTime` (DateTime), `endTime` (DateTime)
+- Time fields: `date` (DATE - date-only, no time component), `startTime` (DateTime), `endTime` (DateTime)
 - Status enum: `status` (AVAILABLE, BOOKED, BLOCKED)
 - Audit fields: `createdAt`, `updatedAt`
 - Relations: `service`, `booking` (optional)
 - Composite index on `serviceId + date + status` for efficient availability queries
 - Index on `bookingId` for reverse lookup
+
+**Note:** The `date` field is DATE type (not DateTime) to store only the calendar date. Time-of-day information is stored separately in `startTime` and `endTime` as DateTime fields.
 
 #### Scenario: Contractor publishes availability slots
 - **WHEN** a contractor creates availability for a service

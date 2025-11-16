@@ -24,16 +24,16 @@ ReparaYa es un **marketplace de servicios locales** (plomería, electricidad, li
 
 ## Las 10 Entidades Más Críticas
 
-1. **USER**: Almacena clientes, contratistas, admins
-2. **CONTRACTOR_PROFILE**: Extiende datos de contratistas (cobertura, recargos)
-3. **SERVICE**: Servicios publicados (precio base, descripción, fotos)
-4. **RESERVATION**: El núcleo - vincula cliente, contratista, servicio, dirección y estado
-5. **PAYMENT**: Transacciones de pago (anticipos, liquidaciones)
-6. **REVIEW**: Calificaciones y reseñas
-7. **DISPUTE**: Gestión de conflictos
-8. **MESSAGE**: Chat cliente-contratista
-9. **SERVICE_SCHEDULE**: Horarios de disponibilidad
-10. **ADDRESS**: Direcciones de entrega
+1. **User**: Almacena clientes, contratistas, admins
+2. **ContractorProfile**: Extiende datos de contratistas (verificación, Stripe Connect)
+3. **Service**: Servicios publicados (precio base, descripción, imágenes)
+4. **Booking**: El núcleo - vincula cliente, contratista, servicio, dirección y estado
+5. **Payment**: Transacciones de pago (anticipos, liquidaciones, reembolsos)
+6. **Rating**: Calificaciones y reseñas
+7. **Dispute**: Gestión de conflictos
+8. **Message**: Chat cliente-contratista
+9. **Availability**: Horarios de disponibilidad del servicio
+10. **Address**: Direcciones de servicio
 
 ## Flujo de Dinero (Ejemplo Práctico)
 
@@ -62,25 +62,25 @@ CLIENTE PAGA $1,265 MXN
     - TOTAL: $315 (~25% del precio público)
 ```
 
-## Estados de Reserva (Máquina de Estados)
+## Estados de Booking (Máquina de Estados)
 
 ```
-CREATED (sin pagar)
-  ↓ [pago exitoso]
-ON_ROUTE (contratista en ruta)
+PENDING_PAYMENT (recién creada, esperando anticipo)
+  ↓ [pago exitoso del anticipo]
+CONFIRMED (pagada, programada)
+  ↓ [contratista en ruta]
+ON_ROUTE
   ↓ [llega al sitio]
 ON_SITE
   ↓ [comienza servicio]
 IN_PROGRESS
-  ↓ [termina servicio]
+  ↓ [termina servicio y cliente paga liquidación]
 COMPLETED ← [cliente puede calificar aquí]
   ↓ [si hay problema]
 DISPUTED (investigación admin)
-  ↓ [resolución]
-RESOLVED_UPHOLD_CLIENT o RESOLVED_UPHOLD_CONTRACTOR
 
 O en cualquier momento antes de COMPLETED:
-→ CANCELED (con posible penalización)
+→ CANCELLED (con posible penalización)
 ```
 
 ## 7 Reglas de Negocio Clave
@@ -95,20 +95,20 @@ O en cualquier momento antes de COMPLETED:
 | **BR-006** | Facturación | Comprobantes según LFPDPPP | Cumplimiento legal |
 | **BR-007** | KYC/Verificación | RFC + datos bancarios obligatorios | Seguridad de payouts |
 
-## Campos Monetarios en RESERVATION (El Corazón Financiero)
+## Campos Monetarios en Booking (El Corazón Financiero)
 
 ```
-price_base_B: $1,000 (lo que establece el contratista)
-    ↓ [aplica recargo de ubicación]
-price_base_adjusted_Bp: $1,100 (B × 1.10)
-    ↓ [aplica recargo de plataforma]
-price_public_P: $1,265 (Bp × 1.15)
+basePrice: $1,000 (lo que establece el contratista en Service)
+    ↓ [puede incluir ajustes]
+finalPrice: $1,000 (precio final acordado)
     ↓ [divide en dos pagos]
-    ├─→ anticipo_amount: $253
-    └─→ liquidacion_amount: $1,012
+    ├─→ anticipoAmount: $200 (20% del finalPrice)
+    ├─→ liquidacionAmount: $800 (80% del finalPrice)
+    ├─→ comisionAmount: $150 (15% del basePrice - para la plataforma)
+    └─→ contractorPayoutAmount: $850 (lo que recibe el contratista)
 ```
 
-**Crítico:** BR-002 dice que la comisión se aplica sobre **B, no sobre P**. Esto protege rentabilidad del contratista.
+**Crítico:** La comisión se aplica sobre el basePrice. El contratista recibe `basePrice - comisionAmount` después de completar el servicio.
 
 ## 15+ Índices Críticos
 

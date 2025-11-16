@@ -174,12 +174,10 @@ else
     echo "  - La contraseña esté URL-encoded si tiene caracteres especiales"
     echo "  - Las URLs sean exactamente las del Dashboard de Supabase"
     echo ""
-    echo "Más información en: SUPABASE_SETUP.md"
 fi
 
 echo ""
 echo -e "${BLUE}📚 Archivos importantes:${NC}"
 echo "  - .env.local (actualizado con credenciales)"
 echo "  - .env.local.backup.* (backup del archivo anterior)"
-echo "  - SUPABASE_SETUP.md (guía completa)"
 echo ""

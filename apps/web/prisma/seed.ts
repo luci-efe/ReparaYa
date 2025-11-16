@@ -16,6 +16,30 @@ async function main() {
   console.log('🌱 Starting database seed...');
 
   // ========================================
+  // GUARDAS DE SEGURIDAD: Prevenir ejecución accidental en producción
+  // ========================================
+  if (process.env.NODE_ENV === 'production') {
+    console.error('❌ ABORTED: Seed cannot run in production (NODE_ENV=production)');
+    console.error('   This would wipe all production data!');
+    process.exit(1);
+  }
+
+  if (process.env.SEED_ALLOW_DATA_WIPE !== 'true') {
+    console.error('❌ ABORTED: Missing required environment variable');
+    console.error('   To confirm you want to WIPE ALL DATA, set:');
+    console.error('   SEED_ALLOW_DATA_WIPE=true npm run prisma:seed');
+    console.error('');
+    console.error('   Current environment:');
+    console.error(`   - NODE_ENV: ${process.env.NODE_ENV || 'undefined'}`);
+    console.error(`   - SEED_ALLOW_DATA_WIPE: ${process.env.SEED_ALLOW_DATA_WIPE || 'undefined'}`);
+    process.exit(1);
+  }
+
+  console.log('⚠️  SAFETY CHECKS PASSED - Proceeding with data wipe');
+  console.log(`   NODE_ENV: ${process.env.NODE_ENV || 'undefined'}`);
+  console.log('');
+
+  // ========================================
   // 1. Limpiar datos existentes (solo en dev!)
   // ========================================
   console.log('🗑️  Cleaning existing data...');
