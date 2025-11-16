@@ -168,56 +168,197 @@ ReparaYa/
 
 ---
 
-## Setup Local
+## Configuración del Entorno Local
+
+Esta sección te guiará paso a paso para configurar el proyecto ReparaYa en tu máquina local, desde la clonación del repositorio hasta ejecutar la aplicación.
 
 ### Prerrequisitos
 
-- [Node.js](https://nodejs.org/) >= 20
-- [PostgreSQL](https://www.postgresql.org/) >= 15
-- [Git](https://git-scm.com/)
-- Cuentas en:
-  - [Clerk](https://clerk.com/) (autenticación)
-  - [Stripe](https://stripe.com/) (pagos, modo test)
-  - [AWS](https://aws.amazon.com/) (opcional, para S3/SES/Location)
+Asegúrate de tener instalado:
 
-### Instalación
+- **[Node.js](https://nodejs.org/)** >= 20
+- **[PostgreSQL](https://www.postgresql.org/)** >= 15
+- **[Git](https://git-scm.com/)**
 
-1. **Clonar el repositorio**
-   ```bash
-   git clone https://github.com/tu-usuario/reparaya.git
-   cd reparaya
-   ```
+### Cuentas necesarias (para funcionalidades completas)
 
-2. **Instalar dependencias**
-   ```bash
-   cd apps/web
-   npm install
-   ```
+- **[Clerk](https://clerk.com/)** - Autenticación (plan gratuito disponible)
+- **[Stripe](https://stripe.com/)** - Pagos en modo test (no requiere verificación)
+- **[AWS](https://aws.amazon.com/)** - S3, SES, Location Service (opcional para desarrollo básico)
 
-3. **Configurar variables de entorno**
-   ```bash
-   cp .env.example .env
-   # Editar .env con tus credenciales
-   ```
+---
 
-4. **Configurar base de datos**
-   ```bash
-   # Crear base de datos PostgreSQL
-   createdb reparaya_dev
+### Guía de Instalación
 
-   # Ejecutar migraciones (cuando estén disponibles)
-   npx prisma migrate dev
+#### 1. Clonar el repositorio
 
-   # Seed de datos de prueba (opcional)
-   npm run prisma:seed
-   ```
+```bash
+git clone https://github.com/tu-usuario/reparaya.git
+cd reparaya
+```
 
-5. **Ejecutar en desarrollo**
-   ```bash
-   npm run dev
-   ```
+#### 2. Configurar variables de entorno
 
-   La aplicación estará disponible en [http://localhost:3000](http://localhost:3000)
+El proyecto utiliza variables de entorno para credenciales y configuración. **Nunca subas archivos `.env.local` al repositorio.**
+
+```bash
+cd apps/web
+cp .env.example .env.local
+```
+
+Abre `.env.local` en tu editor y completa las variables con tus credenciales:
+
+```bash
+# Mínimas para desarrollo básico:
+DATABASE_URL="postgresql://user:password@localhost:5432/reparaya_dev?schema=public"
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY="pk_test_..." # Obtener de Clerk Dashboard
+CLERK_SECRET_KEY="sk_test_..."
+STRIPE_SECRET_KEY="sk_test_..." # Obtener de Stripe Dashboard
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY="pk_test_..."
+
+# AWS (opcional, para S3/SES/Location)
+AWS_REGION="us-west-2"
+AWS_ACCESS_KEY_ID="AKIA..."
+AWS_SECRET_ACCESS_KEY="..."
+AWS_S3_BUCKET_MEDIA="reparaya-media-dev"
+```
+
+**Tip**: El archivo `.env.example` incluye comentarios detallados sobre cada variable y enlaces a los dashboards donde obtener las credenciales.
+
+#### 3. Instalar dependencias
+
+```bash
+npm install
+```
+
+Este comando instalará todas las dependencias del proyecto definidas en `package.json`.
+
+#### 4. Configurar base de datos
+
+```bash
+# Crear base de datos PostgreSQL
+createdb reparaya_dev
+
+# Ejecutar migraciones de Prisma (cuando estén disponibles)
+npx prisma migrate dev
+
+# (Opcional) Seed de datos de prueba
+npm run prisma:seed
+```
+
+**Nota**: Si no tienes migraciones aún, este paso puede fallar. En ese caso, continúa con el siguiente paso.
+
+#### 5. Ejecutar el servidor de desarrollo
+
+```bash
+npm run dev
+```
+
+La aplicación estará disponible en **[http://localhost:3000](http://localhost:3000)**.
+
+---
+
+### Flujo de Trabajo con Ramas
+
+ReparaYa sigue un flujo de desarrollo basado en ramas:
+
+```
+main (producción) ← dev (integración) ← feature/nombre-descriptivo (tu trabajo)
+```
+
+#### Crear una nueva rama para tu funcionalidad
+
+```bash
+# Asegúrate de estar en 'dev' y tener los últimos cambios
+git checkout dev
+git pull origin dev
+
+# Crea tu rama de feature
+git checkout -b feature/nombre-descriptivo
+```
+
+#### Desarrollar y commitear cambios
+
+Sigue las convenciones de [Conventional Commits](https://www.conventionalcommits.org/):
+
+```bash
+git add .
+git commit -m "feat: descripción breve del cambio"
+```
+
+Tipos de commits:
+- `feat:` - Nueva funcionalidad
+- `fix:` - Corrección de bug
+- `docs:` - Cambios en documentación
+- `test:` - Agregar o actualizar tests
+- `refactor:` - Refactorización de código
+- `chore:` - Tareas de mantenimiento
+
+#### Crear Pull Request
+
+```bash
+# Subir tu rama al repositorio remoto
+git push origin feature/nombre-descriptivo
+```
+
+Luego, en GitHub:
+1. Crea un Pull Request hacia la rama `dev` (no hacia `main`)
+2. **CodeRabbit** revisará automáticamente tu código
+3. Espera la aprobación y que CI pase
+4. Haz merge a `dev`
+
+---
+
+### Herramientas de IA y Automatización
+
+Este proyecto utiliza herramientas de IA para mejorar la calidad del código:
+
+#### CodeRabbit (Revisor Automático de PRs)
+
+- Revisa **automáticamente** todos los PRs hacia `dev`
+- Proporciona sugerencias de seguridad, performance y buenas prácticas
+- Configuración en `.coderabbit.yaml`
+- Ver [configuración de CodeRabbit](./.coderabbit.yaml)
+
+#### OpenSpec (Framework de Especificaciones)
+
+- Define la arquitectura y contratos de cada módulo
+- Las especificaciones están en `/openspec/specs/`
+- **Importante**: Lee `openspec/project.md` antes de trabajar en nuevas features
+- Usa `/openspec:proposal` para cambios arquitectónicos
+
+#### Claude Code (Asistente de Desarrollo)
+
+- Lee las instrucciones en `CLAUDE.md` para interactuar con Claude Code
+- Claude puede ayudarte con implementación, testing y documentación
+
+---
+
+### Verificar que todo funciona
+
+Ejecuta los siguientes comandos para asegurar que tu entorno está correctamente configurado:
+
+```bash
+# Linter (debe pasar sin errores)
+npm run lint
+
+# Type check (debe pasar sin errores)
+npm run type-check
+
+# Tests (debe pasar incluyendo smoke test)
+npm run test
+
+# Build (debe compilar correctamente)
+npm run build
+```
+
+Si todos los comandos pasan sin errores, ¡estás listo para desarrollar! 🎉
+
+---
+
+## Setup Local (Referencia Rápida)
+
+Para desarrolladores experimentados, aquí está la versión resumida:
 
 ---
 
@@ -404,13 +545,52 @@ git push origin main
 
 Este es un proyecto académico de la materia de Ingeniería de Software.
 
-### Guidelines
+### 🔴 IMPORTANTE: Política de Testing Obligatorio
 
-1. Leer [`CLAUDE.md`](./CLAUDE.md) y [`openspec/project.md`](./openspec/project.md)
-2. Seguir convenciones de código y commits
-3. Escribir tests para nuevas funcionalidades
-4. Actualizar documentación relevante
-5. Asegurar que CI pasa antes de solicitar merge
+**TODO el código debe tener tests. Sin excepciones.**
+
+- ✅ Cobertura mínima: **70%** en módulos core
+- ✅ Tests para features, cambios de DB, Terraform, DevOps, configuración
+- ✅ Documentar casos de prueba en `/docs/md/STP-ReparaYa.md` ANTES de implementar
+- ✅ NO se puede mergear sin que todos los tests pasen
+
+### Guía Completa de Contribución
+
+**Lee [`CONTRIBUTING.md`](./CONTRIBUTING.md)** para la guía completa (compatible con Claude Code, GitHub Copilot y otros asistentes de IA).
+
+### Quick Guidelines
+
+1. **Leer documentación clave**:
+   - [`CONTRIBUTING.md`](./CONTRIBUTING.md) - Guía completa para desarrolladores
+   - [`CLAUDE.md`](./CLAUDE.md) - Instrucciones para Claude Code
+   - [`openspec/project.md`](./openspec/project.md) - Contexto del proyecto
+   - [`openspec/README.md`](./openspec/README.md) - Workflow de OpenSpec
+
+2. **Crear feature branch desde `dev`**:
+   ```bash
+   git checkout dev && git pull origin dev
+   git checkout -b feature/nombre-descriptivo
+   ```
+
+3. **Para cambios significativos, crear propuesta OpenSpec**:
+   - DEBE incluir sección "Testing Plan"
+   - Actualizar STP ANTES de implementar
+   - Ver ejemplos en `CONTRIBUTING.md`
+
+4. **Escribir tests** (cobertura ≥ 70%):
+   ```bash
+   npm run test              # Ejecutar tests
+   npm run test:coverage     # Verificar cobertura
+   npm run lint              # Linter
+   npm run type-check        # TypeScript
+   ```
+
+5. **Crear PR hacia `dev`**:
+   - El template de PR se autocompleta con checklist
+   - CodeRabbit revisará automáticamente
+   - Requiere al menos 1 aprobación humana
+
+6. **Asegurar CI/CD pasa completamente** antes de merge
 
 ---
 
