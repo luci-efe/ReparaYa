@@ -37,11 +37,15 @@ jobs:
       - name: Run type check
         run: npm run type-check
 
+      - name: Generate Prisma Client
+        run: npm run prisma:generate
+
       - name: Run tests
         run: npm run test
         env:
-          # Add test environment variables if needed
+          # Test environment variables
           NODE_ENV: test
+          DATABASE_URL: "postgresql://test:test@localhost:5432/test_db"
 
       - name: Upload coverage
         if: success()

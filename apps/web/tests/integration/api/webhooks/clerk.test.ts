@@ -13,6 +13,7 @@ jest.mock("@/lib/db", () => ({
     user: {
       upsert: jest.fn(),
       update: jest.fn(),
+      updateMany: jest.fn(),
     },
   },
 }));
@@ -65,12 +66,12 @@ describe("POST /api/webhooks/clerk", () => {
       process.env.CLERK_WEBHOOK_SECRET = originalSecret;
     });
 
-    it("debe retornar 400 si faltan headers svix", async () => {
+    it("debe retornar 401 si faltan headers svix", async () => {
       const req = createMockRequest({}, {});
       const response = await POST(req);
       const data = await response.json();
 
-      expect(response.status).toBe(400);
+      expect(response.status).toBe(401);
       expect(data.error).toBe("Missing svix headers");
     });
 
@@ -270,13 +271,11 @@ describe("POST /api/webhooks/clerk", () => {
     it("debe hacer soft delete (status = BLOCKED)", async () => {
       mockVerify.mockReturnValue(mockUserDeletedEvent);
 
-      const mockUser = {
-        id: "uuid-123",
-        clerkUserId: "user_clerk_123",
-        status: "BLOCKED",
+      const mockResult = {
+        count: 1,
       };
 
-      (db.user.update as jest.Mock).mockResolvedValue(mockUser);
+      (db.user.updateMany as jest.Mock).mockResolvedValue(mockResult);
 
       const req = createMockRequest(mockUserDeletedEvent, {
         "svix-id": "msg_789",
@@ -291,7 +290,7 @@ describe("POST /api/webhooks/clerk", () => {
       expect(data.success).toBe(true);
       expect(data.eventType).toBe("user.deleted");
 
-      expect(db.user.update).toHaveBeenCalledWith({
+      expect(db.user.updateMany).toHaveBeenCalledWith({
         where: { clerkUserId: "user_clerk_123" },
         data: {
           status: "BLOCKED",

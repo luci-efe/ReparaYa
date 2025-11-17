@@ -450,8 +450,8 @@ Según las **mejores prácticas oficiales de Clerk**, este módulo se implementa
 ## Open Questions
 
 1. **¿Queremos permitir OAuth providers (Google, GitHub)?**
-   - Recomendación: No en MVP, agregar como feature futura
-   - Decisión pendiente del equipo
+   - **Implementado:** Sí, Google y Facebook OAuth habilitados (TC-AUTH-002, 003, 005, 006 PASS)
+   - Los tests manuales confirmaron que ambos providers funcionan correctamente
 
 2. **¿Cómo manejamos el rol inicial del usuario?**
    - Opción A: Usuario elige rol en sign-up (requiere custom sign-up form)

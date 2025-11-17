@@ -48,12 +48,13 @@ export async function POST(req: NextRequest) {
         level: "WARN",
         service: "clerk-webhook",
         error: "Missing svix headers",
+        ip: req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || "unknown",
         timestamp: new Date().toISOString(),
       })
     );
     return NextResponse.json(
       { error: "Missing svix headers" },
-      { status: 400 }
+      { status: 401 }
     );
   }
 
@@ -77,6 +78,7 @@ export async function POST(req: NextRequest) {
         level: "WARN",
         service: "clerk-webhook",
         error: "Invalid webhook signature",
+        ip: req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || "unknown",
         timestamp: new Date().toISOString(),
       })
     );
@@ -188,8 +190,8 @@ export async function POST(req: NextRequest) {
       case "user.deleted": {
         const { id } = evt.data;
 
-        // Soft delete: marcar como BLOCKED en lugar de eliminar
-        const user = await db.user.update({
+        // Soft delete idempotente: marcar como BLOCKED si existe
+        const result = await db.user.updateMany({
           where: { clerkUserId: id },
           data: {
             status: "BLOCKED",
@@ -202,8 +204,8 @@ export async function POST(req: NextRequest) {
             service: "clerk-webhook",
             eventType: "user.deleted",
             clerkUserId: id,
-            userId: user.id,
-            action: "soft_deleted",
+            updatedCount: result.count,
+            action: result.count > 0 ? "soft_deleted" : "already_absent",
             timestamp: new Date().toISOString(),
           })
         );
