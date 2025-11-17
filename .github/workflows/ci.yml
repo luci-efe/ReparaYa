@@ -55,11 +55,15 @@ jobs:
 
       - name: Generate Prisma Client
         run: npm run prisma:generate
+        env:
+          DATABASE_URL: "postgresql://test:test@localhost:5432/test_db"
+          DIRECT_URL: "postgresql://test:test@localhost:5432/test_db"
 
       - name: Setup test database schema
         run: npx prisma db push --accept-data-loss
         env:
           DATABASE_URL: "postgresql://test:test@localhost:5432/test_db"
+          DIRECT_URL: "postgresql://test:test@localhost:5432/test_db"
 
       - name: Run tests
         run: npm run test
@@ -67,6 +71,7 @@ jobs:
           # Test environment variables
           NODE_ENV: test
           DATABASE_URL: "postgresql://test:test@localhost:5432/test_db"
+          DIRECT_URL: "postgresql://test:test@localhost:5432/test_db"
 
       - name: Upload coverage
         if: success()
@@ -105,6 +110,7 @@ jobs:
         env:
           # Dummy values for build (will be replaced in Vercel)
           DATABASE_URL: "postgresql://dummy:dummy@localhost:5432/dummy"
+          DIRECT_URL: "postgresql://dummy:dummy@localhost:5432/dummy"
           NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: "pk_test_dummy"
           CLERK_SECRET_KEY: "sk_test_dummy"
           STRIPE_SECRET_KEY: "sk_test_dummy"
