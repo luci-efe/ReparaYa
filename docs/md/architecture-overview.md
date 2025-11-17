@@ -73,7 +73,7 @@ ReparaYa se despliega como un **monolito modular**:
 |------------|------------|-----------|
 | Frontend | Next.js + React + TypeScript | UI responsive |
 | Backend | Next.js API Routes + TypeScript | Lógica de negocio |
-| Base de datos | PostgreSQL (Neon/Vercel Postgres) | Persistencia |
+| Base de datos | PostgreSQL (Supabase) | Persistencia |
 | ORM | Prisma | Acceso a datos tipado |
 | Autenticación | Clerk | Identidad y sesiones |
 | Pagos | Stripe (Checkout + Connect) | Anticipos y payouts |

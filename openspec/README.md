@@ -47,12 +47,15 @@ Esto crea una propuesta en `openspec/changes/NNN-nombre-cambio/` con:
 - `tasks.md` - Tareas de implementación
 - Specs actualizadas/nuevas si aplica
 
-**IMPORTANTE:** El proposal debe incluir:
+**🔴 CRÍTICO:** El proposal debe incluir:
 - ✅ Plan de implementación técnico
-- ✅ **Plan de testing (OBLIGATORIO)**
-  - Casos de prueba a agregar al STP
-  - Tipo de pruebas (unitarias, integración, E2E)
-  - Criterios de aceptación
+- ✅ **Plan de testing (OBLIGATORIO - SIN EXCEPCIONES)**
+  - Casos de prueba a agregar al STP (IDs: `TC-RF-XXX-YY`, `TC-RNF-XXX-YY`, `TC-BR-XXX-YY`)
+  - Tipo de pruebas (unitarias, integración, E2E, performance, seguridad)
+  - Criterios de aceptación (cobertura ≥ 70%, performance, seguridad)
+  - Estrategia de implementación (archivos de test, mocks, fixtures)
+
+**ESTO APLICA A TODO:** features, cambios de DB, Terraform, DevOps, configuraciones
 
 ### 2. Documentar Testing en STP
 
@@ -105,12 +108,43 @@ Cuando el cambio está completamente implementado y **todos los tests pasan**:
 
 Esto archiva el cambio y actualiza `openspec/project.md` si es necesario.
 
-**Criterios para archivar:**
-- ✅ Código implementado
-- ✅ Tests escritos y pasando
-- ✅ STP actualizado con resultados
+**🔴 Criterios OBLIGATORIOS para archivar (Definition of Done):**
+- ✅ Código implementado completamente
+- ✅ Tests escritos y **TODOS pasando** (0 failures)
+- ✅ Cobertura de código ≥ 70% en módulos core
+- ✅ STP actualizado con:
+  - Todos los casos de prueba documentados
+  - Resultados de ejecución registrados
+  - Issues encontrados resueltos
 - ✅ PR mergeado a dev
-- ✅ CI/CD passing
+- ✅ CI/CD **completamente en verde** (build, linter, tests)
+- ✅ Performance cumple objetivos (si aplica: P95/P99)
+- ✅ Pruebas de seguridad pasadas (autenticación, autorización, sanitización)
+
+**NO SE PUEDE ARCHIVAR SI ALGUNO DE ESTOS CRITERIOS NO SE CUMPLE**
+
+## Qué Se Debe Testear
+
+**TODO requiere pruebas. Sin excepciones.**
+
+| Tipo de Cambio | Pruebas Requeridas |
+|----------------|-------------------|
+| Nueva feature | Unit + Integration + E2E |
+| Cambio de schema DB | Tests de migración + integridad de datos |
+| API endpoint | Integration tests + tests de autenticación |
+| Infraestructura (Terraform) | `terraform validate` + `terraform plan` + smoke tests |
+| Cambio DevOps (CI/CD) | Validación del pipeline en PR |
+| Cambio de seguridad | Security tests + penetration tests |
+| Optimización de performance | k6 load tests + benchmarks (P95/P99) |
+| Bug fix | Regression test que reproduzca el bug |
+| Configuración | Tests de que la config funciona correctamente |
+
+**Ejemplos concretos:**
+- **Feature nueva**: auth module → tests unitarios de servicios + integration tests de API + E2E de login flow
+- **Schema DB**: nueva tabla `bookings` → tests de migración up/down + tests de constraints + tests de datos
+- **Terraform**: nuevo bucket S3 → `terraform validate` + `terraform plan` en CI + smoke test de subir archivo
+- **CI/CD**: nuevo step de linting → PR debe ejecutar el nuevo step exitosamente
+- **Performance**: optimizar búsqueda → k6 test que valide P95 ≤ 1.2s
 
 ## Ejemplos de Uso
 
@@ -182,13 +216,18 @@ Cobertura: 75% ✅
 ## Relación con Documentación Formal
 
 Las specs de OpenSpec son **documentación técnica viva** que complementa:
-- **SRS** (`docs/md/SRS.md`): Requisitos de negocio y funcionales
-- **SDD** (`docs/md/SDD.md`): Diseño arquitectónico detallado
-- **STP** (`docs/md/STP.md`): Plan de pruebas
+- **SRS** (docs/md) - Requisitos de negocio y funcionales (baseline congelada, NO leer)
+- **SDD** (docs/md) - Diseño arquitectónico detallado (baseline congelada, NO leer)
+- **STP** (`docs/md/STP-ReparaYa.md`) - Plan de pruebas (**DEBE actualizarse**)
+
+**🔴 IMPORTANTE:**
+- La información del SRS y SDD ya está consolidada en `openspec/project.md` y specs de módulos
+- Los agentes NO deben leer archivos grandes de `/docs/md/` (excepto el STP)
+- El STP es el ÚNICO archivo de `/docs/md/` que se actualiza regularmente
 
 **Flujo:**
 ```
-SRS (qué) → OpenSpec (cómo, interfaces) → Código (implementación) → STP (validación)
+[SRS baseline] → openspec/project.md + specs/* (fuente de verdad) → Código → STP (validación)
 ```
 
 ## Comandos Disponibles

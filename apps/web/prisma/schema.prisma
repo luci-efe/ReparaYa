@@ -1,0 +1,346 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id                  String                @id @default(uuid())
+  clerkUserId         String                @unique
+  email               String                @unique
+  firstName           String
+  lastName            String
+  phone               String?
+  avatarUrl           String?
+  role                UserRole              @default(CLIENT)
+  status              UserStatus            @default(ACTIVE)
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
+  addresses           Address[]
+  adminAuditLogs      AdminAuditLog[]
+  clientBookings      Booking[]             @relation("ClientBookings")
+  contractorBookings  Booking[]             @relation("ContractorBookings")
+  bookingStateChanges BookingStateHistory[]
+  contractorProfile   ContractorProfile?
+  disputesOpened      Dispute[]             @relation("DisputeOpenedBy")
+  disputesResolved    Dispute[]             @relation("DisputeResolvedBy")
+  messagesSent        Message[]
+  ratings             Rating[]
+  services            Service[]
+
+  @@index([clerkUserId])
+  @@index([email])
+  @@index([role, status])
+}
+
+model ContractorProfile {
+  id                     String   @id @default(uuid())
+  userId                 String   @unique
+  businessName           String
+  description            String
+  specialties            String[]
+  verified               Boolean  @default(false)
+  verificationDocuments  Json?
+  stripeConnectAccountId String?
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+  user                   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([verified])
+}
+
+model Address {
+  id           String   @id @default(uuid())
+  userId       String
+  addressLine1 String
+  addressLine2 String?
+  city         String
+  state        String
+  postalCode   String
+  country      String   @default("MX")
+  lat          Decimal? @db.Decimal(10, 8)
+  lng          Decimal? @db.Decimal(11, 8)
+  isDefault    Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isDefault])
+}
+
+model Category {
+  id          String     @id @default(uuid())
+  name        String
+  description String
+  slug        String     @unique
+  iconUrl     String?
+  parentId    String?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  parent      Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children    Category[] @relation("CategoryHierarchy")
+  services    Service[]
+
+  @@index([slug])
+  @@index([parentId])
+}
+
+model Service {
+  id               String              @id @default(uuid())
+  contractorId     String
+  categoryId       String
+  title            String
+  description      String
+  basePrice        Decimal             @db.Decimal(12, 2)
+  locationLat      Decimal             @db.Decimal(10, 8)
+  locationLng      Decimal             @db.Decimal(11, 8)
+  locationAddress  String
+  coverageRadiusKm Int
+  images           String[]
+  status           ServiceStatus       @default(ACTIVE)
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+  availabilities   Availability[]
+  bookings         Booking[]
+  ratings          Rating[]
+  category         Category            @relation(fields: [categoryId], references: [id])
+  contractor       User                @relation(fields: [contractorId], references: [id], onDelete: Cascade)
+  ratingStats      ServiceRatingStats?
+
+  @@index([contractorId])
+  @@index([categoryId, status])
+  @@index([locationLat, locationLng])
+  @@index([status])
+}
+
+model Availability {
+  id        String             @id @default(uuid())
+  serviceId String
+  date      DateTime           @db.Date
+  startTime DateTime
+  endTime   DateTime
+  status    AvailabilityStatus @default(AVAILABLE)
+  bookingId String?            @unique
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
+  booking   Booking?           @relation(fields: [bookingId], references: [id])
+  service   Service            @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  @@index([serviceId, date, status])
+  @@index([bookingId])
+}
+
+model Booking {
+  id                     String                @id @default(uuid())
+  serviceId              String
+  clientId               String
+  contractorId           String
+  availabilityId         String                @unique
+  status                 BookingStatus         @default(PENDING_PAYMENT)
+  scheduledDate          DateTime
+  address                String
+  notes                  String?
+  basePrice              Decimal               @db.Decimal(12, 2)
+  finalPrice             Decimal               @db.Decimal(12, 2)
+  anticipoAmount         Decimal               @db.Decimal(12, 2)
+  liquidacionAmount      Decimal               @db.Decimal(12, 2)
+  comisionAmount         Decimal               @db.Decimal(12, 2)
+  contractorPayoutAmount Decimal               @db.Decimal(12, 2)
+  createdAt              DateTime              @default(now())
+  updatedAt              DateTime              @updatedAt
+  availability           Availability?
+  client                 User                  @relation("ClientBookings", fields: [clientId], references: [id])
+  contractor             User                  @relation("ContractorBookings", fields: [contractorId], references: [id])
+  service                Service               @relation(fields: [serviceId], references: [id])
+  stateHistory           BookingStateHistory[]
+  dispute                Dispute?
+  messages               Message[]
+  payments               Payment[]
+  rating                 Rating?
+
+  @@index([clientId, status])
+  @@index([contractorId, status])
+  @@index([status, scheduledDate])
+  @@index([serviceId])
+}
+
+model BookingStateHistory {
+  id        String        @id @default(uuid())
+  bookingId String
+  fromState BookingStatus
+  toState   BookingStatus
+  changedBy String
+  notes     String?
+  createdAt DateTime      @default(now())
+  booking   Booking       @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  user      User          @relation(fields: [changedBy], references: [id])
+
+  @@index([bookingId, createdAt])
+}
+
+model Payment {
+  id                      String        @id @default(uuid())
+  bookingId               String
+  type                    PaymentType
+  amount                  Decimal       @db.Decimal(12, 2)
+  currency                String        @default("mxn")
+  stripePaymentIntentId   String?       @unique
+  stripeCheckoutSessionId String?       @unique
+  stripeTransferId        String?       @unique
+  status                  PaymentStatus @default(PENDING)
+  metadata                Json?
+  createdAt               DateTime      @default(now())
+  updatedAt               DateTime      @updatedAt
+  booking                 Booking       @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  @@index([bookingId])
+  @@index([type, status])
+  @@index([stripePaymentIntentId])
+}
+
+model ProcessedWebhookEvent {
+  id            String   @id @default(uuid())
+  stripeEventId String   @unique
+  eventType     String
+  processedAt   DateTime @default(now())
+
+  @@index([stripeEventId])
+}
+
+model Message {
+  id        String   @id @default(uuid())
+  bookingId String
+  senderId  String
+  text      String   @db.VarChar(2000)
+  createdAt DateTime @default(now())
+  booking   Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  sender    User     @relation(fields: [senderId], references: [id])
+
+  @@index([bookingId, createdAt])
+}
+
+model Rating {
+  id               String           @id @default(uuid())
+  bookingId        String           @unique
+  serviceId        String
+  clientId         String
+  stars            Int
+  comment          String?          @db.VarChar(500)
+  moderationStatus ModerationStatus @default(PENDING)
+  moderationNotes  String?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  booking          Booking          @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  client           User             @relation(fields: [clientId], references: [id])
+  service          Service          @relation(fields: [serviceId], references: [id])
+
+  @@index([serviceId, moderationStatus])
+  @@index([moderationStatus])
+}
+
+model ServiceRatingStats {
+  serviceId    String   @id
+  average      Decimal  @db.Decimal(3, 2)
+  totalRatings Int      @default(0)
+  updatedAt    DateTime @updatedAt
+  service      Service  @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+}
+
+model Dispute {
+  id              String        @id @default(uuid())
+  bookingId       String        @unique
+  openedBy        String
+  reason          String
+  evidence        Json?
+  status          DisputeStatus @default(OPEN)
+  resolution      String?
+  resolutionNotes String?
+  resolvedBy      String?
+  createdAt       DateTime      @default(now())
+  resolvedAt      DateTime?
+  booking         Booking       @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  openedByUser    User          @relation("DisputeOpenedBy", fields: [openedBy], references: [id])
+  resolvedByUser  User?         @relation("DisputeResolvedBy", fields: [resolvedBy], references: [id])
+
+  @@index([status, createdAt])
+  @@index([bookingId])
+}
+
+model AdminAuditLog {
+  id         String   @id @default(uuid())
+  adminId    String
+  action     String
+  targetType String
+  targetId   String
+  metadata   Json?
+  createdAt  DateTime @default(now())
+  admin      User     @relation(fields: [adminId], references: [id])
+
+  @@index([adminId, createdAt])
+  @@index([targetType, targetId])
+}
+
+enum UserRole {
+  CLIENT
+  CONTRACTOR
+  ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  BLOCKED
+  PENDING_VERIFICATION
+}
+
+enum ServiceStatus {
+  ACTIVE
+  INACTIVE
+  UNDER_REVIEW
+}
+
+enum AvailabilityStatus {
+  AVAILABLE
+  BOOKED
+  BLOCKED
+}
+
+enum BookingStatus {
+  PENDING_PAYMENT
+  CONFIRMED
+  ON_ROUTE
+  ON_SITE
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  DISPUTED
+}
+
+enum PaymentType {
+  ANTICIPO
+  LIQUIDACION
+  REEMBOLSO
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCEEDED
+  FAILED
+  REFUNDED
+}
+
+enum ModerationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum DisputeStatus {
+  OPEN
+  RESOLVED_REFUND_CLIENT
+  RESOLVED_PAYOUT_CONTRACTOR
+  RESOLVED_PARTIAL
+}
