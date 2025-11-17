@@ -55,19 +55,33 @@ El proyecto se desarrolla como parte de una materia universitaria de Ingeniería
 
 ### Documentation Layout
 
-- Documentación oficial en dos formatos:
-  - `/docs/pdf/`
-    - `1. Especificación de Requerimientos de Software (SRS).pdf`
-    - `2. Plan de Gestión del Proyecto de Software (SPMP).pdf`
-    - `3. Software Development Design (SDD).pdf`
-    - Otros PDFs (por ejemplo, WBS, ejemplos de STP, etc.).
-  - `/docs/md/`
-    - `1. Especificación de Requerimientos de Software (SRS).md`
-    - `2. Plan de Gestión del Proyecto de Software (SPMP).md`
-    - `3. Software Development Design (SDD).md`
-- Convención:
-  - Los agentes de IA y OpenSpec deben **leer y modificar** únicamente los `.md` de `/docs/md/`.
-  - Los PDFs en `/docs/pdf/` son referencia “congelada” para la materia (no se tocan desde herramientas automáticas).
+- **Documentación base (referencia congelada - NO leer salvo excepciones)**:
+  - `/docs/pdf/` - Entregables formales en PDF (SRS, SPMP, SDD) para la materia
+  - `/docs/md/` - Versiones markdown de documentos base
+    - `1. Especificación de Requerimientos de Software (SRS).md` (17K)
+    - `2. Plan de Gestión del Proyecto de Software (SPMP).md` (8.8K)
+    - `3. Software Development Design (SDD).md` (68K)
+    - `modelo_datos_reparaya.md` (40K)
+    - `architecture-overview.md` (7.6K)
+    - `RESUMEN_EJECUTIVO.md`, `srs-requirements-table.md`
+
+- **🔴 POLÍTICA DE LECTURA PARA AGENTES DE IA**:
+  - **NUNCA leas** los archivos grandes de `/docs/md/` (SRS, SPMP, SDD, modelo_datos) durante operaciones normales
+  - Estos documentos son **baseline congelada** - su contenido ya está consolidado en:
+    - `openspec/project.md` (este archivo) - Arquitectura, stack, convenciones
+    - `openspec/specs/*/spec.md` - Especificaciones por módulo
+  - **ÚNICA EXCEPCIÓN**: Si necesitas información muy específica que no encuentres en `openspec/`, pregunta al usuario antes de leer archivos grandes
+
+- **Documentación activa (leer/modificar regularmente)**:
+  - ✅ **`docs/md/STP-ReparaYa.md`** - Plan de pruebas (DEBE actualizarse con cada implementación)
+  - ✅ **`openspec/project.md`** - Este archivo (contexto del proyecto)
+  - ✅ **`openspec/specs/*/spec.md`** - Especificaciones de módulos
+  - ✅ **`openspec/changes/*/`** - Propuestas y cambios evolutivos
+  - ✅ **`CLAUDE.md`** - Instrucciones para Claude Code
+
+- **Convención para modificaciones**:
+  - Los agentes SOLO modifican archivos en `openspec/` y `docs/md/STP-ReparaYa.md`
+  - Los PDFs y otros archivos `.md` en `/docs/md/` son referencia de solo lectura (salvo excepciones justificadas)
 
 ### Code Style
 
@@ -263,8 +277,12 @@ El proyecto se desarrolla como parte de una materia universitaria de Ingeniería
 - Presupuesto AWS:
   - Aproximadamente 100 USD de crédito.
   - Minimizar servicios caros:
-    - Priorizar Vercel + Postgres gestionado (Neon/Prisma Postgres, etc.) para compute/DB.
+    - Priorizar Vercel para compute.
     - Usar AWS principalmente para S3, SES y Location (bajo costo).
+- Base de datos:
+  - PostgreSQL en Supabase (free tier, sin auto-suspend)
+  - Proyecto: https://vmsqbguwjjpusedhapqo.supabase.co
+  - Cambio desde Neon: Supabase evita cold starts que causaban latencias de 3-5s en primera conexión después de 5 min de inactividad
 - Alcance funcional:
   - Enfocarse en flujos principales y en calidad de la experiencia:
     - Búsqueda y reservas.
@@ -314,3 +332,22 @@ El proyecto se desarrolla como parte de una materia universitaria de Ingeniería
   - Motor de especificaciones y asistente de desarrollo:
     - Specs describen comportamiento esperado y requisitos.
     - Claude Code opera dentro del repo siguiendo este `project.md`, los documentos en `/docs/md/` y la estructura de `openspec/`.
+
+## Module Specifications
+
+Las especificaciones de módulos están en `/openspec/specs/`. Cada especificación define requisitos funcionales y no funcionales, interfaces, modelo de datos y plan de testing para su módulo.
+
+### Active Specifications
+
+- **auth** (`/openspec/specs/auth/`):
+  - `auth-clerk-integration` - Integración de Clerk para autenticación, sesiones, roles y sincronización de usuarios
+
+- **users** (`/openspec/specs/users/`) - _Pendiente de definición_
+- **services** (`/openspec/specs/catalog-search/`) - _Pendiente de definición_
+- **booking** (`/openspec/specs/booking-checkout/`) - _Pendiente de definición_
+- **payments** (`/openspec/specs/payments-webhooks/`) - _Pendiente de definición_
+- **messaging** (`/openspec/specs/reservation-lifecycle-messaging/`) - _Pendiente de definición_
+- **ratings** (`/openspec/specs/ratings-reviews/`) - _Pendiente de definición_
+- **admin** (`/openspec/specs/admin-moderation/`) - _Pendiente de definición_
+
+**Nota:** Los specs vacíos se completarán conforme se vayan implementando los módulos siguiendo el flujo de OpenSpec.
