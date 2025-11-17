@@ -1,15 +1,18 @@
 // Mock del repositorio - DEBE IR AL INICIO ANTES DE CUALQUIER IMPORT
-const mockAddressRepository = {
-  create: jest.fn(),
-  update: jest.fn(),
-  delete: jest.fn(),
-  findByUserId: jest.fn(),
-  findById: jest.fn(),
-};
+jest.mock('../repositories/addressRepository', () => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const mockRepo: any = {
+    create: jest.fn(),
+    update: jest.fn(),
+    delete: jest.fn(),
+    findByUserId: jest.fn(),
+    findById: jest.fn(),
+  };
 
-jest.mock('../repositories/addressRepository', () => ({
-  addressRepository: mockAddressRepository,
-}));
+  return {
+    addressRepository: mockRepo,
+  };
+});
 
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import type { Address } from '../types';
@@ -18,12 +21,18 @@ import { Decimal } from '@prisma/client/runtime/library';
 
 // Imports después del mock
 import { addressService } from '../services/addressService';
+import { addressRepository } from '../repositories/addressRepository';
 
-const mockCreate = mockAddressRepository.create as jest.Mock;
-const mockUpdate = mockAddressRepository.update as jest.Mock;
-const mockDelete = mockAddressRepository.delete as jest.Mock;
-const mockFindByUserId = mockAddressRepository.findByUserId as jest.Mock;
-const mockFindById = mockAddressRepository.findById as jest.Mock;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const mockCreate = (addressRepository as any).create;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const mockUpdate = (addressRepository as any).update;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const mockDelete = (addressRepository as any).delete;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const mockFindByUserId = (addressRepository as any).findByUserId;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const mockFindById = (addressRepository as any).findById;
 
 describe('addressService', () => {
   beforeEach(() => {

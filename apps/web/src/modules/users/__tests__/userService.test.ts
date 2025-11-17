@@ -1,31 +1,14 @@
-// Mock de Prisma - DEBE IR AL INICIO
-jest.mock('@prisma/client');
-jest.mock('@/lib/db', () => {
-  const mockPrismaClient = {
-    user: {
-      findUnique: jest.fn(),
-      findMany: jest.fn(),
-      create: jest.fn(),
-      update: jest.fn(),
-      delete: jest.fn(),
-      upsert: jest.fn(),
-    },
-    address: {
-      findUnique: jest.fn(),
-      findMany: jest.fn(),
-      findFirst: jest.fn(),
-      create: jest.fn(),
-      update: jest.fn(),
-      updateMany: jest.fn(),
-      delete: jest.fn(),
-      count: jest.fn(),
-    },
-    $transaction: jest.fn((callback) => callback(mockPrismaClient)),
+// Mock del repositorio - DEBE IR AL INICIO
+jest.mock('../repositories/userRepository', () => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const mockRepo: any = {
+    findById: jest.fn(),
+    update: jest.fn(),
+    getPublicProfile: jest.fn(),
   };
 
   return {
-    prisma: mockPrismaClient,
-    db: mockPrismaClient,
+    userRepository: mockRepo,
   };
 });
 
@@ -35,7 +18,14 @@ import { ZodError } from 'zod';
 
 // Imports después del mock
 import { userService } from '../services/userService';
-import { prisma } from '@/lib/db';
+import { userRepository } from '../repositories/userRepository';
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const mockFindById = (userRepository as any).findById;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const mockUpdate = (userRepository as any).update;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const mockGetPublicProfile = (userRepository as any).getPublicProfile;
 
 describe('userService', () => {
   beforeEach(() => {

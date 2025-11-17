@@ -3,7 +3,10 @@
  * Este mock intercepta todas las llamadas a @prisma/client
  */
 
-export const mockPrismaClient = {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type MockPrismaClient = any;
+
+export const mockPrismaClient: MockPrismaClient = {
   user: {
     findUnique: jest.fn(),
     findMany: jest.fn(),
@@ -21,7 +24,7 @@ export const mockPrismaClient = {
     delete: jest.fn(),
     count: jest.fn(),
   },
-  $transaction: jest.fn((callback) => callback(mockPrismaClient)),
+  $transaction: jest.fn((callback: (client: MockPrismaClient) => unknown) => callback(mockPrismaClient)),
 };
 
 export const PrismaClient = jest.fn(() => mockPrismaClient);

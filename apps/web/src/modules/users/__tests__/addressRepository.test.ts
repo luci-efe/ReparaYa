@@ -1,6 +1,7 @@
 jest.mock('@prisma/client');
 jest.mock('@/lib/db', () => {
-  const mockPrismaClient = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const mockPrismaClient: any = {
     user: {
       findUnique: jest.fn(),
       findMany: jest.fn(),
@@ -19,7 +20,8 @@ jest.mock('@/lib/db', () => {
       delete: jest.fn(),
       count: jest.fn(),
     },
-    $transaction: jest.fn((callback) => callback(mockPrismaClient)),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    $transaction: jest.fn((callback: any) => callback(mockPrismaClient)),
   };
 
   return {
@@ -37,13 +39,20 @@ import { addressRepository } from '../repositories/addressRepository';
 import { AddressNotFoundError, CannotDeleteLastAddressError } from '../errors';
 import { prisma } from '@/lib/db';
 
-const mockCreate = prisma.address.create as jest.Mock;
-const mockUpdate = prisma.address.update as jest.Mock;
-const mockUpdateMany = prisma.address.updateMany as jest.Mock;
-const mockDelete = prisma.address.delete as jest.Mock;
-const mockFindFirst = prisma.address.findFirst as jest.Mock;
-const mockFindMany = prisma.address.findMany as jest.Mock;
-const mockCount = prisma.address.count as jest.Mock;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const mockCreate = prisma.address.create as any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const mockUpdate = prisma.address.update as any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const mockUpdateMany = prisma.address.updateMany as any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const mockDelete = prisma.address.delete as any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const mockFindFirst = prisma.address.findFirst as any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const mockFindMany = prisma.address.findMany as any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const mockCount = prisma.address.count as any;
 
 describe('addressRepository', () => {
   beforeEach(() => {
