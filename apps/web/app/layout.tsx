@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import { ClerkProvider } from "@clerk/nextjs";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -15,11 +16,22 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es">
-      <body className={inter.className}>
-        {/* TODO: Integrar ClerkProvider aquí */}
-        {children}
-      </body>
-    </html>
+    <ClerkProvider
+      appearance={{
+        variables: {
+          colorPrimary: "#2563eb", // blue-600 - Color primario de ReparaYa
+          colorBackground: "#ffffff",
+          colorText: "#1f2937", // gray-800
+        },
+        elements: {
+          formButtonPrimary: "bg-blue-600 hover:bg-blue-700 text-white",
+          card: "shadow-md",
+        },
+      }}
+    >
+      <html lang="es">
+        <body className={inter.className}>{children}</body>
+      </html>
+    </ClerkProvider>
   );
 }

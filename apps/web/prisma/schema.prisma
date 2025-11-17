@@ -1,23 +1,288 @@
-// ========================================
-// ReparaYa - Prisma Database Schema
-// ========================================
-// Marketplace de servicios de reparación y mantenimiento del hogar
-// Stack: PostgreSQL + Prisma + Next.js 14 + TypeScript
-// Integrations: Clerk (Auth) + Stripe (Payments) + AWS (S3, SES, Location)
-
-datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL") // Conexión pooled para runtime (con -pooler)
-  directUrl = env("DIRECT_URL") // Conexión directa para migraciones (sin -pooler)
-}
-
 generator client {
   provider = "prisma-client-js"
 }
 
-// ========================================
-// ENUMS
-// ========================================
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id                  String                @id @default(uuid())
+  clerkUserId         String                @unique
+  email               String                @unique
+  firstName           String
+  lastName            String
+  phone               String?
+  avatarUrl           String?
+  role                UserRole              @default(CLIENT)
+  status              UserStatus            @default(ACTIVE)
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
+  addresses           Address[]
+  adminAuditLogs      AdminAuditLog[]
+  clientBookings      Booking[]             @relation("ClientBookings")
+  contractorBookings  Booking[]             @relation("ContractorBookings")
+  bookingStateChanges BookingStateHistory[]
+  contractorProfile   ContractorProfile?
+  disputesOpened      Dispute[]             @relation("DisputeOpenedBy")
+  disputesResolved    Dispute[]             @relation("DisputeResolvedBy")
+  messagesSent        Message[]
+  ratings             Rating[]
+  services            Service[]
+
+  @@index([clerkUserId])
+  @@index([email])
+  @@index([role, status])
+}
+
+model ContractorProfile {
+  id                     String   @id @default(uuid())
+  userId                 String   @unique
+  businessName           String
+  description            String
+  specialties            String[]
+  verified               Boolean  @default(false)
+  verificationDocuments  Json?
+  stripeConnectAccountId String?
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+  user                   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([verified])
+}
+
+model Address {
+  id           String   @id @default(uuid())
+  userId       String
+  addressLine1 String
+  addressLine2 String?
+  city         String
+  state        String
+  postalCode   String
+  country      String   @default("MX")
+  lat          Decimal? @db.Decimal(10, 8)
+  lng          Decimal? @db.Decimal(11, 8)
+  isDefault    Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isDefault])
+}
+
+model Category {
+  id          String     @id @default(uuid())
+  name        String
+  description String
+  slug        String     @unique
+  iconUrl     String?
+  parentId    String?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  parent      Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children    Category[] @relation("CategoryHierarchy")
+  services    Service[]
+
+  @@index([slug])
+  @@index([parentId])
+}
+
+model Service {
+  id               String              @id @default(uuid())
+  contractorId     String
+  categoryId       String
+  title            String
+  description      String
+  basePrice        Decimal             @db.Decimal(12, 2)
+  locationLat      Decimal             @db.Decimal(10, 8)
+  locationLng      Decimal             @db.Decimal(11, 8)
+  locationAddress  String
+  coverageRadiusKm Int
+  images           String[]
+  status           ServiceStatus       @default(ACTIVE)
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+  availabilities   Availability[]
+  bookings         Booking[]
+  ratings          Rating[]
+  category         Category            @relation(fields: [categoryId], references: [id])
+  contractor       User                @relation(fields: [contractorId], references: [id], onDelete: Cascade)
+  ratingStats      ServiceRatingStats?
+
+  @@index([contractorId])
+  @@index([categoryId, status])
+  @@index([locationLat, locationLng])
+  @@index([status])
+}
+
+model Availability {
+  id        String             @id @default(uuid())
+  serviceId String
+  date      DateTime           @db.Date
+  startTime DateTime
+  endTime   DateTime
+  status    AvailabilityStatus @default(AVAILABLE)
+  bookingId String?            @unique
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
+  booking   Booking?           @relation(fields: [bookingId], references: [id])
+  service   Service            @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  @@index([serviceId, date, status])
+  @@index([bookingId])
+}
+
+model Booking {
+  id                     String                @id @default(uuid())
+  serviceId              String
+  clientId               String
+  contractorId           String
+  availabilityId         String                @unique
+  status                 BookingStatus         @default(PENDING_PAYMENT)
+  scheduledDate          DateTime
+  address                String
+  notes                  String?
+  basePrice              Decimal               @db.Decimal(12, 2)
+  finalPrice             Decimal               @db.Decimal(12, 2)
+  anticipoAmount         Decimal               @db.Decimal(12, 2)
+  liquidacionAmount      Decimal               @db.Decimal(12, 2)
+  comisionAmount         Decimal               @db.Decimal(12, 2)
+  contractorPayoutAmount Decimal               @db.Decimal(12, 2)
+  createdAt              DateTime              @default(now())
+  updatedAt              DateTime              @updatedAt
+  availability           Availability?
+  client                 User                  @relation("ClientBookings", fields: [clientId], references: [id])
+  contractor             User                  @relation("ContractorBookings", fields: [contractorId], references: [id])
+  service                Service               @relation(fields: [serviceId], references: [id])
+  stateHistory           BookingStateHistory[]
+  dispute                Dispute?
+  messages               Message[]
+  payments               Payment[]
+  rating                 Rating?
+
+  @@index([clientId, status])
+  @@index([contractorId, status])
+  @@index([status, scheduledDate])
+  @@index([serviceId])
+}
+
+model BookingStateHistory {
+  id        String        @id @default(uuid())
+  bookingId String
+  fromState BookingStatus
+  toState   BookingStatus
+  changedBy String
+  notes     String?
+  createdAt DateTime      @default(now())
+  booking   Booking       @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  user      User          @relation(fields: [changedBy], references: [id])
+
+  @@index([bookingId, createdAt])
+}
+
+model Payment {
+  id                      String        @id @default(uuid())
+  bookingId               String
+  type                    PaymentType
+  amount                  Decimal       @db.Decimal(12, 2)
+  currency                String        @default("mxn")
+  stripePaymentIntentId   String?       @unique
+  stripeCheckoutSessionId String?       @unique
+  stripeTransferId        String?       @unique
+  status                  PaymentStatus @default(PENDING)
+  metadata                Json?
+  createdAt               DateTime      @default(now())
+  updatedAt               DateTime      @updatedAt
+  booking                 Booking       @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  @@index([bookingId])
+  @@index([type, status])
+  @@index([stripePaymentIntentId])
+}
+
+model ProcessedWebhookEvent {
+  id            String   @id @default(uuid())
+  stripeEventId String   @unique
+  eventType     String
+  processedAt   DateTime @default(now())
+
+  @@index([stripeEventId])
+}
+
+model Message {
+  id        String   @id @default(uuid())
+  bookingId String
+  senderId  String
+  text      String   @db.VarChar(2000)
+  createdAt DateTime @default(now())
+  booking   Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  sender    User     @relation(fields: [senderId], references: [id])
+
+  @@index([bookingId, createdAt])
+}
+
+model Rating {
+  id               String           @id @default(uuid())
+  bookingId        String           @unique
+  serviceId        String
+  clientId         String
+  stars            Int
+  comment          String?          @db.VarChar(500)
+  moderationStatus ModerationStatus @default(PENDING)
+  moderationNotes  String?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  booking          Booking          @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  client           User             @relation(fields: [clientId], references: [id])
+  service          Service          @relation(fields: [serviceId], references: [id])
+
+  @@index([serviceId, moderationStatus])
+  @@index([moderationStatus])
+}
+
+model ServiceRatingStats {
+  serviceId    String   @id
+  average      Decimal  @db.Decimal(3, 2)
+  totalRatings Int      @default(0)
+  updatedAt    DateTime @updatedAt
+  service      Service  @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+}
+
+model Dispute {
+  id              String        @id @default(uuid())
+  bookingId       String        @unique
+  openedBy        String
+  reason          String
+  evidence        Json?
+  status          DisputeStatus @default(OPEN)
+  resolution      String?
+  resolutionNotes String?
+  resolvedBy      String?
+  createdAt       DateTime      @default(now())
+  resolvedAt      DateTime?
+  booking         Booking       @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  openedByUser    User          @relation("DisputeOpenedBy", fields: [openedBy], references: [id])
+  resolvedByUser  User?         @relation("DisputeResolvedBy", fields: [resolvedBy], references: [id])
+
+  @@index([status, createdAt])
+  @@index([bookingId])
+}
+
+model AdminAuditLog {
+  id         String   @id @default(uuid())
+  adminId    String
+  action     String
+  targetType String
+  targetId   String
+  metadata   Json?
+  createdAt  DateTime @default(now())
+  admin      User     @relation(fields: [adminId], references: [id])
+
+  @@index([adminId, createdAt])
+  @@index([targetType, targetId])
+}
 
 enum UserRole {
   CLIENT
@@ -50,7 +315,6 @@ enum BookingStatus {
   ON_SITE
   IN_PROGRESS
   COMPLETED
-  NO_SHOW
   CANCELLED
   DISPUTED
 }
@@ -76,339 +340,7 @@ enum ModerationStatus {
 
 enum DisputeStatus {
   OPEN
-  RESOLVED_UPHOLD_CLIENT
-  RESOLVED_UPHOLD_CONTRACTOR
+  RESOLVED_REFUND_CLIENT
+  RESOLVED_PAYOUT_CONTRACTOR
   RESOLVED_PARTIAL
-}
-
-// ========================================
-// DOMAIN: AUTH & USERS
-// ========================================
-
-model User {
-  id          String     @id @default(uuid())
-  clerkUserId String     @unique // ID de Clerk (ej: user_2xxx...)
-  email       String     @unique
-  firstName   String
-  lastName    String
-  phone       String?
-  avatarUrl   String?
-  role        UserRole   @default(CLIENT)
-  status      UserStatus @default(ACTIVE)
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
-
-  // Relaciones
-  contractorProfile   ContractorProfile? // 1:1 solo si role=CONTRACTOR
-  addresses           Address[] // Direcciones del usuario
-  clientBookings      Booking[]             @relation("ClientBookings")
-  contractorBookings  Booking[]             @relation("ContractorBookings")
-  services            Service[] // Servicios ofrecidos (si es contratista)
-  ratings             Rating[] // Calificaciones dadas
-  messagesSent        Message[] // Mensajes enviados
-  bookingStateChanges BookingStateHistory[] // Cambios de estado realizados
-  disputesOpened      Dispute[]             @relation("DisputeOpenedBy")
-  disputesResolved    Dispute[]             @relation("DisputeResolvedBy")
-  adminAuditLogs      AdminAuditLog[] // Acciones administrativas
-
-  @@index([clerkUserId])
-  @@index([email])
-  @@index([role, status])
-}
-
-model ContractorProfile {
-  id                     String   @id @default(uuid())
-  userId                 String   @unique
-  businessName           String
-  description            String   @db.Text
-  specialties            String[] // Array de categorías/especialidades
-  verified               Boolean  @default(false)
-  verificationDocuments  Json? // S3 keys de documentos KYC
-  stripeConnectAccountId String?
-  createdAt              DateTime @default(now())
-  updatedAt              DateTime @updatedAt
-
-  // Relación
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([verified])
-}
-
-model Address {
-  id           String   @id @default(uuid())
-  userId       String
-  addressLine1 String
-  addressLine2 String?
-  city         String
-  state        String
-  postalCode   String
-  country      String   @default("MX")
-  lat          Decimal? @db.Decimal(10, 8) // Latitud para geocodificación
-  lng          Decimal? @db.Decimal(11, 8) // Longitud para geocodificación
-  isDefault    Boolean  @default(false)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  // Relación
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId, isDefault])
-}
-
-// ========================================
-// DOMAIN: SERVICES
-// ========================================
-
-model Category {
-  id          String   @id @default(uuid())
-  name        String
-  description String   @db.Text
-  slug        String   @unique
-  iconUrl     String?
-  parentId    String? // Self-reference para jerarquía de categorías
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  // Relaciones
-  parent   Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
-  children Category[] @relation("CategoryHierarchy")
-  services Service[]
-
-  @@index([slug])
-  @@index([parentId])
-}
-
-model Service {
-  id               String        @id @default(uuid())
-  contractorId     String
-  categoryId       String
-  title            String
-  description      String        @db.Text
-  basePrice        Decimal       @db.Decimal(12, 2) // Precio base en MXN
-  locationLat      Decimal       @db.Decimal(10, 8) // Ubicación del contratista
-  locationLng      Decimal       @db.Decimal(11, 8)
-  locationAddress  String // Dirección legible
-  coverageRadiusKm Int // Radio de cobertura en km
-  images           String[] // URLs de S3 (máx 5 imágenes)
-  status           ServiceStatus @default(ACTIVE)
-  createdAt        DateTime      @default(now())
-  updatedAt        DateTime      @updatedAt
-
-  // Relaciones
-  contractor     User                @relation(fields: [contractorId], references: [id], onDelete: Cascade)
-  category       Category            @relation(fields: [categoryId], references: [id])
-  availabilities Availability[]
-  bookings       Booking[]
-  ratings        Rating[]
-  ratingStats    ServiceRatingStats?
-
-  @@index([contractorId])
-  @@index([categoryId, status])
-  @@index([locationLat, locationLng]) // Búsqueda geoespacial - índice compuesto para BETWEEN queries
-  @@index([status])
-}
-
-model Availability {
-  id        String             @id @default(uuid())
-  serviceId String
-  date      DateTime           @db.Date // Fecha del slot
-  startTime DateTime // Hora de inicio
-  endTime   DateTime // Hora de fin
-  status    AvailabilityStatus @default(AVAILABLE)
-  bookingId String?            @unique // FK a Booking si está reservado
-  createdAt DateTime           @default(now())
-  updatedAt DateTime           @updatedAt
-
-  // Relaciones
-  service Service  @relation(fields: [serviceId], references: [id], onDelete: Cascade)
-  booking Booking? @relation(fields: [bookingId], references: [id])
-
-  @@index([serviceId, date, status])
-  @@index([bookingId])
-}
-
-// ========================================
-// DOMAIN: BOOKING
-// ========================================
-
-model Booking {
-  id                     String        @id @default(uuid())
-  serviceId              String
-  clientId               String
-  contractorId           String
-  availabilityId         String        @unique
-  status                 BookingStatus @default(PENDING_PAYMENT)
-  scheduledDate          DateTime // Fecha y hora del servicio
-  address                String // Dirección donde se prestará el servicio
-  notes                  String?       @db.Text // Notas adicionales del cliente
-  basePrice              Decimal       @db.Decimal(12, 2) // Precio base (snapshot)
-  finalPrice             Decimal       @db.Decimal(12, 2) // Precio final con recargos
-  anticipoAmount         Decimal       @db.Decimal(12, 2) // 20% anticipo
-  liquidacionAmount      Decimal       @db.Decimal(12, 2) // 80% liquidación
-  comisionAmount         Decimal       @db.Decimal(12, 2) // 15% comisión plataforma
-  contractorPayoutAmount Decimal       @db.Decimal(12, 2) // Pago al contratista
-  createdAt              DateTime      @default(now())
-  updatedAt              DateTime      @updatedAt
-
-  // Relaciones
-  service      Service               @relation(fields: [serviceId], references: [id])
-  client       User                  @relation("ClientBookings", fields: [clientId], references: [id])
-  contractor   User                  @relation("ContractorBookings", fields: [contractorId], references: [id])
-  availability Availability?
-  payments     Payment[]
-  messages     Message[]
-  rating       Rating?
-  dispute      Dispute?
-  stateHistory BookingStateHistory[]
-
-  @@index([clientId, status])
-  @@index([contractorId, status])
-  @@index([status, scheduledDate])
-  @@index([serviceId])
-}
-
-model BookingStateHistory {
-  id        String        @id @default(uuid())
-  bookingId String
-  fromState BookingStatus // Estado anterior
-  toState   BookingStatus // Estado nuevo
-  changedBy String // Usuario que realizó el cambio
-  notes     String?       @db.Text // Notas sobre el cambio
-  createdAt DateTime      @default(now())
-
-  // Relaciones
-  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
-  user    User    @relation(fields: [changedBy], references: [id])
-
-  @@index([bookingId, createdAt])
-}
-
-// ========================================
-// DOMAIN: PAYMENTS
-// ========================================
-
-model Payment {
-  id                      String        @id @default(uuid())
-  bookingId               String
-  type                    PaymentType // ANTICIPO, LIQUIDACION, REEMBOLSO
-  amount                  Decimal       @db.Decimal(12, 2)
-  currency                String        @default("mxn")
-  stripePaymentIntentId   String?       @unique // ID de Stripe PaymentIntent
-  stripeCheckoutSessionId String?       @unique // ID de Stripe Checkout Session
-  stripeTransferId        String?       @unique // ID de Stripe Transfer (para payouts)
-  status                  PaymentStatus @default(PENDING)
-  metadata                Json? // Información adicional (fees, etc.)
-  createdAt               DateTime      @default(now())
-  updatedAt               DateTime      @updatedAt
-
-  // Relación
-  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
-
-  @@index([bookingId])
-  @@index([type, status])
-  @@index([stripePaymentIntentId])
-}
-
-model ProcessedWebhookEvent {
-  id            String   @id @default(uuid())
-  stripeEventId String   @unique // ID del evento de Stripe (para idempotencia)
-  eventType     String // Tipo de evento (ej: payment_intent.succeeded)
-  processedAt   DateTime @default(now())
-
-  @@index([stripeEventId])
-}
-
-// ========================================
-// DOMAIN: MESSAGING
-// ========================================
-
-model Message {
-  id        String   @id @default(uuid())
-  bookingId String
-  senderId  String
-  text      String   @db.VarChar(2000) // Máximo 2000 caracteres
-  createdAt DateTime @default(now())
-
-  // Relaciones
-  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
-  sender  User    @relation(fields: [senderId], references: [id])
-
-  @@index([bookingId, createdAt])
-}
-
-// ========================================
-// DOMAIN: RATINGS
-// ========================================
-
-model Rating {
-  id               String           @id @default(uuid())
-  bookingId        String           @unique // Una calificación por reserva
-  serviceId        String
-  clientId         String
-  stars            Int // 1-5 estrellas (validar en app layer)
-  comment          String?          @db.VarChar(500) // Comentario opcional (máx 500 chars)
-  moderationStatus ModerationStatus @default(PENDING)
-  moderationNotes  String?          @db.Text // Notas del moderador
-  createdAt        DateTime         @default(now())
-  updatedAt        DateTime         @updatedAt
-
-  // Relaciones
-  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
-  service Service @relation(fields: [serviceId], references: [id])
-  client  User    @relation(fields: [clientId], references: [id])
-
-  @@index([serviceId, moderationStatus])
-  @@index([moderationStatus])
-}
-
-model ServiceRatingStats {
-  serviceId    String   @id // PK = FK a Service
-  average      Decimal  @db.Decimal(3, 2) // Promedio 1.00 - 5.00
-  totalRatings Int      @default(0)
-  updatedAt    DateTime @updatedAt
-
-  // Relación
-  service Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
-}
-
-// ========================================
-// DOMAIN: ADMIN
-// ========================================
-
-model Dispute {
-  id              String        @id @default(uuid())
-  bookingId       String        @unique // Una disputa por reserva
-  openedBy        String // Usuario que abrió la disputa
-  reason          String        @db.Text
-  evidence        Json? // URLs de S3 con evidencia (fotos, documentos)
-  status          DisputeStatus @default(OPEN)
-  resolution      String?       @db.Text // Descripción de la resolución
-  resolutionNotes String?       @db.Text // Notas internas del admin
-  resolvedBy      String? // Admin que resolvió la disputa
-  createdAt       DateTime      @default(now())
-  resolvedAt      DateTime? // Fecha de resolución
-
-  // Relaciones
-  booking        Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
-  openedByUser   User    @relation("DisputeOpenedBy", fields: [openedBy], references: [id])
-  resolvedByUser User?   @relation("DisputeResolvedBy", fields: [resolvedBy], references: [id])
-
-  @@index([status, createdAt])
-  @@index([bookingId])
-}
-
-model AdminAuditLog {
-  id         String   @id @default(uuid())
-  adminId    String
-  action     String // Acción realizada (ej: "approve_service", "block_user")
-  targetType String // Tipo de objeto afectado (ej: "service", "user", "rating")
-  targetId   String // UUID del objeto afectado
-  metadata   Json? // Detalles adicionales de la acción
-  createdAt  DateTime @default(now())
-
-  // Relación
-  admin User @relation(fields: [adminId], references: [id])
-
-  @@index([adminId, createdAt])
-  @@index([targetType, targetId])
 }
