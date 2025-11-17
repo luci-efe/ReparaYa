@@ -108,23 +108,23 @@ jobs:
       - name: Build application
         run: npm run build
         env:
-          # Dummy values for build (will be replaced in Vercel)
-          # IMPORTANT: Clerk keys must have valid Base64 format even if dummy
-          DATABASE_URL: "postgresql://dummy:dummy@localhost:5432/dummy"
-          DIRECT_URL: "postgresql://dummy:dummy@localhost:5432/dummy"
-          NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: "pk_test_ZHVtbXlrZXlmb3JjaWJ1aWxkb25seQ=="
-          CLERK_SECRET_KEY: "sk_test_1234567890abcdefghijklmnopqrstuvwxyzABCDEFGH"
-          CLERK_WEBHOOK_SECRET: "whsec_dummywebhooksecretforcibuilds"
-          STRIPE_SECRET_KEY: "sk_test_dummystripe"
-          STRIPE_WEBHOOK_SECRET: "whsec_dummystripe"
-          NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: "pk_test_dummystripe"
+          # Placeholder values for CI build only (real values in Vercel)
+          # NOTE: Using valid Base64 format for Clerk keys to avoid build errors
+          DATABASE_URL: "postgresql://ciuser:cipass@localhost:5432/cidb"
+          DIRECT_URL: "postgresql://ciuser:cipass@localhost:5432/cidb"
+          NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: "pk_test_Y2lidWlsZHBsYWNlaG9sZGVy"
+          CLERK_SECRET_KEY: "ci_placeholder_clerk_secret_key_for_build_only"
+          CLERK_WEBHOOK_SECRET: "ci_placeholder_webhook_secret"
+          STRIPE_SECRET_KEY: "ci_placeholder_stripe_key"
+          STRIPE_WEBHOOK_SECRET: "ci_placeholder_stripe_webhook"
+          NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: "ci_placeholder_stripe_public"
           AWS_REGION: "us-west-2"
-          AWS_ACCESS_KEY_ID: "AKIADUMMY"
-          AWS_SECRET_ACCESS_KEY: "dummysecretkey"
-          AWS_S3_BUCKET_MEDIA: "dummy-bucket"
-          AWS_SES_SENDER_EMAIL: "noreply@example.com"
-          AWS_LOCATION_PLACE_INDEX: "dummy-index"
-          AWS_LOCATION_ROUTE_CALCULATOR: "dummy-calculator"
+          AWS_ACCESS_KEY_ID: "CI_PLACEHOLDER_KEY"
+          AWS_SECRET_ACCESS_KEY: "ci-placeholder-secret"
+          AWS_S3_BUCKET_MEDIA: "ci-bucket-placeholder"
+          AWS_SES_SENDER_EMAIL: "ci@placeholder.test"
+          AWS_LOCATION_PLACE_INDEX: "ci-index"
+          AWS_LOCATION_ROUTE_CALCULATOR: "ci-calculator"
           PLATFORM_MARKUP_PERCENTAGE: "10"
           PLATFORM_COMMISSION_PERCENTAGE: "15"
           BOOKING_ADVANCE_PERCENTAGE: "30"
