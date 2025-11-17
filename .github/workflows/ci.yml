@@ -109,15 +109,25 @@ jobs:
         run: npm run build
         env:
           # Dummy values for build (will be replaced in Vercel)
+          # IMPORTANT: Clerk keys must have valid Base64 format even if dummy
           DATABASE_URL: "postgresql://dummy:dummy@localhost:5432/dummy"
           DIRECT_URL: "postgresql://dummy:dummy@localhost:5432/dummy"
-          NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: "pk_test_dummy"
-          CLERK_SECRET_KEY: "sk_test_dummy"
-          STRIPE_SECRET_KEY: "sk_test_dummy"
+          NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: "pk_test_ZHVtbXlrZXlmb3JjaWJ1aWxkb25seQ=="
+          CLERK_SECRET_KEY: "sk_test_1234567890abcdefghijklmnopqrstuvwxyzABCDEFGH"
+          CLERK_WEBHOOK_SECRET: "whsec_dummywebhooksecretforcibuilds"
+          STRIPE_SECRET_KEY: "sk_test_dummystripe"
+          STRIPE_WEBHOOK_SECRET: "whsec_dummystripe"
+          NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: "pk_test_dummystripe"
           AWS_REGION: "us-west-2"
-          AWS_ACCESS_KEY_ID: "dummy"
-          AWS_SECRET_ACCESS_KEY: "dummy"
-          AWS_S3_BUCKET_MEDIA: "dummy"
+          AWS_ACCESS_KEY_ID: "AKIADUMMY"
+          AWS_SECRET_ACCESS_KEY: "dummysecretkey"
+          AWS_S3_BUCKET_MEDIA: "dummy-bucket"
+          AWS_SES_SENDER_EMAIL: "noreply@example.com"
+          AWS_LOCATION_PLACE_INDEX: "dummy-index"
+          AWS_LOCATION_ROUTE_CALCULATOR: "dummy-calculator"
+          PLATFORM_MARKUP_PERCENTAGE: "10"
+          PLATFORM_COMMISSION_PERCENTAGE: "15"
+          BOOKING_ADVANCE_PERCENTAGE: "30"
 
       - name: Check build output
         run: |
