@@ -137,6 +137,15 @@ Criterios:
 **And** la sesión del usuario está activa
 **And** cookies de sesión están presentes en el navegador
 
+#### Scenario: Login con redirect_url preservado
+
+**Given** un usuario no autenticado intenta acceder a `/reservas`
+**And** el middleware redirige a `/sign-in?redirect_url=/reservas`
+**When** el usuario completa el login exitosamente
+**Then** el sistema valida que `redirect_url=/reservas` es seguro (no open redirect)
+**And** el sistema redirige al usuario a `/reservas` (en lugar de `/dashboard`)
+**And** la sesión del usuario está activa
+
 #### Scenario: Login fallido - credenciales inválidas
 
 **Given** el usuario navega a `/sign-in`
@@ -178,7 +187,10 @@ Rutas públicas (accesibles sin sesión):
 **When** el usuario navega a `/dashboard`
 **Then** el middleware intercepta la petición
 **And** el sistema redirige al usuario a `/sign-in?redirect_url=/dashboard`
+**And** el parámetro `redirect_url` es preservado para redirección post-login
 **And** el usuario ve la página de login
+
+**Security Note:** El sistema DEBE validar `redirect_url` contra open redirect attacks. Solo se permiten URLs relativas que comiencen con `/` o URLs absolutas del mismo dominio.
 
 #### Scenario: Usuario autenticado accede a ruta protegida
 
@@ -394,15 +406,21 @@ Criterios:
 - Limpiar cookies de sesión
 - Redirigir a landing page (`/`)
 
+**Alcance de cierre de sesión:**
+- **MVP:** El cierre de sesión invalida SOLO la sesión del dispositivo actual
+- **Future:** Opción para cerrar sesión en todos los dispositivos (requiere session management avanzado)
+
 #### Scenario: Usuario cierra sesión exitosamente
 
 **Given** el usuario tiene sesión activa
 **And** el usuario está en `/dashboard`
 **When** el usuario hace clic en botón "Cerrar sesión"
-**Then** el sistema invalida la sesión en Clerk
-**And** las cookies de sesión son eliminadas
+**Then** el sistema invalida la sesión en Clerk del dispositivo actual
+**And** las cookies de sesión son eliminadas del dispositivo actual
 **And** el sistema redirige al usuario a `/`
-**And** el usuario ya NO tiene sesión activa
+**And** el usuario ya NO tiene sesión activa en este dispositivo
+
+**Note:** Sesiones en otros dispositivos (si existen) permanecen activas hasta que expiren o se cierren manualmente.
 
 ---
 
@@ -578,7 +596,13 @@ model User {
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
 
-  // ... relaciones
+  // Relaciones (gestionadas por otros módulos)
+  bookings    Booking[]  // Reservas creadas por el cliente
+  contractorBookings Booking[] @relation("ContractorBookings") // Reservas asignadas al contratista
+  ratings     Rating[]   // Calificaciones dadas
+  reviews     Review[]   // Reseñas escritas
+  messages    Message[]  // Mensajes enviados
+  // ... otras relaciones
 }
 
 enum UserRole {
@@ -664,11 +688,15 @@ enum UserStatus {
 | TC-AUTH-015 | requireRole lanza error si rol no coincide | Unitaria | Alta | AUTH-008 |
 | TC-AUTH-016 | requireRole retorna usuario si rol coincide | Unitaria | Alta | AUTH-008 |
 | TC-AUTH-017 | Cierre de sesión invalida sesión y redirige | E2E | Media | AUTH-009 |
+| TC-AUTH-018 | Validación de variables de entorno al iniciar | Unitaria | Alta | AUTH-001 |
+| TC-AUTH-019 | requireAuth lanza UnauthorizedError sin sesión | Unitaria | Alta | AUTH-007 |
+
+**Total:** 19 casos de prueba
 
 ### Acceptance Criteria for Testing
 
-- ✅ Cobertura de código ≥ 70% en módulo `src/modules/auth`
-- ✅ Todos los casos TC-AUTH-001 a TC-AUTH-017 pasan
+- ✅ Cobertura de código ≥ 78% en módulo `src/modules/auth` (objetivo actualizado según resultados de implementación)
+- ✅ Todos los casos TC-AUTH-001 a TC-AUTH-019 pasan
 - ✅ Tests de integración usan test database (no producción)
 - ✅ Tests E2E usan Clerk test environment
 - ✅ Webhook tests validan idempotencia estrictamente

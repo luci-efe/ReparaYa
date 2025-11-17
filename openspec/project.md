@@ -335,7 +335,7 @@ El proyecto se desarrolla como parte de una materia universitaria de Ingeniería
 
 ## Module Specifications
 
-Las especificaciones de módulos están en `/openspec/specs/`. Cada spec define requisitos funcionales y no funcionales, interfaces, modelo de datos y plan de testing para su módulo.
+Las especificaciones de módulos están en `/openspec/specs/`. Cada especificación define requisitos funcionales y no funcionales, interfaces, modelo de datos y plan de testing para su módulo.
 
 ### Active Specifications
 
