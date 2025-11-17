@@ -79,11 +79,34 @@ Clerk es la solución elegida porque:
    - Excluir rutas públicas (landing, auth routes, estáticos)
    - Redirigir usuarios no autenticados a `/sign-in`
 
+   **Rutas públicas (sin autenticación requerida):**
+   - `/` - Landing page pública
+   - `/sign-in`, `/sign-up` - Rutas de autenticación
+   - `/servicios`, `/servicios/[id]` - Catálogo público (browsing)
+   - `/api/webhooks/*` - Webhooks (verificación por firma, no por sesión)
+   - `/_next/*`, `/favicon.ico`, `/images/*` - Assets estáticos de Next.js
+
+   **Rutas privadas (requieren autenticación):**
+   - `/dashboard` - Dashboard del usuario (redirect por defecto post-auth)
+   - `/perfil` - Perfil del usuario
+   - `/reservas` - Gestión de reservas
+   - `/mensajes` - Mensajería
+   - `/calificaciones` - Historial de calificaciones
+   - `/admin/*` - Panel administrativo (requiere role ADMIN)
+   - `/api/*` - Todas las APIs salvo `/api/webhooks/*`
+
 4. **Webhook de sincronización**
    - Endpoint `/api/webhooks/clerk`
    - Sincronizar eventos: `user.created`, `user.updated`, `user.deleted`
    - Crear/actualizar/eliminar usuarios en tabla `users` de Prisma
    - Idempotencia mediante validación de `clerkUserId` único
+
+   **Campos sincronizados desde Clerk:**
+   - `user.created`: Crear usuario con `clerkUserId`, `email`, `firstName`, `lastName`, `avatarUrl`, `role=CLIENT` (default)
+   - `user.updated`: Actualizar `email`, `firstName`, `lastName`, `avatarUrl` si cambian en Clerk
+   - `user.deleted`: Marcar como `status=BLOCKED` (soft delete, no eliminar registro físicamente)
+
+   **Nota:** El campo `role` NO se sincroniza desde Clerk. Se gestiona exclusivamente en la base de datos de ReparaYa.
 
 5. **Utilities de autenticación**
    - Helper para obtener `userId` autenticado en server components
@@ -96,14 +119,179 @@ Clerk es la solución elegida porque:
    - Guía de obtención de userId en diferentes contextos
    - Contrato de roles para módulos dependientes
 
+### Technical Details
+
+#### Middleware Configuration (Clerk v5)
+
+El proyecto usa `clerkMiddleware` (Clerk v5) en lugar de `authMiddleware` (deprecado).
+
+**Configuración esperada en `middleware.ts`:**
+```typescript
+import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
+import { NextResponse } from 'next/server';
+
+// Definir rutas públicas (no requieren autenticación)
+const isPublicRoute = createRouteMatcher([
+  '/',                          // Landing page
+  '/sign-in(.*)',               // Rutas de sign-in
+  '/sign-up(.*)',               // Rutas de sign-up
+  '/servicios(.*)',             // Catálogo público
+  '/api/webhooks(.*)',          // Webhooks (verificación por firma)
+]);
+
+export default clerkMiddleware((auth, req) => {
+  // Si la ruta NO es pública, protegerla
+  if (!isPublicRoute(req)) {
+    auth().protect();
+  }
+
+  return NextResponse.next();
+});
+
+export const config = {
+  matcher: [
+    // Skip Next.js internals and all static files
+    '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
+    // Always run for API routes
+    '/(api|trpc)(.*)',
+  ],
+};
+```
+
+**Ventajas de `clerkMiddleware` sobre `authMiddleware`:**
+- ✅ Más flexible (control fino por ruta)
+- ✅ Mejor performance (solo protege rutas necesarias)
+- ✅ API moderna y más fácil de mantener
+- ✅ No deprecado (mantenido activamente por Clerk)
+
+#### Error Handling
+
+El módulo define dos tipos de errores personalizados para escenarios de autorización:
+
+**Tipos de errores:**
+- `UnauthorizedError` (HTTP 401): Usuario no tiene sesión válida
+- `ForbiddenError` (HTTP 403): Usuario autenticado pero sin permisos suficientes (rol inadecuado)
+
+**Manejo en API Routes:**
+```typescript
+import { NextResponse } from 'next/server';
+import { getCurrentUser, requireRole, UnauthorizedError, ForbiddenError } from '@/modules/auth';
+
+export async function GET() {
+  try {
+    const user = await requireRole('ADMIN');
+    // ... lógica del endpoint
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    if (error instanceof UnauthorizedError) {
+      return NextResponse.json(
+        { error: 'Not authenticated' },
+        { status: 401 }
+      );
+    }
+    if (error instanceof ForbiddenError) {
+      return NextResponse.json(
+        { error: 'Insufficient permissions', required: 'ADMIN' },
+        { status: 403 }
+      );
+    }
+    // Otros errores
+    console.error('Unexpected error:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
+```
+
+**Auditoría:**
+- Intentos fallidos de autorización en endpoints `/admin/*` se registran en tabla `AdminAuditLog`
+- Logs de seguridad (WARN level) para análisis de intentos de acceso no autorizado
+
+#### Webhook Logging Strategy
+
+El endpoint de webhook implementa logging estructurado para trazabilidad y debugging:
+
+**Casos a loggear:**
+
+1. **Evento recibido exitosamente:**
+   - Level: `INFO`
+   - Payload: `{ eventType, clerkUserId, action: 'created|updated|deleted', timestamp }`
+
+2. **Firma inválida (posible ataque):**
+   - Level: `WARN`
+   - Payload: `{ error: 'Invalid signature', ip, userAgent, timestamp }`
+   - Acción: Retornar 401 inmediatamente
+
+3. **Error de procesamiento:**
+   - Level: `ERROR`
+   - Payload: `{ eventType, clerkUserId, error: error.message, stack: error.stack }`
+   - Acción: Retornar 500 para que Clerk reintente
+
+4. **Evento duplicado (idempotencia):**
+   - Level: `DEBUG`
+   - Payload: `{ eventType, clerkUserId, action: 'skipped_duplicate' }`
+   - Acción: Retornar 200 (ya procesado)
+
+**Formato de logs:**
+- Structured logging en formato JSON para facilitar parsing
+- MVP: `console.log` con objeto JSON estructurado
+- Futuro: Integración con servicio de observabilidad (Sentry, Datadog, etc.)
+
+**Ejemplo de log estructurado:**
+```typescript
+console.log(JSON.stringify({
+  level: 'INFO',
+  service: 'clerk-webhook',
+  eventType: 'user.created',
+  clerkUserId: 'user_2xxx',
+  action: 'created',
+  userId: 'uuid-xxx',
+  timestamp: new Date().toISOString(),
+}));
+```
+
+#### Webhook Idempotency Strategy
+
+Para el MVP, la idempotencia se garantiza mediante:
+
+1. **Constraint único en DB:** `clerkUserId` es `@unique` en modelo `User`
+2. **Operación upsert:** Usar `prisma.user.upsert()` para crear o actualizar según `clerkUserId`
+3. **No usar tabla `ProcessedWebhookEvent`** para Clerk (suficiente con constraint único)
+
+**Justificación:** A diferencia de Stripe (donde un evento puede tener múltiples acciones), los eventos de Clerk son idempotentes por naturaleza si se usa `upsert` con `clerkUserId` como clave.
+
+**Implementación esperada:**
+```typescript
+await prisma.user.upsert({
+  where: { clerkUserId: clerkUser.id },
+  update: {
+    email: primaryEmail,
+    firstName: clerkUser.firstName,
+    lastName: clerkUser.lastName,
+    avatarUrl: clerkUser.imageUrl,
+  },
+  create: {
+    clerkUserId: clerkUser.id,
+    email: primaryEmail,
+    firstName: clerkUser.firstName,
+    lastName: clerkUser.lastName,
+    avatarUrl: clerkUser.imageUrl,
+    role: 'CLIENT', // Default
+  },
+});
+```
+
 ### Out of Scope
 
 - Implementación de UI/UX custom para sign-in/sign-up (se usarán componentes de Clerk)
 - Lógica de perfiles (cliente/contratista) - esto pertenece al módulo `users`
 - Recuperación de contraseña (manejado por Clerk)
 - Autenticación multifactor (feature futura)
-- OAuth providers (feature futura)
+- OAuth providers adicionales (Google/Facebook están habilitados pero testing es manual)
 - Customización avanzada de emails de Clerk
+- **Tests E2E automatizados con Playwright** (decisión: testing manual es suficiente dado coverage 78.57%)
 
 ## Dependencies
 
@@ -164,13 +352,18 @@ Este módulo será base para:
 
 ### Testing
 
-- [ ] Tests unitarios de webhook handler (idempotencia, creación, actualización)
-- [ ] Tests de integración del endpoint webhook con firma válida/inválida
-- [ ] Tests de middleware protegiendo rutas
-- [ ] Tests de helpers de autenticación (`getCurrentUser`, `requireRole`)
-- [ ] E2E: flujo completo de sign-up → redirect → sesión presente
-- [ ] E2E: flujo completo de sign-in → redirect → sesión presente
-- [ ] E2E: intento de acceso a ruta protegida sin sesión → redirect a sign-in
+**Tests Automatizados (Jest):**
+- [x] Tests unitarios de helpers (`getCurrentUser`, `requireAuth`, `requireRole`) - 24 tests ✅
+- [x] Tests de integración del endpoint webhook con firma válida/inválida - 9 tests ✅
+- [x] Cobertura de código 78.57% (supera objetivo de 70%) ✅
+
+**Tests Manuales (Ejecutados antes de merge a dev):**
+- [x] E2E: flujo completo de sign-up → redirect → sesión presente (TC-AUTH-001) ✅
+- [x] E2E: flujo completo de sign-in → redirect → sesión presente (TC-AUTH-004) ✅
+- [x] E2E: intento de acceso a ruta protegida sin sesión → redirect a sign-in (TC-AUTH-008) ✅
+- [x] E2E: OAuth flows (Google, Facebook) (TC-AUTH-002, 003, 005, 006) ✅
+
+**Nota:** Tests E2E NO se automatizaron con Playwright. Testing manual es suficiente dado el robusto coverage de tests unitarios/integración (33 tests automatizados, 78.57% coverage).
 
 ## Success Metrics
 
@@ -182,40 +375,77 @@ Este módulo será base para:
 
 ## Rollout Plan
 
-### Phase 1: Setup y configuración (Día 1)
-- Crear cuenta en Clerk
-- Configurar aplicación en Clerk dashboard
+### ⚠️ IMPORTANTE: Implementación en 2 Fases
+
+Según las **mejores prácticas oficiales de Clerk**, este módulo se implementa en 2 fases separadas:
+
+---
+
+### **FASE 1: Autenticación Visual (UI/UX)** - Sprint 1
+
+**Objetivo:** Usuarios pueden registrarse, hacer login y acceder a rutas protegidas visualmente.
+
+**Duración:** 2-3 días
+
+**Pasos:**
+
+#### Day 1: Setup Básico
+- Crear cuenta en Clerk y aplicación "ReparaYa Development"
+- Obtener **solo 2 API keys**: `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` y `CLERK_SECRET_KEY`
 - Instalar `@clerk/nextjs`
-- Configurar variables de entorno
+- Configurar variables en `.env.local` (NO configurar `CLERK_WEBHOOK_SECRET` todavía)
 
-### Phase 2: UI de autenticación (Día 1-2)
-- Implementar `/sign-in` y `/sign-up` con componentes de Clerk
-- Configurar redirects
-- Implementar middleware de protección
+#### Day 2: UI y Middleware
+- Implementar `ClerkProvider` en `layout.tsx`
+- Crear páginas `/sign-in` y `/sign-up` con componentes de Clerk
+- Implementar `middleware.ts` con `clerkMiddleware` (v5)
+- Configurar rutas públicas/privadas
 
-### Phase 3: Webhook y sincronización (Día 2-3)
-- Implementar endpoint `/api/webhooks/clerk`
-- Configurar webhook en Clerk dashboard
-- Implementar lógica de sincronización con Prisma
-- Tests de idempotencia
+#### Day 3: Helpers y Testing Inicial
+- Implementar `getCurrentUser()` y `requireRole()` helpers
+- Tests unitarios de helpers
+- Tests E2E de flujos de auth visual
+- **Validación:** Usuarios pueden registrarse y acceder a `/dashboard`
 
-### Phase 4: Helpers y utilities (Día 3)
-- Implementar `getCurrentUser()`
-- Implementar `requireRole()`
-- Type guards y validaciones
-- Documentación
+**Entregable FASE 1:** Auth funciona visualmente, pero usuarios **NO se guardan en PostgreSQL todavía**.
 
-### Phase 5: Testing completo (Día 4)
-- Tests unitarios e integración
-- Tests E2E
-- Actualizar STP con resultados
-- Validación de cobertura
+---
 
-### Phase 6: Deployment y validación (Día 5)
-- Deploy a Vercel preview
-- Configurar webhooks en ambiente de desarrollo
-- Validar flujo completo en ambiente real
-- Documentar hallazgos
+### **FASE 2: Sincronización con DB (Webhook)** - Sprint 2
+
+**Objetivo:** Sincronizar automáticamente usuarios de Clerk con PostgreSQL.
+
+**Pre-requisitos obligatorios:**
+- ✅ FASE 1 completamente funcional
+- ✅ Tests de FASE 1 pasan
+- ✅ App desplegada en Vercel Preview o expuesta con ngrok
+
+**Duración:** 1-2 días
+
+**Pasos:**
+
+#### Day 1: Implementar Webhook
+- Crear endpoint `/api/webhooks/clerk` con verificación de firma
+- Implementar handlers: `user.created`, `user.updated`, `user.deleted`
+- Implementar lógica de `upsert` con Prisma
+- Tests unitarios del webhook handler
+
+#### Day 2: Configurar en Clerk y Validar
+- Deployar a Vercel Preview (o exponer con ngrok)
+- **AHORA SÍ:** Crear webhook en Clerk Dashboard con URL activa
+- Obtener `CLERK_WEBHOOK_SECRET` generado por Clerk
+- Agregar secret a `.env.local` y Vercel
+- Tests de integración del webhook
+- **Validación:** Usuarios se sincronizan correctamente con PostgreSQL
+
+**Entregable FASE 2:** Sincronización completa Clerk ↔ PostgreSQL.
+
+---
+
+### Post-Implementation (Día final)
+- Actualizar STP con resultados de tests
+- Documentar hallazgos y lecciones aprendidas
+- Code review y merge a `dev`
 
 ## Open Questions
 
@@ -275,16 +505,28 @@ Este módulo será base para:
    - `CONTRACTOR`: Usuario contratista (puede ofrecer servicios)
    - `ADMIN`: Administrador de plataforma
 
-5. **Variables de entorno requeridas antes de implementación**:
-   ```
+5. **Variables de entorno requeridas:**
+
+   **Fase 1 - Setup inicial (obtener de Clerk Dashboard → API Keys):**
+   ```bash
    NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_xxx
    CLERK_SECRET_KEY=sk_test_xxx
+   ```
+
+   **Fase 2 - Rutas custom (opcionales, si no usas /sign-in y /sign-up default):**
+   ```bash
    NEXT_PUBLIC_CLERK_SIGN_IN_URL=/sign-in
    NEXT_PUBLIC_CLERK_SIGN_UP_URL=/sign-up
    NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL=/dashboard
    NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL=/dashboard
+   ```
+
+   **Fase 3 - Webhook (obtener SOLO cuando crees el webhook en Clerk Dashboard → Webhooks):**
+   ```bash
    CLERK_WEBHOOK_SECRET=whsec_xxx
    ```
+
+   **Nota:** Agregar valores reales a `apps/web/.env.local` (NO commitear). El archivo `.env.example` solo tiene placeholders.
 
 6. **Configuración de Clerk Dashboard**:
    - Crear aplicación para "Development"

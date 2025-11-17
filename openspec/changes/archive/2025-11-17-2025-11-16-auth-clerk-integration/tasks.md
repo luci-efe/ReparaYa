@@ -2,7 +2,31 @@
 
 **Change ID:** `2025-11-16-auth-clerk-integration`
 
-## Task Breakdown
+## ⚠️ IMPORTANTE: Implementación en 2 Fases
+
+Este módulo se implementa en **2 fases separadas** según las mejores prácticas de Clerk:
+
+### **FASE 1: Autenticación Visual (UI/UX)**
+Implementar sign-in/sign-up, middleware y helpers para que usuarios puedan autenticarse visualmente. **NO incluye sincronización con DB todavía**.
+
+**Duración estimada:** 2-3 días
+**Tasks:** 1, 2, 3, 4, 6, 7, 10, 11
+
+### **FASE 2: Sincronización con DB (Webhook)**
+Una vez que auth visual funciona, implementar webhook para sincronizar usuarios de Clerk con PostgreSQL. **Requiere que Fase 1 esté completamente funcional**.
+
+**Duración estimada:** 1-2 días
+**Tasks:** 5, 8, 9, 12
+
+**Justificación técnica:**
+- No puedes obtener `CLERK_WEBHOOK_SECRET` sin crear el webhook en Dashboard
+- No puedes crear el webhook sin una URL activa
+- No tiene sentido tener URL activa sin código que funcione
+- El webhook depende de que auth básica esté operativa
+
+---
+
+## Task Breakdown - FASE 1 (Autenticación Visual)
 
 ### 1. Setup y Configuración Inicial
 
@@ -84,9 +108,9 @@
 **Estimated effort:** 2 horas
 
 - [ ] **4.1** Crear `middleware.ts` en root de `apps/web`
-  - Importar `authMiddleware` de Clerk
-  - Configurar rutas públicas (landing, auth, static assets)
-  - Configurar rutas protegidas (dashboard, perfil, reservas)
+  - Importar `clerkMiddleware` y `createRouteMatcher` de Clerk (v5)
+  - Configurar rutas públicas con matcher (landing, auth, static assets)
+  - Proteger rutas que NO son públicas con `auth().protect()`
 
 - [ ] **4.2** Definir constantes de rutas
   - Crear `src/lib/routes.ts` con rutas públicas y privadas
@@ -100,6 +124,21 @@
 - Acceso a `/dashboard` sin sesión redirige a `/sign-in`
 - Sign-in exitoso redirige a `/dashboard`
 - Rutas públicas accesibles sin sesión
+
+---
+
+## Task Breakdown - FASE 2 (Sincronización con DB)
+
+### ⚠️ IMPORTANTE: Completar FASE 1 antes de empezar
+
+**Pre-requisitos:**
+- ✅ Usuarios pueden registrarse y hacer login visualmente
+- ✅ Middleware protege rutas correctamente
+- ✅ Helpers de auth (`getCurrentUser`, `requireRole`) funcionan
+- ✅ Tests de FASE 1 pasan
+- ✅ Aplicación desplegada en Vercel Preview o expuesta con ngrok
+
+**Objetivo de FASE 2:** Sincronizar usuarios de Clerk con PostgreSQL automáticamente
 
 ---
 
