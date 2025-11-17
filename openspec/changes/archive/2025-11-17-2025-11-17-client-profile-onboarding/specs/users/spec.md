@@ -3,11 +3,13 @@
 **Change ID:** `2025-11-17-client-profile-onboarding`
 **Created:** 2025-11-17
 
-Este documento describe las **modificaciones y adiciones** al módulo `users` como parte del change `client-profile-onboarding`. Solo se documentan los cambios introducidos por este change.
+## Purpose
+
+Este spec delta documenta las adiciones al módulo `users` para implementar el flujo de onboarding y gestión de perfiles de clientes. Habilita a usuarios autenticados a completar su perfil con información adicional (teléfono, direcciones) y gestionar sus datos personales mediante endpoints REST API con validación Zod y autorización por rol.
 
 ---
 
-## ADDED Requirements
+## ADDED
 
 ### Requirement: USER-001 - The system SHALL allow authenticated users to retrieve their complete profile
 
@@ -194,154 +196,13 @@ El sistema SHALL validar que las operaciones de update (`PATCH /api/users/me/add
 
 ---
 
-## MODIFIED Requirements
+## MODIFIED
 
-_(Ningún requisito existente se modifica en este change. Solo se agregan nuevos requisitos al módulo users.)_
-
----
-
-## Testing Plan
-
-### Casos de Prueba
-
-Los siguientes casos de prueba están documentados en `/docs/md/STP-ReparaYa.md`, sección 4.1.2:
-
-| ID | Descripción | Tipo | Prioridad | Requisito |
-|----|-------------|------|-----------|-----------|
-| TC-USER-001 | Obtener perfil de usuario autenticado (GET /api/users/me) | Integración | Alta | RF-003-01 |
-| TC-USER-002 | Actualizar perfil de usuario autenticado (PATCH /api/users/me) | Integración | Alta | RF-003-02 |
-| TC-USER-003 | Usuario no puede editar perfil de otro usuario | Integración | Alta | RF-003-02 |
-| TC-USER-004 | Obtener perfil público de usuario (GET /api/users/:id/public) | Integración | Alta | RF-003-03 |
-| TC-USER-005 | Crear dirección para usuario autenticado (POST /api/users/me/addresses) | Integración | Alta | RF-003-04 |
-| TC-USER-006 | Actualizar dirección existente (PATCH /api/users/me/addresses/:id) | Integración | Media | RF-003-05 |
-| TC-USER-007 | Eliminar dirección (DELETE /api/users/me/addresses/:id) | Integración | Media | RF-003-05 |
-| TC-USER-008 | No permitir eliminar única dirección del usuario | Integración | Alta | BR-001 |
-| TC-USER-009 | Flag isDefault se desactiva en otras direcciones al crear nueva como default | Unitaria | Alta | BR-002 |
-| TC-USER-010 | Validación de datos con Zod en actualización de perfil | Unitaria | Alta | RNF-001 |
-
-### Criterios de Cobertura
-
-- ✅ Cobertura ≥ 75% en `src/modules/users`
-- ✅ Tests unitarios para servicios, repositorios y validadores
-- ✅ Tests de integración para todos los endpoints API
-- ✅ Tests de seguridad (autorización, input sanitization)
-
-### Estrategia de Testing
-
-**Archivos de test:**
-- `apps/web/src/modules/users/__tests__/userService.test.ts`
-- `apps/web/src/modules/users/__tests__/addressService.test.ts`
-- `apps/web/src/modules/users/__tests__/userRepository.test.ts`
-- `apps/web/src/modules/users/__tests__/addressRepository.test.ts`
-- `tests/integration/api/users.test.ts`
-
-**Mocks:**
-- Mock de Clerk para autenticación en tests de integración
-- Mock de Prisma Client para tests unitarios
-- Fixtures de usuarios y direcciones de prueba
-
-**Ambientes:**
-- Tests unitarios: mocks de Prisma
-- Tests de integración: PostgreSQL de test (Supabase test o Docker)
+_(No hay requisitos modificados en este change)_
 
 ---
 
-## Implementation Notes
+## REMOVED
 
-### Estructura del Módulo
+_(No hay requisitos removidos en este change)_
 
-```
-apps/web/src/modules/users/
-├── services/
-│   ├── userService.ts          # CRUD de perfiles
-│   └── addressService.ts       # Gestión de direcciones
-├── repositories/
-│   ├── userRepository.ts       # Acceso a datos de User
-│   └── addressRepository.ts    # Acceso a datos de Address
-├── types/
-│   └── index.ts                # DTOs y tipos
-├── validators/
-│   └── index.ts                # Schemas Zod
-├── errors/
-│   └── index.ts                # Errores custom
-└── __tests__/
-    ├── userService.test.ts
-    ├── addressService.test.ts
-    ├── userRepository.test.ts
-    └── addressRepository.test.ts
-```
-
-### Endpoints API
-
-```
-apps/web/app/api/users/
-├── me/
-│   ├── route.ts                # GET, PATCH /api/users/me
-│   └── addresses/
-│       ├── route.ts            # POST /api/users/me/addresses
-│       └── [id]/
-│           └── route.ts        # PATCH, DELETE /api/users/me/addresses/:id
-└── [id]/
-    └── public/
-        └── route.ts            # GET /api/users/:id/public
-```
-
-### Dependencias
-
-- `@clerk/nextjs`: Autenticación (ya instalado en change anterior)
-- `zod`: Validación de schemas (ya instalado)
-- `@prisma/client`: ORM (ya instalado)
-
-### Variables de Entorno
-
-No se requieren nuevas variables de entorno para este change.
-
----
-
-## Handoff Notes
-
-### Para módulos downstream (booking, messaging, ratings)
-
-**Garantías de este módulo:**
-
-1. Todos los clientes tienen perfil básico con datos de Clerk (`firstName`, `lastName`, `email`)
-2. Campo `phone` es opcional (validar con `user.phone ?? 'N/A'`)
-3. Endpoint `GET /api/users/:id/public` disponible para mostrar nombres/avatares
-4. Cada cliente que completó onboarding tiene al menos 1 dirección
-
-**Campos mínimos esperados en User:**
-- `id` (UUID) - Usar como FK en relaciones
-- `firstName`, `lastName` - Siempre presentes
-- `phone` - Opcional (nullable)
-- `avatarUrl` - Opcional (nullable, usar placeholder si null)
-
-**Ejemplo de uso en booking:**
-```typescript
-import { userService } from '@/modules/users/services/userService';
-
-const profile = await userService.getProfile(clientId);
-const defaultAddress = profile.addresses.find(addr => addr.isDefault);
-if (!defaultAddress) {
-  throw new Error('Cliente no tiene dirección configurada');
-}
-```
-
-### Para el change de contratistas (futuro)
-
-El onboarding de contratistas NO está incluido en este change. Quedará para un change futuro que incluirá:
-- Creación de `ContractorProfile`
-- Upload de documentos de verificación a S3
-- Integración con Stripe Connect
-- Flujo de verificación KYC por admins
-
----
-
-## Open Questions
-
-_(Ninguna pregunta abierta. Todos los requisitos están claros.)_
-
----
-
-**Estado del spec delta:** COMPLETO
-**Listo para validación:** Sí
-**Comando de validación:** `openspec validate 2025-11-17-client-profile-onboarding --strict`
