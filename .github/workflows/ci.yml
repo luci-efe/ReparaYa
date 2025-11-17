@@ -13,6 +13,22 @@ jobs:
     name: Lint and Test
     runs-on: ubuntu-latest
 
+    # Servicio de PostgreSQL para tests de integración
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: test_db
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
     defaults:
       run:
         working-directory: apps/web
@@ -39,6 +55,11 @@ jobs:
 
       - name: Generate Prisma Client
         run: npm run prisma:generate
+
+      - name: Setup test database schema
+        run: npx prisma db push --accept-data-loss
+        env:
+          DATABASE_URL: "postgresql://test:test@localhost:5432/test_db"
 
       - name: Run tests
         run: npm run test
