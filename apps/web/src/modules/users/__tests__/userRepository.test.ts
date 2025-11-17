@@ -1,6 +1,7 @@
 jest.mock('@prisma/client');
 jest.mock('@/lib/db', () => {
-  const mockPrismaClient = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const mockPrismaClient: any = {
     user: {
       findUnique: jest.fn(),
       findMany: jest.fn(),
@@ -19,7 +20,8 @@ jest.mock('@/lib/db', () => {
       delete: jest.fn(),
       count: jest.fn(),
     },
-    $transaction: jest.fn((callback) => callback(mockPrismaClient)),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    $transaction: jest.fn((callback: any) => callback(mockPrismaClient)),
   };
 
   return {
@@ -36,8 +38,10 @@ import { userRepository } from '../repositories/userRepository';
 import { UserNotFoundError } from '../errors';
 import { prisma } from '@/lib/db';
 
-const mockFindUnique = prisma.user.findUnique as jest.Mock;
-const mockUpdate = prisma.user.update as jest.Mock;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const mockFindUnique = prisma.user.findUnique as any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const mockUpdate = prisma.user.update as any;
 
 describe('userRepository', () => {
   beforeEach(() => {
