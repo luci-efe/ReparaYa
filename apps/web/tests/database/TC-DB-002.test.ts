@@ -6,6 +6,10 @@
  * - TC-DB-002-02: Queries de Prisma usan tipos correctos (UUID, DateTime)
  */
 
+// IMPORTANTE: Desactivar el mock global de Prisma para estos tests de integración
+jest.unmock('@prisma/client');
+jest.unmock('../../src/lib/db');
+
 import { PrismaClient } from '@prisma/client';
 import { db } from '../../src/lib/db';
 
