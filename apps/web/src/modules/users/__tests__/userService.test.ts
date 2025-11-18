@@ -133,10 +133,16 @@ describe('userService', () => {
       };
 
       const mockUpdatedProfile: UserProfile = {
-        ...existingUser,
+        id: existingUser.id,
+        clerkUserId: existingUser.clerkUserId,
+        email: existingUser.email,
         firstName: validData.firstName,
         lastName: validData.lastName,
         phone: validData.phone,
+        avatarUrl: existingUser.avatarUrl,
+        role: 'CLIENT',
+        status: 'ACTIVE',
+        createdAt: existingUser.createdAt,
         updatedAt: new Date('2024-02-01'),
         addresses: [],
       };
@@ -258,8 +264,16 @@ describe('userService', () => {
       };
 
       const mockUpdatedProfile: UserProfile = {
-        ...existingUser,
+        id: existingUser.id,
+        clerkUserId: existingUser.clerkUserId,
+        email: existingUser.email,
+        firstName: existingUser.firstName,
+        lastName: existingUser.lastName,
+        phone: existingUser.phone,
         avatarUrl: validData.avatarUrl,
+        role: 'CLIENT',
+        status: 'ACTIVE',
+        createdAt: existingUser.createdAt,
         updatedAt: new Date('2024-02-01'),
         addresses: [],
       };
@@ -306,8 +320,16 @@ describe('userService', () => {
       };
 
       const mockUpdatedProfile: UserProfile = {
-        ...existingUser,
+        id: existingUser.id,
+        clerkUserId: existingUser.clerkUserId,
+        email: existingUser.email,
+        firstName: existingUser.firstName,
+        lastName: existingUser.lastName,
         phone: validData.phone,
+        avatarUrl: existingUser.avatarUrl,
+        role: 'CLIENT',
+        status: 'ACTIVE',
+        createdAt: existingUser.createdAt,
         updatedAt: new Date('2024-02-01'),
         addresses: [],
       };
@@ -354,8 +376,16 @@ describe('userService', () => {
       };
 
       const mockUpdatedProfile: UserProfile = {
-        ...existingUser,
+        id: existingUser.id,
+        clerkUserId: existingUser.clerkUserId,
+        email: existingUser.email,
         firstName: partialData.firstName,
+        lastName: existingUser.lastName,
+        phone: existingUser.phone,
+        avatarUrl: existingUser.avatarUrl,
+        role: 'CLIENT',
+        status: 'ACTIVE',
+        createdAt: existingUser.createdAt,
         updatedAt: new Date('2024-02-01'),
         addresses: [],
       };
