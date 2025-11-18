@@ -345,7 +345,11 @@ Las especificaciones de módulos están en `/openspec/specs/`. Cada especificaci
 - **users** (`/openspec/specs/users/`):
   - Gestión de perfiles de usuario (clientes), direcciones y perfiles públicos
   - Implementado: CRUD de perfiles, gestión de direcciones, validación con Zod
-  - Pendiente: Onboarding de contratistas, verificación KYC, integración con Stripe Connect
+
+- **contractors** (`/openspec/specs/profiles/`):
+  - `profiles-contractor` - Gestión de perfiles profesionales de contratistas, verificación KYC y preparación para Stripe Connect
+  - Implementado: CRUD de perfiles de contratista, estados de verificación (DRAFT/ACTIVE), autorización por rol
+  - Pendiente: Integración con Stripe Connect, upload de documentos a S3, estado SUSPENDED
 - **services** (`/openspec/specs/catalog-search/`) - _Pendiente de definición_
 - **booking** (`/openspec/specs/booking-checkout/`) - _Pendiente de definición_
 - **payments** (`/openspec/specs/payments-webhooks/`) - _Pendiente de definición_

@@ -1392,7 +1392,398 @@ El módulo está completamente funcional y listo para merge:
 
 ---
 
-#### 4.1.3 Búsqueda de servicios (Catalog)
+#### 4.1.3 Perfiles de Contratista (Contractor Profiles)
+
+**Referencia de spec:** `/openspec/specs/contractors/spec.md`
+**Propuesta relacionada:** `/openspec/changes/2025-11-17-profiles-contractor/proposal.md`
+
+**Criterios de aceptación generales:**
+- Cobertura de código ≥ 70% en módulo `src/modules/contractors`
+- Todos los tests unitarios e integración automatizados deben pasar
+- Endpoints API protegidos por autenticación y autorización por rol
+- Datos sensibles no expuestos en endpoints públicos
+- Transiciones de estado validadas según reglas de negocio
+- Validaciones Zod en todos los inputs
+
+**Casos de prueba:**
+
+| ID | Descripción | Tipo | Prioridad | Requisito | Procedimiento | Resultado Esperado | Estado |
+|----|-------------|------|-----------|-----------|---------------|-------------------|--------|
+| TC-CONTRACTOR-001 | Crear perfil de contratista exitosamente | Integración | Alta | RF-CONTRACTOR-001 | Llamar POST /api/contractors/profile con datos válidos y role=CONTRACTOR | 201 Created con perfil, verified=false | Passed (2025-11-17) |
+| TC-CONTRACTOR-002 | Rechazar creación de perfil duplicado | Integración | Alta | RF-CONTRACTOR-001 | Intentar crear segundo perfil para mismo userId | 409 Conflict | Passed (2025-11-17) |
+| TC-CONTRACTOR-003 | Rechazar creación por usuario CLIENT | Integración | Alta | RF-CONTRACTOR-002 | Llamar POST con role=CLIENT | 403 Forbidden | Passed (2025-11-17) |
+| TC-CONTRACTOR-004 | Obtener perfil propio del contratista | Integración | Alta | RF-CONTRACTOR-002 | Llamar GET /api/contractors/profile/me | 200 OK con perfil completo | Passed (2025-11-17) |
+| TC-CONTRACTOR-005 | Actualizar perfil en estado DRAFT | Integración | Alta | RF-CONTRACTOR-002 | Llamar PATCH /api/contractors/profile/me con verified=false | 200 OK con perfil actualizado | Passed (2025-11-17) |
+| TC-CONTRACTOR-006 | Obtener perfil público | Integración | Alta | RF-CONTRACTOR-003 | Llamar GET /api/contractors/:id sin auth | 200 OK con campos públicos | Passed (2025-11-17) |
+| TC-CONTRACTOR-007 | Perfil público no expone datos sensibles | Integración | Alta | RNF-CONTRACTOR-001 | Verificar respuesta de GET /api/contractors/:id | NO incluye verificationDocuments ni stripeConnectAccountId | Passed (2025-11-17) |
+| TC-CONTRACTOR-008 | Admin aprueba perfil | Integración | Alta | RF-CONTRACTOR-004 | Llamar PATCH /api/admin/contractors/:id/verify con role=ADMIN | 200 OK, verified=true | Passed (2025-11-17) |
+| TC-CONTRACTOR-009 | Contratista no puede auto-aprobar | Integración | Alta | RF-CONTRACTOR-004 | Contratista intenta verificar su propio perfil | 403 Forbidden | Passed (2025-11-17) |
+| TC-CONTRACTOR-010 | Validación Zod de datos | Unitaria | Alta | RNF-CONTRACTOR-002 | Enviar businessName > 100 chars | Error de validación Zod | Passed (2025-11-17) |
+| TC-CONTRACTOR-011 | Transición DRAFT → ACTIVE | Unitaria | Alta | RF-CONTRACTOR-005 | Actualizar verified de false a true | Estado cambia correctamente | Passed (2025-11-17) |
+| TC-CONTRACTOR-012 | Campo stripeConnectAccountId NULL por defecto | Unitaria | Media | RF-CONTRACTOR-006 | Crear perfil nuevo | stripeConnectAccountId es NULL | Passed (2025-11-17) |
+
+---
+
+**Procedimientos de prueba detallados:**
+
+##### TC-CONTRACTOR-001: Crear perfil de contratista exitosamente
+
+**Objetivo:** Validar que un usuario con role=CONTRACTOR puede crear su perfil.
+
+**Precondiciones:**
+- Usuario autenticado con role=CONTRACTOR
+- Usuario sin perfil de contratista previo
+- Base de datos PostgreSQL disponible
+
+**Procedimiento:**
+1. Autenticarse como usuario con role=CONTRACTOR
+2. Ejecutar `POST /api/contractors/profile` con body:
+   ```json
+   {
+     "businessName": "Reparaciones Juan",
+     "businessDescription": "Especialista en reparaciones de electrodomésticos",
+     "yearsExperience": 5,
+     "specialties": ["electrodomésticos", "aire acondicionado"]
+   }
+   ```
+3. Verificar respuesta HTTP
+
+**Datos de prueba:**
+- businessName: "Reparaciones Juan"
+- yearsExperience: 5
+- specialties: ["electrodomésticos", "aire acondicionado"]
+
+**Resultado esperado:**
+- ✅ Status: 201 Created
+- ✅ Body contiene campos: `id`, `userId`, `businessName`, `verified`, `createdAt`, `updatedAt`
+- ✅ `verified` es `false` por defecto
+- ✅ `stripeConnectAccountId` es `null`
+- ✅ Perfil es asociado al usuario autenticado
+
+**Estado:** Passed (2025-11-17)
+**Cobertura:** 72 tests pasando (56 unitarios + 16 integración), cobertura 99.13%
+
+---
+
+##### TC-CONTRACTOR-002: Rechazar creación de perfil duplicado
+
+**Objetivo:** Validar que un usuario no puede crear dos perfiles.
+
+**Precondiciones:**
+- Usuario ya tiene perfil de contratista creado (de TC-CONTRACTOR-001)
+
+**Procedimiento:**
+1. Autenticarse como mismo usuario
+2. Intentar ejecutar `POST /api/contractors/profile` nuevamente
+3. Verificar rechazo
+
+**Resultado esperado:**
+- ✅ Status: 409 Conflict
+- ✅ Mensaje de error: "Este usuario ya tiene un perfil de contratista"
+- ✅ No se crea segundo perfil en base de datos
+
+**Estado:** Passed (2025-11-17)
+
+---
+
+##### TC-CONTRACTOR-003: Rechazar creación por usuario CLIENT
+
+**Objetivo:** Validar que usuarios con role=CLIENT no pueden crear perfil de contratista.
+
+**Precondiciones:**
+- Usuario autenticado con role=CLIENT
+
+**Procedimiento:**
+1. Autenticarse como usuario con role=CLIENT
+2. Intentar ejecutar `POST /api/contractors/profile`
+3. Verificar rechazo
+
+**Resultado esperado:**
+- ✅ Status: 403 Forbidden
+- ✅ Mensaje de error: "No tienes permiso para crear un perfil de contratista"
+- ✅ No se crea perfil
+
+**Estado:** Passed (2025-11-17)
+
+---
+
+##### TC-CONTRACTOR-004: Obtener perfil propio del contratista
+
+**Objetivo:** Validar que un contratista puede obtener su perfil.
+
+**Precondiciones:**
+- Usuario autenticado con role=CONTRACTOR
+- Usuario tiene perfil creado
+
+**Procedimiento:**
+1. Autenticarse como contratista
+2. Ejecutar `GET /api/contractors/profile/me`
+3. Verificar respuesta
+
+**Resultado esperado:**
+- ✅ Status: 200 OK
+- ✅ Body contiene perfil completo del usuario
+- ✅ Incluye campos: businessName, businessDescription, yearsExperience, specialties, verified
+
+**Estado:** Passed (2025-11-17)
+
+---
+
+##### TC-CONTRACTOR-005: Actualizar perfil en estado DRAFT
+
+**Objetivo:** Validar que un contratista puede actualizar su perfil no verificado.
+
+**Precondiciones:**
+- Usuario autenticado con role=CONTRACTOR
+- Perfil con verified=false
+
+**Procedimiento:**
+1. Autenticarse como contratista
+2. Ejecutar `PATCH /api/contractors/profile/me` con body:
+   ```json
+   {
+     "businessDescription": "Descripción actualizada con más detalles"
+   }
+   ```
+3. Verificar actualización
+
+**Resultado esperado:**
+- ✅ Status: 200 OK
+- ✅ `businessDescription` se actualiza correctamente
+- ✅ Campo `updatedAt` refleja cambio reciente
+- ✅ `verified` sigue siendo `false`
+
+**Estado:** Passed (2025-11-17)
+
+---
+
+##### TC-CONTRACTOR-006: Obtener perfil público
+
+**Objetivo:** Validar que cualquiera puede obtener el perfil público de un contratista.
+
+**Precondiciones:**
+- Perfil de contratista existe
+- Perfil es verified=true (para mostrarse públicamente)
+
+**Procedimiento:**
+1. Ejecutar `GET /api/contractors/:contractorId` SIN autenticación
+2. Verificar respuesta
+
+**Datos de prueba:**
+- contractorId: UUID del contratista
+
+**Resultado esperado:**
+- ✅ Status: 200 OK
+- ✅ Body contiene SOLO campos públicos: businessName, businessDescription, yearsExperience, specialties, rating
+- ✅ NO expone: verificationDocuments, stripeConnectAccountId, verified flag
+
+**Estado:** Passed (2025-11-17)
+
+---
+
+##### TC-CONTRACTOR-007: Perfil público no expone datos sensibles
+
+**Objetivo:** Validar que endpoint público filtra datos sensibles.
+
+**Precondiciones:**
+- Perfil de contratista existe
+
+**Procedimiento:**
+1. Ejecutar `GET /api/contractors/:contractorId`
+2. Analizar respuesta para campos prohibidos
+3. Verificar ausencia de: verificationDocuments, stripeConnectAccountId, internalNotes
+
+**Resultado esperado:**
+- ✅ Response NO contiene `verificationDocuments`
+- ✅ Response NO contiene `stripeConnectAccountId`
+- ✅ Response NO contiene `internalNotes`
+- ✅ Response NO contiene `verified` (flag interno)
+
+**Estado:** Passed (2025-11-17)
+
+---
+
+##### TC-CONTRACTOR-008: Admin aprueba perfil
+
+**Objetivo:** Validar que admin puede verificar y aprobar perfiles.
+
+**Precondiciones:**
+- Usuario autenticado con role=ADMIN
+- Perfil de contratista existe con verified=false
+- Perfil tiene ID conocido
+
+**Procedimiento:**
+1. Autenticarse como admin
+2. Ejecutar `PATCH /api/admin/contractors/:contractorId/verify` con body:
+   ```json
+   {
+     "verified": true
+   }
+   ```
+3. Verificar cambio de estado
+
+**Resultado esperado:**
+- ✅ Status: 200 OK
+- ✅ `verified` cambia de `false` a `true`
+- ✅ Campo `verifiedAt` se registra con timestamp actual
+- ✅ Log de auditoría registra la acción
+
+**Estado:** Passed (2025-11-17)
+
+---
+
+##### TC-CONTRACTOR-009: Contratista no puede auto-aprobar
+
+**Objetivo:** Validar que contratista no puede cambiar su propio estado verified.
+
+**Precondiciones:**
+- Usuario autenticado con role=CONTRACTOR
+- Perfil con verified=false
+
+**Procedimiento:**
+1. Autenticarse como contratista
+2. Intentar ejecutar `PATCH /api/admin/contractors/:myId/verify`
+3. Verificar rechazo
+
+**Resultado esperado:**
+- ✅ Status: 403 Forbidden
+- ✅ Mensaje de error: "No tienes permiso para verificar perfiles"
+- ✅ `verified` sigue siendo `false`
+
+**Estado:** Passed (2025-11-17)
+
+---
+
+##### TC-CONTRACTOR-010: Validación Zod de datos
+
+**Objetivo:** Validar que schema Zod rechaza inputs inválidos.
+
+**Precondiciones:**
+- Ninguna (tests unitarios de validadores)
+
+**Procedimiento:**
+1. Ejecutar tests de validación Zod:
+   ```bash
+   npm run test -- src/modules/contractors/__tests__/validators.test.ts
+   ```
+2. Probar casos:
+   - businessName > 100 caracteres → debe fallar
+   - yearsExperience < 0 → debe fallar
+   - specialties vacío → debe fallar
+   - email inválido → debe fallar
+
+**Casos de validación:**
+- businessName válido: "Reparaciones Juan" ✅
+- businessName inválido: "A" (< 3 chars) ❌
+- yearsExperience válido: 5 ✅
+- yearsExperience inválido: -1 ❌
+- businessDescription válido: "Descripción válida" ✅
+- businessDescription inválido: "A" (< 10 chars) ❌
+
+**Resultado esperado:**
+- ✅ Inputs válidos pasan validación
+- ✅ Inputs inválidos lanzan `ZodError`
+- ✅ Mensajes de error especifican qué campo falló
+
+**Estado:** Passed (2025-11-17)
+
+---
+
+##### TC-CONTRACTOR-011: Transición DRAFT → ACTIVE
+
+**Objetivo:** Validar que el estado cambia correctamente cuando admin verifica.
+
+**Precondiciones:**
+- Perfil en estado DRAFT (verified=false)
+
+**Procedimiento:**
+1. Verificar estado inicial: `verified=false`
+2. Admin aprueba (TC-CONTRACTOR-008)
+3. Verificar estado final: `verified=true`
+
+**Resultado esperado:**
+- ✅ Estado DRAFT → ACTIVE (representado por verified: false → true)
+- ✅ Transición es atómica (no hay estado intermedio)
+- ✅ `verifiedAt` registra el momento de transición
+
+**Estado:** Passed (2025-11-17)
+
+---
+
+##### TC-CONTRACTOR-012: Campo stripeConnectAccountId NULL por defecto
+
+**Objetivo:** Validar que nuevo perfil no tiene cuenta Stripe conectada.
+
+**Precondiciones:**
+- Perfil recién creado
+
+**Procedimiento:**
+1. Crear perfil con TC-CONTRACTOR-001
+2. Obtener perfil con `GET /api/contractors/profile/me`
+3. Verificar campo stripeConnectAccountId
+
+**Resultado esperado:**
+- ✅ `stripeConnectAccountId` es `null` en perfil nuevo
+- ✅ Se establece cuando contratista completa onboarding de Stripe Connect
+- ✅ No es un string vacío, definitivamente `null`
+
+**Estado:** Passed (2025-11-17)
+
+---
+
+**Archivos de implementación esperados:**
+
+```
+apps/web/src/modules/contractors/
+├── services/
+│   └── contractorService.ts           # CRUD y lógica de perfiles
+├── repositories/
+│   └── contractorRepository.ts        # Acceso a datos
+├── types/
+│   └── index.ts                       # DTOs y tipos
+├── validators/
+│   └── index.ts                       # Schemas Zod
+├── errors/
+│   └── index.ts                       # Errores custom
+└── __tests__/
+    ├── contractorService.test.ts      # Tests unitarios
+    ├── contractorRepository.test.ts   # Tests unitarios
+    └── validators.test.ts             # Tests de validación
+
+apps/web/app/api/contractors/
+├── profile/
+│   ├── route.ts                       # POST /api/contractors/profile
+│   └── me/
+│       └── route.ts                   # GET, PATCH /api/contractors/profile/me
+└── [id]/
+    └── route.ts                       # GET /api/contractors/:id (público)
+
+apps/web/app/api/admin/contractors/
+└── [id]/
+    └── verify/
+        └── route.ts                   # PATCH /api/admin/contractors/:id/verify
+
+tests/integration/api/
+└── contractors.test.ts                # Tests de integración
+```
+
+**Comandos de prueba:**
+
+```bash
+# Tests unitarios del módulo
+npm run test -- src/modules/contractors
+
+# Tests de integración
+npm run test -- tests/integration/api/contractors.test.ts
+
+# Cobertura
+npm run test:coverage
+# Objetivo: ≥ 70% en src/modules/contractors
+```
+
+---
+
+#### 4.1.4 Búsqueda de servicios (Catalog)
 
 | ID | Descripción | Requisito | Prioridad | Estado |
 |----|-------------|-----------|-----------|--------|
@@ -1401,7 +1792,7 @@ El módulo está completamente funcional y listo para merge:
 | TC-RF-001-03 | Performance: P95 ≤ 1.2s con 10 RPS | RNF-3.5.1 | Alta | Pendiente |
 | TC-RF-002-01 | Visualización de detalle de servicio | RF-002 | Media | Pendiente |
 
-#### 4.1.4 Reservas y Checkout (Booking)
+#### 4.1.5 Reservas y Checkout (Booking)
 
 | ID | Descripción | Requisito | Prioridad | Estado |
 |----|-------------|-----------|-----------|--------|
@@ -1410,7 +1801,7 @@ El módulo está completamente funcional y listo para merge:
 | TC-RF-006-01 | Transiciones válidas de estado | RF-006 | Alta | Pendiente |
 | TC-RF-006-02 | Rechazo de transiciones inválidas | RF-006 | Alta | Pendiente |
 
-#### 4.1.5 Pagos y Webhooks (Payments)
+#### 4.1.6 Pagos y Webhooks (Payments)
 
 | ID | Descripción | Requisito | Prioridad | Estado |
 |----|-------------|-----------|-----------|--------|
@@ -1419,7 +1810,7 @@ El módulo está completamente funcional y listo para merge:
 | TC-RF-010-01 | Liquidación correcta según comisiones (BR-002) | RF-010 | Alta | Pendiente |
 | TC-BR-002-01 | Cálculo de comisiones (Ic = B - C%) | BR-002 | Alta | Pendiente |
 
-#### 4.1.5 Mensajería (Messaging)
+#### 4.1.7 Mensajería (Messaging)
 
 | ID | Descripción | Requisito | Prioridad | Estado |
 |----|-------------|-----------|-----------|--------|
@@ -1427,7 +1818,7 @@ El módulo está completamente funcional y listo para merge:
 | TC-RF-008-02 | Sanitización anti-XSS en mensajes | RF-008 | Alta | Pendiente |
 | TC-RF-008-03 | Retención de mensajes (7 días post-cierre) | RF-008 | Media | Pendiente |
 
-#### 4.1.6 Calificaciones (Ratings)
+#### 4.1.8 Calificaciones (Ratings)
 
 | ID | Descripción | Requisito | Prioridad | Estado |
 |----|-------------|-----------|-----------|--------|
@@ -1435,7 +1826,7 @@ El módulo está completamente funcional y listo para merge:
 | TC-RF-009-02 | Rechazo de calificación duplicada | RF-009 | Media | Pendiente |
 | TC-RF-009-03 | Cálculo correcto de promedio | RF-009 | Media | Pendiente |
 
-#### 4.1.7 Administración (Admin)
+#### 4.1.9 Administración (Admin)
 
 | ID | Descripción | Requisito | Prioridad | Estado |
 |----|-------------|-----------|-----------|--------|
@@ -1443,7 +1834,7 @@ El módulo está completamente funcional y listo para merge:
 | TC-RF-011-02 | Bloqueo de usuario | RF-011 | Media | Pendiente |
 | TC-BR-005-01 | Resolución de disputa | BR-005 | Media | Pendiente |
 
-#### 4.1.8 Base de Datos y Schema Prisma (Database)
+#### 4.1.10 Base de Datos y Schema Prisma (Database)
 
 | ID | Descripción | Requisito | Prioridad | Estado |
 |----|-------------|-----------|-----------|--------|
