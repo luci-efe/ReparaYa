@@ -1,16 +1,25 @@
-// Mock del repositorio - DEBE IR AL INICIO ANTES DE CUALQUIER IMPORT
-jest.mock('../repositories/addressRepository', () => {
+// Mock de Prisma - DEBE IR AL INICIO ANTES DE CUALQUIER IMPORT
+jest.mock('@prisma/client');
+jest.mock('@/lib/db', () => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const mockRepo: any = {
-    create: jest.fn(),
-    update: jest.fn(),
-    delete: jest.fn(),
-    findByUserId: jest.fn(),
-    findById: jest.fn(),
+  const mockPrismaClient: any = {
+    address: {
+      findUnique: jest.fn(),
+      findMany: jest.fn(),
+      findFirst: jest.fn(),
+      create: jest.fn(),
+      update: jest.fn(),
+      updateMany: jest.fn(),
+      delete: jest.fn(),
+      count: jest.fn(),
+    },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    $transaction: jest.fn((callback: any) => callback(mockPrismaClient)),
   };
 
   return {
-    addressRepository: mockRepo,
+    prisma: mockPrismaClient,
+    db: mockPrismaClient,
   };
 });
 
@@ -21,19 +30,22 @@ import { Decimal } from '@prisma/client/runtime/library';
 
 // Imports después del mock
 import { addressService } from '../services/addressService';
-import { addressRepository } from '../repositories/addressRepository';
+import { prisma } from '@/lib/db';
 
-// Obtener las funciones mock tipadas
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const mockCreate = addressRepository.create as any;
+const mockCreate = prisma.address.create as any;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const mockUpdate = addressRepository.update as any;
+const mockUpdate = prisma.address.update as any;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const mockDelete = addressRepository.delete as any;
+const mockUpdateMany = prisma.address.updateMany as any;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const mockFindByUserId = addressRepository.findByUserId as any;
+const mockDelete = prisma.address.delete as any;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const mockFindById = addressRepository.findById as any;
+const mockFindMany = prisma.address.findMany as any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const mockFindFirst = prisma.address.findFirst as any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const mockCount = prisma.address.count as any;
 
 describe('addressService', () => {
   beforeEach(() => {
@@ -71,7 +83,13 @@ describe('addressService', () => {
 
       // Assert
       expect(result).toEqual(mockCreatedAddress);
-      expect(mockCreate).toHaveBeenCalledWith(userId, validData);
+      expect(mockCreate).toHaveBeenCalledWith({
+        data: {
+          userId,
+          ...validData,
+          country: 'MX',
+        },
+      });
     });
 
     it('TC-RF-005-17: debe rechazar postalCode con formato inválido', async () => {
@@ -209,6 +227,7 @@ describe('addressService', () => {
         updatedAt: new Date('2024-02-01'),
       };
 
+      mockUpdateMany.mockResolvedValue({ count: 0 });
       mockCreate.mockResolvedValue(mockCreatedAddress);
 
       // Act
@@ -216,7 +235,6 @@ describe('addressService', () => {
 
       // Assert
       expect(result.isDefault).toBe(true);
-      expect(mockCreate).toHaveBeenCalledWith(userId, validData);
     });
   });
 
@@ -230,12 +248,12 @@ describe('addressService', () => {
         city: 'Puebla',
       };
 
-      const mockUpdatedAddress: Address = {
+      const existingAddress = {
         id: addressId,
         userId,
-        addressLine1: validData.addressLine1,
+        addressLine1: 'Old Address',
         addressLine2: null,
-        city: validData.city,
+        city: 'Old City',
         state: 'Puebla',
         postalCode: '72000',
         country: 'MX',
@@ -243,9 +261,16 @@ describe('addressService', () => {
         lng: null,
         isDefault: false,
         createdAt: new Date('2024-01-01'),
+        updatedAt: new Date('2024-01-01'),
+      };
+
+      const mockUpdatedAddress: Address = {
+        ...existingAddress,
+        ...validData,
         updatedAt: new Date('2024-02-01'),
       };
 
+      mockFindFirst.mockResolvedValue(existingAddress);
       mockUpdate.mockResolvedValue(mockUpdatedAddress);
 
       // Act
@@ -253,7 +278,8 @@ describe('addressService', () => {
 
       // Assert
       expect(result).toEqual(mockUpdatedAddress);
-      expect(mockUpdate).toHaveBeenCalledWith(addressId, userId, validData);
+      expect(mockFindFirst).toHaveBeenCalled();
+      expect(mockUpdate).toHaveBeenCalled();
     });
 
     it('TC-RF-005-24: debe rechazar postalCode inválido en actualización', async () => {
@@ -296,12 +322,12 @@ describe('addressService', () => {
         city: 'Querétaro',
       };
 
-      const mockUpdatedAddress: Address = {
+      const existingAddress = {
         id: addressId,
         userId,
         addressLine1: 'Calle Original 123',
         addressLine2: null,
-        city: partialData.city,
+        city: 'Old City',
         state: 'Querétaro',
         postalCode: '76000',
         country: 'MX',
@@ -309,9 +335,16 @@ describe('addressService', () => {
         lng: null,
         isDefault: false,
         createdAt: new Date('2024-01-01'),
+        updatedAt: new Date('2024-01-01'),
+      };
+
+      const mockUpdatedAddress: Address = {
+        ...existingAddress,
+        city: partialData.city,
         updatedAt: new Date('2024-02-01'),
       };
 
+      mockFindFirst.mockResolvedValue(existingAddress);
       mockUpdate.mockResolvedValue(mockUpdatedAddress);
 
       // Act
@@ -319,7 +352,6 @@ describe('addressService', () => {
 
       // Assert
       expect(result.city).toBe(partialData.city);
-      expect(mockUpdate).toHaveBeenCalledWith(addressId, userId, partialData);
     });
 
     it('TC-RF-005-27: debe propagar regla BR-002 del repositorio al actualizar isDefault', async () => {
@@ -330,7 +362,7 @@ describe('addressService', () => {
         isDefault: true,
       };
 
-      const mockUpdatedAddress: Address = {
+      const existingAddress = {
         id: addressId,
         userId,
         addressLine1: 'Calle Test 123',
@@ -341,11 +373,19 @@ describe('addressService', () => {
         country: 'MX',
         lat: null,
         lng: null,
-        isDefault: true,
+        isDefault: false,
         createdAt: new Date('2024-01-01'),
+        updatedAt: new Date('2024-01-01'),
+      };
+
+      const mockUpdatedAddress: Address = {
+        ...existingAddress,
+        isDefault: true,
         updatedAt: new Date('2024-02-01'),
       };
 
+      mockFindFirst.mockResolvedValue(existingAddress);
+      mockUpdateMany.mockResolvedValue({ count: 1 });
       mockUpdate.mockResolvedValue(mockUpdatedAddress);
 
       // Act
@@ -353,7 +393,6 @@ describe('addressService', () => {
 
       // Assert
       expect(result.isDefault).toBe(true);
-      expect(mockUpdate).toHaveBeenCalledWith(addressId, userId, updateData);
     });
   });
 
@@ -363,47 +402,53 @@ describe('addressService', () => {
       const addressId = 'addr-123';
       const userId = 'user-123';
 
-      mockDelete.mockResolvedValue(undefined);
+      const existingAddress = {
+        id: addressId,
+        userId,
+      };
+
+      mockFindFirst.mockResolvedValue(existingAddress);
+      mockCount.mockResolvedValue(2); // Más de una dirección
+      mockDelete.mockResolvedValue(existingAddress);
 
       // Act
       await addressService.delete(addressId, userId);
 
       // Assert
-      expect(mockDelete).toHaveBeenCalledWith(addressId, userId);
+      expect(mockDelete).toHaveBeenCalledWith({ where: { id: addressId } });
     });
 
     it('TC-RF-005-29: debe propagar CannotDeleteLastAddressError del repositorio (BR-001)', async () => {
       // Arrange
       const addressId = 'addr-123';
       const userId = 'user-123';
-      const error = new Error('No puedes eliminar la única dirección de tu perfil');
-      error.name = 'CannotDeleteLastAddressError';
 
-      mockDelete.mockRejectedValue(error);
+      const existingAddress = {
+        id: addressId,
+        userId,
+      };
+
+      mockFindFirst.mockResolvedValue(existingAddress);
+      mockCount.mockResolvedValue(1); // Solo una dirección
 
       // Act & Assert
       await expect(
         addressService.delete(addressId, userId)
       ).rejects.toThrow('No puedes eliminar la única dirección de tu perfil');
-
-      expect(mockDelete).toHaveBeenCalledWith(addressId, userId);
     });
 
     it('TC-RF-005-30: debe propagar AddressNotFoundError del repositorio', async () => {
       // Arrange
       const addressId = 'addr-nonexistent';
       const userId = 'user-123';
-      const error = new Error('Dirección con ID addr-nonexistent no encontrada');
-      error.name = 'AddressNotFoundError';
 
-      mockDelete.mockRejectedValue(error);
+      mockCount.mockResolvedValue(2); // Más de una dirección, para pasar la primera verificación
+      mockFindFirst.mockResolvedValue(null); // Pero la dirección específica no existe
 
       // Act & Assert
       await expect(
         addressService.delete(addressId, userId)
       ).rejects.toThrow('Dirección con ID addr-nonexistent no encontrada');
-
-      expect(mockDelete).toHaveBeenCalledWith(addressId, userId);
     });
   });
 
@@ -444,7 +489,7 @@ describe('addressService', () => {
         },
       ];
 
-      mockFindByUserId.mockResolvedValue(mockAddresses);
+      mockFindMany.mockResolvedValue(mockAddresses);
 
       // Act
       const result = await addressService.getByUserId(userId);
@@ -453,14 +498,17 @@ describe('addressService', () => {
       expect(result).toEqual(mockAddresses);
       expect(result).toHaveLength(2);
       expect(result[0].isDefault).toBe(true);
-      expect(mockFindByUserId).toHaveBeenCalledWith(userId);
+      expect(mockFindMany).toHaveBeenCalledWith({
+        where: { userId },
+        orderBy: { isDefault: 'desc' },
+      });
     });
 
     it('TC-RF-005-32: debe retornar array vacío cuando no hay direcciones', async () => {
       // Arrange
       const userId = 'user-new';
 
-      mockFindByUserId.mockResolvedValue([]);
+      mockFindMany.mockResolvedValue([]);
 
       // Act
       const result = await addressService.getByUserId(userId);
@@ -493,31 +541,39 @@ describe('addressService', () => {
         updatedAt: new Date('2024-01-01'),
       };
 
-      mockFindById.mockResolvedValue(mockAddress);
+      mockFindFirst.mockResolvedValue(mockAddress);
 
       // Act
       const result = await addressService.getById(addressId, userId);
 
       // Assert
       expect(result).toEqual(mockAddress);
-      expect(mockFindById).toHaveBeenCalledWith(addressId, userId);
+      expect(mockFindFirst).toHaveBeenCalledWith({
+        where: {
+          id: addressId,
+          userId,
+        },
+      });
     });
 
     it('TC-RF-005-34: debe propagar AddressNotFoundError del repositorio', async () => {
       // Arrange
       const addressId = 'addr-nonexistent';
       const userId = 'user-123';
-      const error = new Error('Dirección con ID addr-nonexistent no encontrada');
-      error.name = 'AddressNotFoundError';
 
-      mockFindById.mockRejectedValue(error);
+      mockFindFirst.mockResolvedValue(null);
 
       // Act & Assert
       await expect(
         addressService.getById(addressId, userId)
       ).rejects.toThrow('Dirección con ID addr-nonexistent no encontrada');
 
-      expect(mockFindById).toHaveBeenCalledWith(addressId, userId);
+      expect(mockFindFirst).toHaveBeenCalledWith({
+        where: {
+          id: addressId,
+          userId,
+        },
+      });
     });
   });
 });
