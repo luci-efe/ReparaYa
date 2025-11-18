@@ -23,16 +23,17 @@ import { Decimal } from '@prisma/client/runtime/library';
 import { addressService } from '../services/addressService';
 import { addressRepository } from '../repositories/addressRepository';
 
+// Obtener las funciones mock tipadas
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const mockCreate = (addressRepository as any).create;
+const mockCreate = addressRepository.create as any;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const mockUpdate = (addressRepository as any).update;
+const mockUpdate = addressRepository.update as any;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const mockDelete = (addressRepository as any).delete;
+const mockDelete = addressRepository.delete as any;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const mockFindByUserId = (addressRepository as any).findByUserId;
+const mockFindByUserId = addressRepository.findByUserId as any;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const mockFindById = (addressRepository as any).findById;
+const mockFindById = addressRepository.findById as any;
 
 describe('addressService', () => {
   beforeEach(() => {

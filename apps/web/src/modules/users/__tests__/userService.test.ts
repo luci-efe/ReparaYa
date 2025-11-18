@@ -20,12 +20,13 @@ import { ZodError } from 'zod';
 import { userService } from '../services/userService';
 import { userRepository } from '../repositories/userRepository';
 
+// Obtener las funciones mock tipadas
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const mockFindById = (userRepository as any).findById;
+const mockFindById = userRepository.findById as any;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const mockUpdate = (userRepository as any).update;
+const mockUpdate = userRepository.update as any;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const mockGetPublicProfile = (userRepository as any).getPublicProfile;
+const mockGetPublicProfile = userRepository.getPublicProfile as any;
 
 describe('userService', () => {
   beforeEach(() => {
