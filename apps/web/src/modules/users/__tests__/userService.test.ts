@@ -1,4 +1,6 @@
 // Mock de Prisma - DEBE IR AL INICIO ANTES DE CUALQUIER IMPORT
+import { describe, it, expect, jest, beforeEach } from '@jest/globals';
+
 jest.mock('@prisma/client');
 jest.mock('@/lib/db', () => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -24,7 +26,6 @@ jest.mock('@/lib/db', () => {
   };
 });
 
-import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import type { UserProfile, PublicUserProfile } from '../types';
 import { ZodError } from 'zod';
 

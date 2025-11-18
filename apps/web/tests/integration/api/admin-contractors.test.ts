@@ -63,21 +63,6 @@ const mockAdminUser = {
   addresses: [],
 };
 
-const mockContractorUser = {
-  id: 'user-contractor-123',
-  clerkUserId: 'clerk_contractor_abc123',
-  email: 'juan.garcia@example.com',
-  firstName: 'Juan',
-  lastName: 'García',
-  phone: '5551234567',
-  avatarUrl: 'https://example.com/juan-avatar.jpg',
-  role: 'CONTRACTOR',
-  status: 'ACTIVE',
-  createdAt: new Date('2024-01-01'),
-  updatedAt: new Date('2024-01-01'),
-  addresses: [],
-};
-
 const mockContractorProfile = {
   id: 'contractor-profile-123',
   userId: 'user-contractor-123',
