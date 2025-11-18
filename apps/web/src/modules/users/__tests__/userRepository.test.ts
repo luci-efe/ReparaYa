@@ -171,10 +171,16 @@ describe('userRepository', () => {
       };
 
       const updatedUser: UserProfile = {
-        ...existingUser,
+        id: existingUser.id,
+        clerkUserId: existingUser.clerkUserId,
+        email: existingUser.email,
         firstName: 'Pedro',
+        lastName: existingUser.lastName,
         phone: '5551112222',
         avatarUrl: 'https://example.com/new-avatar.jpg',
+        role: 'CLIENT',
+        status: 'ACTIVE',
+        createdAt: existingUser.createdAt,
         updatedAt: new Date('2024-02-01'),
         addresses: [],
       };
