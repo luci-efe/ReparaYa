@@ -1,3 +1,5 @@
+import { describe, it, expect, jest, beforeEach } from '@jest/globals';
+
 jest.mock('@prisma/client');
 jest.mock('@/lib/db', () => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -30,7 +32,6 @@ jest.mock('@/lib/db', () => {
   };
 });
 
-import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import { Decimal } from '@prisma/client/runtime/library';
 import type { Address } from '../types';
 
