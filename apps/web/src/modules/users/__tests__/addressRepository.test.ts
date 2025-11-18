@@ -1,4 +1,4 @@
-import { describe, it, expect, jest, beforeEach } from '@jest/globals';
+import { describe, it, expect, beforeEach } from '@jest/globals';
 
 jest.mock('@prisma/client');
 jest.mock('@/lib/db', () => {
