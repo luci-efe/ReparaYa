@@ -165,7 +165,6 @@ describe('Endpoints de gestión de usuarios', () => {
         .mockResolvedValueOnce({ ...mockUser }); // getProfile
 
       // Act
-      const req = createMockRequest();
       const response = await getUserMe();
       const data = await response.json();
 
