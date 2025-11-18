@@ -1,14 +1,26 @@
-// Mock del repositorio - DEBE IR AL INICIO
-jest.mock('../repositories/userRepository', () => {
+// Mock de Prisma - DEBE IR AL INICIO ANTES DE CUALQUIER IMPORT
+jest.mock('@prisma/client');
+jest.mock('@/lib/db', () => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const mockRepo: any = {
-    findById: jest.fn(),
-    update: jest.fn(),
-    getPublicProfile: jest.fn(),
+  const mockPrismaClient: any = {
+    user: {
+      findUnique: jest.fn(),
+      findMany: jest.fn(),
+      create: jest.fn(),
+      update: jest.fn(),
+      delete: jest.fn(),
+      upsert: jest.fn(),
+    },
+    address: {
+      findMany: jest.fn(),
+    },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    $transaction: jest.fn((callback: any) => callback(mockPrismaClient)),
   };
 
   return {
-    userRepository: mockRepo,
+    prisma: mockPrismaClient,
+    db: mockPrismaClient,
   };
 });
 
@@ -18,15 +30,12 @@ import { ZodError } from 'zod';
 
 // Imports después del mock
 import { userService } from '../services/userService';
-import { userRepository } from '../repositories/userRepository';
+import { prisma } from '@/lib/db';
 
-// Obtener las funciones mock tipadas
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const mockFindById = userRepository.findById as any;
+const mockFindUnique = prisma.user.findUnique as any;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const mockUpdate = userRepository.update as any;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const mockGetPublicProfile = userRepository.getPublicProfile as any;
+const mockUpdate = prisma.user.update as any;
 
 describe('userService', () => {
   beforeEach(() => {
@@ -68,7 +77,7 @@ describe('userService', () => {
         ],
       };
 
-      mockFindById.mockResolvedValue(mockProfile);
+      mockFindUnique.mockResolvedValue(mockProfile);
 
       // Act
       const result = await userService.getProfile(userId);
@@ -76,20 +85,26 @@ describe('userService', () => {
       // Assert
       expect(result).toEqual(mockProfile);
       expect(result?.addresses).toHaveLength(1);
-      expect(mockFindById).toHaveBeenCalledWith(userId);
+      expect(mockFindUnique).toHaveBeenCalledWith({
+        where: { id: userId },
+        include: { addresses: true },
+      });
     });
 
     it('TC-RF-004-11: debe retornar null cuando el usuario no existe', async () => {
       // Arrange
       const userId = 'user-nonexistent';
-      mockFindById.mockResolvedValue(null);
+      mockFindUnique.mockResolvedValue(null);
 
       // Act
       const result = await userService.getProfile(userId);
 
       // Assert
       expect(result).toBeNull();
-      expect(mockFindById).toHaveBeenCalledWith(userId);
+      expect(mockFindUnique).toHaveBeenCalledWith({
+        where: { id: userId },
+        include: { addresses: true },
+      });
     });
   });
 
@@ -125,7 +140,11 @@ describe('userService', () => {
 
       // Assert
       expect(result).toEqual(mockUpdatedProfile);
-      expect(mockUpdate).toHaveBeenCalledWith(userId, validData);
+      expect(mockUpdate).toHaveBeenCalledWith({
+        where: { id: userId },
+        data: validData,
+        include: { addresses: true },
+      });
     });
 
     it('TC-RF-004-13: debe rechazar phone con formato inválido', async () => {
@@ -232,7 +251,11 @@ describe('userService', () => {
 
       // Assert
       expect(result.avatarUrl).toBe(validData.avatarUrl);
-      expect(mockUpdate).toHaveBeenCalledWith(userId, validData);
+      expect(mockUpdate).toHaveBeenCalledWith({
+        where: { id: userId },
+        data: validData,
+        include: { addresses: true },
+      });
     });
 
     it('TC-RF-004-19: debe aceptar phone válido con 10 dígitos', async () => {
@@ -264,7 +287,11 @@ describe('userService', () => {
 
       // Assert
       expect(result.phone).toBe(validData.phone);
-      expect(mockUpdate).toHaveBeenCalledWith(userId, validData);
+      expect(mockUpdate).toHaveBeenCalledWith({
+        where: { id: userId },
+        data: validData,
+        include: { addresses: true },
+      });
     });
 
     it('TC-RF-004-20: debe permitir actualización parcial de campos', async () => {
@@ -296,7 +323,11 @@ describe('userService', () => {
 
       // Assert
       expect(result.firstName).toBe(partialData.firstName);
-      expect(mockUpdate).toHaveBeenCalledWith(userId, partialData);
+      expect(mockUpdate).toHaveBeenCalledWith({
+        where: { id: userId },
+        data: partialData,
+        include: { addresses: true },
+      });
     });
   });
 
@@ -304,6 +335,8 @@ describe('userService', () => {
     it('TC-RF-004-21: debe retornar solo campos públicos', async () => {
       // Arrange
       const userId = 'user-123';
+
+      // El mock debe retornar solo los campos que se seleccionan en el repository
       const mockPublicProfile: PublicUserProfile = {
         id: userId,
         firstName: 'Elena',
@@ -311,7 +344,7 @@ describe('userService', () => {
         avatarUrl: 'https://example.com/elena.jpg',
       };
 
-      mockGetPublicProfile.mockResolvedValue(mockPublicProfile);
+      mockFindUnique.mockResolvedValue(mockPublicProfile);
 
       // Act
       const result = await userService.getPublicProfile(userId);
@@ -322,23 +355,37 @@ describe('userService', () => {
       expect(result).not.toHaveProperty('phone');
       expect(result).not.toHaveProperty('clerkUserId');
       expect(result).not.toHaveProperty('addresses');
-      expect(mockGetPublicProfile).toHaveBeenCalledWith(userId);
+      expect(mockFindUnique).toHaveBeenCalledWith({
+        where: { id: userId },
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          avatarUrl: true,
+        },
+      });
     });
 
     it('TC-RF-004-22: debe propagar UserNotFoundError del repositorio', async () => {
       // Arrange
       const userId = 'user-nonexistent';
-      const error = new Error('Usuario con ID user-nonexistent no encontrado');
-      error.name = 'UserNotFoundError';
 
-      mockGetPublicProfile.mockRejectedValue(error);
+      mockFindUnique.mockResolvedValue(null);
 
       // Act & Assert
       await expect(
         userService.getPublicProfile(userId)
       ).rejects.toThrow('Usuario con ID user-nonexistent no encontrado');
 
-      expect(mockGetPublicProfile).toHaveBeenCalledWith(userId);
+      expect(mockFindUnique).toHaveBeenCalledWith({
+        where: { id: userId },
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          avatarUrl: true,
+        },
+      });
     });
   });
 });
