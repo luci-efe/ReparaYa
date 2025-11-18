@@ -1,4 +1,3 @@
-jest.mock('@prisma/client');
 jest.mock('@/lib/db', () => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const mockPrismaClient: any = {
@@ -157,21 +156,32 @@ describe('userRepository', () => {
   describe('update', () => {
     it('TC-RF-004-05: debe actualizar campos correctamente cuando el usuario existe', async () => {
       // Arrange
-      const updatedUser: UserProfile = {
+      const existingUser = {
         id: 'user-123',
         clerkUserId: 'clerk_abc123',
         email: 'pedro.lopez@example.com',
-        firstName: 'Pedro',
+        firstName: 'Juan',
         lastName: 'López',
-        phone: '5551112222',
-        avatarUrl: 'https://example.com/new-avatar.jpg',
+        phone: '5551111111',
+        avatarUrl: 'https://example.com/old-avatar.jpg',
         role: 'CLIENT',
         status: 'ACTIVE',
         createdAt: new Date('2024-01-01'),
+        updatedAt: new Date('2024-01-15'),
+      };
+
+      const updatedUser: UserProfile = {
+        ...existingUser,
+        firstName: 'Pedro',
+        phone: '5551112222',
+        avatarUrl: 'https://example.com/new-avatar.jpg',
         updatedAt: new Date('2024-02-01'),
         addresses: [],
       };
 
+      // Mock findUnique para validar existencia
+      mockFindUnique.mockResolvedValue(existingUser);
+      // Mock update para la actualización
       mockUpdate.mockResolvedValue(updatedUser);
 
       // Act
@@ -183,6 +193,9 @@ describe('userRepository', () => {
 
       // Assert
       expect(result).toEqual(updatedUser);
+      expect(mockFindUnique).toHaveBeenCalledWith({
+        where: { id: 'user-123' },
+      });
       expect(mockUpdate).toHaveBeenCalledWith({
         where: { id: 'user-123' },
         data: {
@@ -196,8 +209,8 @@ describe('userRepository', () => {
 
     it('TC-RF-004-06: debe lanzar UserNotFoundError cuando el ID es inválido', async () => {
       // Arrange
-      const prismaError = new Error('Record to update not found');
-      mockUpdate.mockRejectedValue(prismaError);
+      // Mock de findUnique retornando null (usuario no encontrado)
+      mockFindUnique.mockResolvedValue(null);
 
       // Act & Assert
       await expect(
@@ -207,6 +220,14 @@ describe('userRepository', () => {
       await expect(
         userRepository.update('user-invalid', { firstName: 'Test' })
       ).rejects.toThrow('Usuario con ID user-invalid no encontrado');
+
+      // Verificar que se llamó a findUnique
+      expect(mockFindUnique).toHaveBeenCalledWith({
+        where: { id: 'user-invalid' },
+      });
+
+      // Verificar que NO se llamó a update (porque el usuario no existe)
+      expect(mockUpdate).not.toHaveBeenCalled();
     });
   });
 

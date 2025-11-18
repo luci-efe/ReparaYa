@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { requireAuth } from '@/modules/auth/utils/requireAuth';
 import { UnauthorizedError } from '@/modules/auth/errors';
-import { userService } from '@/modules/users';
+import { userService, UserNotFoundError } from '@/modules/users';
 import { ZodError } from 'zod';
 
 /**
@@ -12,6 +12,13 @@ export async function GET() {
   try {
     const user = await requireAuth();
     const profile = await userService.getProfile(user.id);
+
+    if (!profile) {
+      return NextResponse.json(
+        { error: 'Perfil no encontrado' },
+        { status: 404 }
+      );
+    }
 
     return NextResponse.json(profile);
   } catch (error) {
@@ -37,7 +44,16 @@ export async function GET() {
 export async function PATCH(request: Request) {
   try {
     const user = await requireAuth();
-    const body = await request.json();
+
+    let body;
+    try {
+      body = await request.json();
+    } catch (parseError) {
+      return NextResponse.json(
+        { error: 'JSON inválido en el cuerpo de la petición' },
+        { status: 400 }
+      );
+    }
 
     const updated = await userService.updateProfile(user.id, body);
     return NextResponse.json(updated);
@@ -53,6 +69,13 @@ export async function PATCH(request: Request) {
       return NextResponse.json(
         { error: 'Datos inválidos', details: error.errors },
         { status: 400 }
+      );
+    }
+
+    if (error instanceof UserNotFoundError) {
+      return NextResponse.json(
+        { error: 'Usuario no encontrado' },
+        { status: 404 }
       );
     }
 
