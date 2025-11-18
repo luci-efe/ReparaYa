@@ -169,9 +169,10 @@ Ver `/docs/md/STP-ReparaYa.md` sección 4.1.2 para casos TC-USER-001 a TC-USER-0
 **Cobertura de tests:**
 - 56 tests unitarios
 - 14 tests de integración
+- 24 tests de repository
 - Casos: TC-USER-001 a TC-USER-010
 
-**Nota:** Los tests están implementados pero requieren ajuste de mocks de Prisma/Clerk. La estructura y lógica de los tests son correctas.
+**Estado:** ✅ Todos los tests pasan (100% PASS). Los mocks de Prisma/Clerk han sido ajustados correctamente y la suite de tests está completamente verde.
 
 ## Consideraciones de Seguridad
 

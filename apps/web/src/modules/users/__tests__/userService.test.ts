@@ -118,21 +118,32 @@ describe('userService', () => {
         phone: '5559876543',
       };
 
-      const mockUpdatedProfile: UserProfile = {
+      const existingUser = {
         id: userId,
         clerkUserId: 'clerk_abc123',
         email: 'roberto@example.com',
-        firstName: validData.firstName,
-        lastName: validData.lastName,
-        phone: validData.phone,
+        firstName: 'Juan',
+        lastName: 'Pérez',
+        phone: '5551111111',
         avatarUrl: null,
         role: 'CLIENT',
         status: 'ACTIVE',
         createdAt: new Date('2024-01-01'),
+        updatedAt: new Date('2024-01-01'),
+      };
+
+      const mockUpdatedProfile: UserProfile = {
+        ...existingUser,
+        firstName: validData.firstName,
+        lastName: validData.lastName,
+        phone: validData.phone,
         updatedAt: new Date('2024-02-01'),
         addresses: [],
       };
 
+      // Mock findUnique para validar existencia
+      mockFindUnique.mockResolvedValue(existingUser);
+      // Mock update para la actualización
       mockUpdate.mockResolvedValue(mockUpdatedProfile);
 
       // Act
@@ -140,6 +151,9 @@ describe('userService', () => {
 
       // Assert
       expect(result).toEqual(mockUpdatedProfile);
+      expect(mockFindUnique).toHaveBeenCalledWith({
+        where: { id: userId },
+      });
       expect(mockUpdate).toHaveBeenCalledWith({
         where: { id: userId },
         data: validData,
@@ -229,21 +243,30 @@ describe('userService', () => {
         avatarUrl: 'https://example.com/avatar.jpg',
       };
 
-      const mockUpdatedProfile: UserProfile = {
+      const existingUser = {
         id: userId,
         clerkUserId: 'clerk_abc123',
         email: 'test@example.com',
         firstName: 'Juan',
         lastName: 'Pérez',
         phone: null,
-        avatarUrl: validData.avatarUrl,
+        avatarUrl: null,
         role: 'CLIENT',
         status: 'ACTIVE',
         createdAt: new Date('2024-01-01'),
+        updatedAt: new Date('2024-01-01'),
+      };
+
+      const mockUpdatedProfile: UserProfile = {
+        ...existingUser,
+        avatarUrl: validData.avatarUrl,
         updatedAt: new Date('2024-02-01'),
         addresses: [],
       };
 
+      // Mock findUnique para validar existencia
+      mockFindUnique.mockResolvedValue(existingUser);
+      // Mock update para la actualización
       mockUpdate.mockResolvedValue(mockUpdatedProfile);
 
       // Act
@@ -251,6 +274,9 @@ describe('userService', () => {
 
       // Assert
       expect(result.avatarUrl).toBe(validData.avatarUrl);
+      expect(mockFindUnique).toHaveBeenCalledWith({
+        where: { id: userId },
+      });
       expect(mockUpdate).toHaveBeenCalledWith({
         where: { id: userId },
         data: validData,
@@ -265,21 +291,30 @@ describe('userService', () => {
         phone: '5551234567',
       };
 
-      const mockUpdatedProfile: UserProfile = {
+      const existingUser = {
         id: userId,
         clerkUserId: 'clerk_abc123',
         email: 'test@example.com',
         firstName: 'Juan',
         lastName: 'Pérez',
-        phone: validData.phone,
+        phone: null,
         avatarUrl: null,
         role: 'CLIENT',
         status: 'ACTIVE',
         createdAt: new Date('2024-01-01'),
+        updatedAt: new Date('2024-01-01'),
+      };
+
+      const mockUpdatedProfile: UserProfile = {
+        ...existingUser,
+        phone: validData.phone,
         updatedAt: new Date('2024-02-01'),
         addresses: [],
       };
 
+      // Mock findUnique para validar existencia
+      mockFindUnique.mockResolvedValue(existingUser);
+      // Mock update para la actualización
       mockUpdate.mockResolvedValue(mockUpdatedProfile);
 
       // Act
@@ -287,6 +322,9 @@ describe('userService', () => {
 
       // Assert
       expect(result.phone).toBe(validData.phone);
+      expect(mockFindUnique).toHaveBeenCalledWith({
+        where: { id: userId },
+      });
       expect(mockUpdate).toHaveBeenCalledWith({
         where: { id: userId },
         data: validData,
@@ -301,21 +339,30 @@ describe('userService', () => {
         firstName: 'NuevoNombre',
       };
 
-      const mockUpdatedProfile: UserProfile = {
+      const existingUser = {
         id: userId,
         clerkUserId: 'clerk_abc123',
         email: 'test@example.com',
-        firstName: partialData.firstName,
+        firstName: 'Juan',
         lastName: 'Apellido Original',
         phone: null,
         avatarUrl: null,
         role: 'CLIENT',
         status: 'ACTIVE',
         createdAt: new Date('2024-01-01'),
+        updatedAt: new Date('2024-01-01'),
+      };
+
+      const mockUpdatedProfile: UserProfile = {
+        ...existingUser,
+        firstName: partialData.firstName,
         updatedAt: new Date('2024-02-01'),
         addresses: [],
       };
 
+      // Mock findUnique para validar existencia
+      mockFindUnique.mockResolvedValue(existingUser);
+      // Mock update para la actualización
       mockUpdate.mockResolvedValue(mockUpdatedProfile);
 
       // Act
@@ -323,6 +370,9 @@ describe('userService', () => {
 
       // Assert
       expect(result.firstName).toBe(partialData.firstName);
+      expect(mockFindUnique).toHaveBeenCalledWith({
+        where: { id: userId },
+      });
       expect(mockUpdate).toHaveBeenCalledWith({
         where: { id: userId },
         data: partialData,

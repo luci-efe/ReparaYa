@@ -30,18 +30,26 @@ export const userRepository = {
 
   /**
    * Actualizar perfil de usuario
+   * Nota: Validamos existencia antes de actualizar para evitar depender del manejo de errores de Prisma
    */
   async update(id: string, data: UpdateUserProfileDTO): Promise<UserProfile> {
-    try {
-      const user = await prisma.user.update({
-        where: { id },
-        data,
-        include: { addresses: true },
-      });
-      return user;
-    } catch (error) {
+    // Validar existencia del usuario antes de actualizar
+    const existingUser = await prisma.user.findUnique({
+      where: { id },
+    });
+
+    if (!existingUser) {
       throw new UserNotFoundError(id);
     }
+
+    // Actualizar usuario
+    const user = await prisma.user.update({
+      where: { id },
+      data,
+      include: { addresses: true },
+    });
+
+    return user;
   },
 
   /**
