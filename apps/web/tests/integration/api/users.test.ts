@@ -183,7 +183,6 @@ describe('Endpoints de gestión de usuarios', () => {
       (getCurrentUser as jest.Mock).mockResolvedValueOnce(null);
 
       // Act
-      const req = createMockRequest();
       const response = await getUserMe();
       const data = await response.json();
 
