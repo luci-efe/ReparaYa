@@ -70,21 +70,6 @@ const mockContractorUser = {
   addresses: [],
 };
 
-const mockClientUser = {
-  id: 'user-client-456',
-  clerkUserId: 'clerk_client_xyz789',
-  email: 'maria.lopez@example.com',
-  firstName: 'María',
-  lastName: 'López',
-  phone: '5559876543',
-  avatarUrl: null,
-  role: 'CLIENT',
-  status: 'ACTIVE',
-  createdAt: new Date('2024-01-15'),
-  updatedAt: new Date('2024-01-15'),
-  addresses: [],
-};
-
 const mockContractorProfile = {
   id: 'contractor-profile-123',
   userId: 'user-contractor-123',

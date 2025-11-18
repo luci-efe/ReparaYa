@@ -1,3 +1,5 @@
+import { describe, it, expect, jest, beforeEach } from '@jest/globals';
+
 jest.mock('@/lib/db', () => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const mockPrismaClient: any = {
@@ -29,7 +31,6 @@ jest.mock('@/lib/db', () => {
   };
 });
 
-import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import type { UserProfile } from '../types';
 
 // Imports después del mock
