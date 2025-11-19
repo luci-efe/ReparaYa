@@ -254,7 +254,7 @@ describe('QuickAccessTiles', () => {
 
     it('each tile should have icon, title, description, and CTA', () => {
       // Arrange
-      const { container } = render(<QuickAccessTiles />);
+      render(<QuickAccessTiles />);
 
       // Assert
       const tiles = screen.getAllByRole('link');

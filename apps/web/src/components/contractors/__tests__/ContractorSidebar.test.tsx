@@ -347,7 +347,7 @@ describe('ContractorSidebar', () => {
       mockUsePathname.mockReturnValue('/contractors/dashboard');
 
       // Act
-      const { container } = render(<ContractorSidebar isOpen={false} onClose={mockOnClose} />);
+      render(<ContractorSidebar isOpen={false} onClose={mockOnClose} />);
 
       // Assert - Profile links should have hover styles (not active)
       const profileLinks = screen.getAllByRole('link', { name: /mi perfil/i });
@@ -360,7 +360,7 @@ describe('ContractorSidebar', () => {
   describe('Icon rendering', () => {
     it('each link should have an icon', () => {
       // Arrange & Act
-      const { container } = render(<ContractorSidebar isOpen={false} onClose={mockOnClose} />);
+      render(<ContractorSidebar isOpen={false} onClose={mockOnClose} />);
 
       // Assert
       const links = screen.getAllByRole('link');
