@@ -350,6 +350,13 @@ Las especificaciones de módulos están en `/openspec/specs/`. Cada especificaci
   - `profiles-contractor` - Gestión de perfiles profesionales de contratistas, verificación KYC y preparación para Stripe Connect
   - Implementado: CRUD de perfiles de contratista, estados de verificación (DRAFT/ACTIVE), autorización por rol
   - Pendiente: Integración con Stripe Connect, upload de documentos a S3, estado SUSPENDED
+
+- **contractor-location** (`/openspec/specs/contractor-location/`):
+  - `contractor-location` - Captura de ubicación geográfica y zona de operación de contratistas
+  - En desarrollo: Dirección normalizada, geocodificación con AWS Location Service, zona RADIUS
+  - Integración: AWS Location Service (Place Index), geo-tz (timezone), Prisma (ContractorServiceLocation)
+  - Funcionalidades: Captura en onboarding, edición en settings, control de acceso por ownership/rol
+
 - **services** (`/openspec/specs/catalog-search/`) - _Pendiente de definición_
 - **booking** (`/openspec/specs/booking-checkout/`) - _Pendiente de definición_
 - **payments** (`/openspec/specs/payments-webhooks/`) - _Pendiente de definición_
