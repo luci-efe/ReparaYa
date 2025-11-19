@@ -1783,7 +1783,453 @@ npm run test:coverage
 
 ---
 
-#### 4.1.4 Búsqueda de servicios (Catalog)
+#### 4.1.4 Dashboard de Contratista (Contractor Dashboard)
+
+**Referencia de spec:** `/openspec/specs/contractor-dashboard/spec.md`
+**Propuesta relacionada:** `/openspec/changes/add-contractor-dashboard/proposal.md`
+
+**Criterios de aceptación generales:**
+- Cobertura de código ≥ 70% en componentes de dashboard
+- Todos los tests unitarios e integración automatizados deben pasar
+- Tests E2E manuales (TC-CDASH-001 a TC-CDASH-007) ejecutados en cada push a dev
+- Lighthouse Accessibility score ≥ 90
+- Performance: Initial load ≤ 1.5s en 3G, FCP ≤ 1.0s, TTI ≤ 2.0s
+- Responsive: Mobile, tablet, desktop layouts funcionan correctamente
+
+**Nota sobre testing:**
+- **Tests unitarios (TC-CDASH-008 a TC-CDASH-010):** Automatizados con Jest + React Testing Library
+- **Tests de integración (TC-CDASH-006 a TC-CDASH-007):** Automatizados con Jest + Supertest
+- **Tests E2E (TC-CDASH-001 a TC-CDASH-005):** Manuales (documentados en procedimientos detallados)
+- **Tests A11y (TC-CDASH-011 a TC-CDASH-012):** Automatizados (axe-core) + manuales (keyboard/screen reader)
+- **Tests responsive (TC-CDASH-013 a TC-CDASH-015):** Manuales con Chrome DevTools
+- **Tests de performance (TC-CDASH-016):** Manual con Chrome DevTools Network throttling
+
+**Casos de prueba:**
+
+| ID | Descripción | Tipo | Requisito | Prioridad | Estado |
+|----|-------------|------|-----------|-----------|--------|
+| TC-CDASH-001 | Contractor con perfil DRAFT ve estado "En Revisión" | E2E | RF-CDASH-001 | Alta | Pendiente |
+| TC-CDASH-002 | Contractor con perfil ACTIVE ve badge "Verificado" | E2E | RF-CDASH-001 | Alta | Pendiente |
+| TC-CDASH-003 | Dashboard muestra CTA de zona de servicio cuando falta | E2E | RF-CDASH-002 | Media | Pendiente |
+| TC-CDASH-004 | Dashboard oculta CTA cuando zona está configurada | E2E | RF-CDASH-002 | Media | Pendiente |
+| TC-CDASH-005 | Quick access tiles navegan a rutas correctas | E2E | RF-CDASH-003 | Alta | Pendiente |
+| TC-CDASH-006 | Usuario CLIENT/ADMIN no puede acceder a dashboard contratista (403) | Integración | RF-CDASH-004 | Crítica | Pendiente |
+| TC-CDASH-007 | Usuario no autenticado redirigido a /sign-in | Integración | RF-CDASH-004 | Crítica | Pendiente |
+| TC-CDASH-008 | Dashboard renderiza estado de carga (loading) | Unitaria | RNF-CDASH-001 | Media | Pendiente |
+| TC-CDASH-009 | Dashboard renderiza estado de error cuando API falla | Unitaria | RNF-CDASH-001 | Media | Pendiente |
+| TC-CDASH-010 | Dashboard renderiza estado vacío cuando no hay datos | Unitaria | RNF-CDASH-001 | Media | Pendiente |
+| TC-CDASH-011 | Navegación con teclado (Tab, Enter, Arrow keys) funciona | A11y | RNF-CDASH-002 | Alta | Pendiente |
+| TC-CDASH-012 | Todos los elementos interactivos tienen ARIA labels | A11y | RNF-CDASH-002 | Alta | Pendiente |
+| TC-CDASH-013 | Dashboard responsive en mobile (≤640px) | Responsive | RNF-CDASH-003 | Alta | Pendiente |
+| TC-CDASH-014 | Dashboard responsive en tablet (640-1024px) | Responsive | RNF-CDASH-003 | Media | Pendiente |
+| TC-CDASH-015 | Dashboard responsive en desktop (≥1024px) | Responsive | RNF-CDASH-003 | Alta | Pendiente |
+| TC-CDASH-016 | Performance: Initial load ≤ 1.5s en 3G | Performance | RNF-CDASH-004 | Media | Pendiente |
+
+---
+
+**Procedimientos de prueba detallados:**
+
+##### TC-CDASH-001: Contractor con perfil DRAFT ve estado "En Revisión"
+
+**Objetivo:** Validar que un contratista con perfil no verificado ve el estado de verificación pendiente en el dashboard.
+
+**Precondiciones:**
+- Usuario autenticado con `role=CONTRACTOR`
+- Perfil de contratista creado con `verified: false` (estado DRAFT)
+- Aplicación corriendo en `http://localhost:3000`
+
+**Procedimiento:**
+1. Iniciar sesión como contratista con perfil DRAFT
+2. Navegar a `http://localhost:3000/contractors/dashboard`
+3. Observar el widget de estado de verificación
+4. Verificar el badge mostrado
+5. Verificar el mensaje descriptivo
+
+**Datos de prueba:**
+- Email: `contractor-draft@test.com`
+- Perfil: `{ verified: false, businessName: "Plomería Test" }`
+
+**Resultado esperado:**
+- ✅ Dashboard carga correctamente
+- ✅ Widget de verificación muestra badge amarillo "⏱ En Revisión"
+- ✅ Mensaje: "Tu perfil está en revisión. Podrás publicar servicios cuando sea aprobado."
+- ✅ No hay errores en consola
+
+**Estado:** Pendiente
+
+---
+
+##### TC-CDASH-002: Contractor con perfil ACTIVE ve badge "Verificado"
+
+**Objetivo:** Validar que un contratista con perfil verificado ve el estado activo en el dashboard.
+
+**Precondiciones:**
+- Usuario autenticado con `role=CONTRACTOR`
+- Perfil de contratista con `verified: true` (estado ACTIVE)
+
+**Procedimiento:**
+1. Iniciar sesión como contratista verificado
+2. Navegar a `/contractors/dashboard`
+3. Observar el widget de estado de verificación
+
+**Datos de prueba:**
+- Email: `contractor-active@test.com`
+- Perfil: `{ verified: true, businessName: "Electricidad Pro" }`
+
+**Resultado esperado:**
+- ✅ Widget muestra badge verde "✓ Verificado"
+- ✅ Mensaje: "Tu perfil ha sido aprobado. Ya puedes publicar servicios."
+
+**Estado:** Pendiente
+
+---
+
+##### TC-CDASH-003: Dashboard muestra CTA de zona de servicio cuando falta
+
+**Objetivo:** Validar que el dashboard muestra un Call-to-Action para configurar la zona de servicio cuando no está configurada.
+
+**Precondiciones:**
+- Contratista autenticado
+- Zona de servicio NO configurada (`serviceArea: null` o campo faltante)
+
+**Procedimiento:**
+1. Iniciar sesión como contratista sin zona configurada
+2. Navegar a `/contractors/dashboard`
+3. Buscar widget de "Configurar Zona de Servicio"
+
+**Resultado esperado:**
+- ✅ Widget CTA visible en dashboard
+- ✅ Mensaje: "Configura tu zona de operación para recibir solicitudes"
+- ✅ Botón "Configurar →" presente
+
+**Estado:** Pendiente
+
+---
+
+##### TC-CDASH-004: Dashboard oculta CTA cuando zona está configurada
+
+**Objetivo:** Validar que el CTA de zona de servicio NO se muestra cuando ya está configurada.
+
+**Precondiciones:**
+- Contratista autenticado
+- Zona de servicio configurada (`serviceArea: { ... }`)
+
+**Procedimiento:**
+1. Iniciar sesión como contratista con zona configurada
+2. Navegar a `/contractors/dashboard`
+3. Verificar ausencia del widget CTA
+
+**Resultado esperado:**
+- ✅ Widget CTA NO se muestra
+- ✅ Dashboard muestra otras secciones normalmente
+
+**Estado:** Pendiente
+
+---
+
+##### TC-CDASH-005: Quick access tiles navegan a rutas correctas
+
+**Objetivo:** Validar que los tiles de acceso rápido navegan a las rutas esperadas.
+
+**Precondiciones:**
+- Contratista autenticado
+
+**Procedimiento:**
+1. Navegar a `/contractors/dashboard`
+2. Identificar tiles de acceso rápido:
+   - "Mis Servicios"
+   - "Disponibilidad"
+   - "Mensajes"
+3. Hacer clic en cada tile
+4. Verificar navegación
+
+**Resultado esperado:**
+- ✅ Click en "Mis Servicios" → navega a `/contractors/services` (placeholder)
+- ✅ Click en "Disponibilidad" → navega a `/contractors/availability` (placeholder)
+- ✅ Click en "Mensajes" → navega a `/contractors/messages` (placeholder)
+- ✅ Placeholders muestran mensaje "Próximamente" o equivalente
+
+**Estado:** Pendiente
+
+---
+
+##### TC-CDASH-006: Usuario CLIENT/ADMIN no puede acceder a dashboard contratista (403)
+
+**Objetivo:** Validar que solo usuarios con rol CONTRACTOR pueden acceder al dashboard de contratista.
+
+**Precondiciones:**
+- Usuario autenticado con `role=CLIENT` o `role=ADMIN`
+
+**Procedimiento:**
+1. Iniciar sesión como CLIENT
+2. Intentar navegar a `/contractors/dashboard`
+3. Observar respuesta
+
+**Resultado esperado:**
+- ✅ HTTP 403 Forbidden
+- ✅ Redirect a dashboard apropiado (`/dashboard` para CLIENT, `/admin/dashboard` para ADMIN)
+- ✅ Mensaje de error: "No tienes permisos para acceder a esta página"
+
+**Estado:** Pendiente
+
+---
+
+##### TC-CDASH-007: Usuario no autenticado redirigido a /sign-in
+
+**Objetivo:** Validar que usuarios no autenticados no pueden acceder al dashboard de contratista.
+
+**Precondiciones:**
+- Usuario sin sesión activa (cookies limpias)
+
+**Procedimiento:**
+1. Cerrar sesión / abrir navegador incógnito
+2. Navegar a `/contractors/dashboard`
+3. Observar comportamiento
+
+**Resultado esperado:**
+- ✅ Redirect automático a `/sign-in`
+- ✅ Parámetro `redirect_url=/contractors/dashboard` en query string
+- ✅ Después de login exitoso, redirect de vuelta a dashboard
+
+**Estado:** Pendiente
+
+---
+
+##### TC-CDASH-008: Dashboard renderiza estado de carga (loading)
+
+**Objetivo:** Validar que el dashboard muestra un estado de carga mientras obtiene datos del perfil.
+
+**Precondiciones:**
+- Test unitario con Jest + React Testing Library
+
+**Procedimiento:**
+1. Renderizar componente `<DashboardShell>` con mock de API lenta
+2. Verificar que se muestra skeleton loader o spinner
+
+**Datos de prueba:**
+```typescript
+// Mock API delay
+fetchContractorProfile.mockImplementation(() =>
+  new Promise(resolve => setTimeout(() => resolve(mockProfile), 1000))
+);
+```
+
+**Resultado esperado:**
+- ✅ Skeleton loaders visibles
+- ✅ Texto "Cargando..." o spinner presente
+- ✅ Elementos interactivos deshabilitados
+- ✅ No se muestran secciones vacías antes de cargar
+
+**Estado:** Pendiente
+
+---
+
+##### TC-CDASH-009: Dashboard renderiza estado de error cuando API falla
+
+**Objetivo:** Validar que el dashboard muestra un error amigable cuando falla la API.
+
+**Precondiciones:**
+- Test unitario con mock de API fallida
+
+**Procedimiento:**
+1. Renderizar componente con mock de API que lanza error
+2. Verificar mensaje de error
+
+**Datos de prueba:**
+```typescript
+fetchContractorProfile.mockRejectedValue(new Error('Network error'));
+```
+
+**Resultado esperado:**
+- ✅ Mensaje de error visible: "Error al cargar el dashboard"
+- ✅ Botón "Reintentar" presente
+- ✅ Sugerencia de contactar soporte si persiste
+- ✅ No se muestra contenido parcial o corrupto
+
+**Estado:** Pendiente
+
+---
+
+##### TC-CDASH-010: Dashboard renderiza estado vacío cuando no hay datos
+
+**Objetivo:** Validar que el dashboard muestra un estado vacío amigable para contratistas nuevos.
+
+**Precondiciones:**
+- Contratista recién registrado sin servicios ni datos
+
+**Procedimiento:**
+1. Renderizar dashboard con perfil básico (solo nombre, sin servicios, sin reservas)
+2. Verificar estado vacío en secciones
+
+**Resultado esperado:**
+- ✅ Métricas muestran "0" (Servicios Activos: 0, Reservas: 0, etc.)
+- ✅ Mensaje de bienvenida: "Completa tu perfil para empezar a recibir solicitudes"
+- ✅ CTA visible: "Crear mi primer servicio"
+- ✅ No hay errores de renderizado
+
+**Estado:** Pendiente
+
+---
+
+##### TC-CDASH-011: Navegación con teclado (Tab, Enter, Arrow keys) funciona
+
+**Objetivo:** Validar que el dashboard es completamente navegable con teclado.
+
+**Precondiciones:**
+- Dashboard renderizado en navegador
+- Solo uso de teclado (sin mouse)
+
+**Procedimiento:**
+1. Cargar `/contractors/dashboard`
+2. Presionar Tab repetidamente
+3. Verificar orden de foco lógico (sidebar → contenido principal → widgets)
+4. Presionar Enter/Space en links y botones
+5. Verificar que menús desplegables funcionan con Arrow keys
+
+**Resultado esperado:**
+- ✅ Todos los elementos interactivos son alcanzables con Tab
+- ✅ Orden de foco es lógico (top → bottom, left → right)
+- ✅ Focus indicator visible (anillo azul 2px)
+- ✅ Enter/Space activan links y botones
+- ✅ Esc cierra sidebar en mobile (si aplica)
+
+**Estado:** Pendiente
+
+---
+
+##### TC-CDASH-012: Todos los elementos interactivos tienen ARIA labels
+
+**Objetivo:** Validar que el dashboard es accesible para usuarios de lectores de pantalla.
+
+**Precondiciones:**
+- Test automatizado con axe-core en Jest
+- Test manual con NVDA/JAWS/VoiceOver
+
+**Procedimiento (automatizado):**
+1. Ejecutar test: `npm run test -- DashboardShell.test.tsx`
+2. Verificar que axe-core no reporte errores
+
+**Procedimiento (manual):**
+1. Activar lector de pantalla (NVDA en Windows, VoiceOver en Mac)
+2. Navegar por el dashboard
+3. Verificar que todos los elementos son anunciados correctamente
+
+**Resultado esperado:**
+- ✅ Axe-core: 0 errores de accesibilidad
+- ✅ `<nav>` tiene `aria-label="Navegación principal"`
+- ✅ `<main>` tiene `aria-label="Contenido del dashboard"`
+- ✅ Iconos decorativos tienen `aria-hidden="true"`
+- ✅ Botones sin texto tienen `aria-label`
+- ✅ Status messages usan `role="status"` o `aria-live="polite"`
+
+**Estado:** Pendiente
+
+---
+
+##### TC-CDASH-013: Dashboard responsive en mobile (≤640px)
+
+**Objetivo:** Validar que el dashboard es funcional y usable en dispositivos móviles.
+
+**Precondiciones:**
+- Chrome DevTools Device Emulation
+
+**Procedimiento:**
+1. Abrir `/contractors/dashboard` en Chrome
+2. Abrir DevTools (F12)
+3. Activar Device Emulation
+4. Seleccionar "iPhone SE" (375x667)
+5. Verificar layout y funcionalidad
+
+**Resultado esperado:**
+- ✅ Sidebar oculta por defecto
+- ✅ Bottom navigation visible con 4 iconos clave
+- ✅ Todas las secciones apiladas verticalmente (1 columna)
+- ✅ Texto legible (font-size ≥ 14px)
+- ✅ Botones táctiles ≥ 44x44px
+- ✅ No hay scroll horizontal
+- ✅ Hamburger menu ☰ funciona (toggle sidebar)
+
+**Estado:** Pendiente
+
+---
+
+##### TC-CDASH-014: Dashboard responsive en tablet (640-1024px)
+
+**Objetivo:** Validar layout en tablets.
+
+**Precondiciones:**
+- Chrome DevTools Device Emulation
+
+**Procedimiento:**
+1. Emular iPad (768x1024)
+2. Verificar layout
+
+**Resultado esperado:**
+- ✅ Sidebar colapsable (hamburger menu)
+- ✅ Quick access tiles en grid 2 columnas
+- ✅ Topbar visible con logo + user menu
+- ✅ Contenido aprovecha ancho de pantalla
+
+**Estado:** Pendiente
+
+---
+
+##### TC-CDASH-015: Dashboard responsive en desktop (≥1024px)
+
+**Objetivo:** Validar layout en desktop.
+
+**Precondiciones:**
+- Navegador en ventana 1920x1080
+
+**Procedimiento:**
+1. Abrir dashboard en desktop
+2. Verificar layout completo
+
+**Resultado esperado:**
+- ✅ Sidebar fija y siempre visible
+- ✅ Quick access tiles en grid 3 columnas
+- ✅ Topbar con logo, notifications, user menu
+- ✅ Máximo ancho de contenido (max-w-7xl)
+- ✅ Espaciado generoso entre secciones
+
+**Estado:** Pendiente
+
+---
+
+##### TC-CDASH-016: Performance: Initial load ≤ 1.5s en 3G
+
+**Objetivo:** Validar que el dashboard carga rápidamente incluso en conexiones lentas.
+
+**Precondiciones:**
+- Chrome DevTools Network Throttling
+
+**Procedimiento:**
+1. Abrir Chrome DevTools
+2. Ir a Network tab
+3. Seleccionar "Fast 3G" throttling
+4. Navegar a `/contractors/dashboard`
+5. Medir tiempos con Performance tab
+
+**Métricas a validar:**
+- First Contentful Paint (FCP)
+- Time to Interactive (TTI)
+- Total load time
+
+**Resultado esperado:**
+- ✅ FCP ≤ 1.0s
+- ✅ TTI ≤ 2.0s
+- ✅ Total load ≤ 1.5s (average)
+- ✅ Bundle size increase ≤ 20KB (gzipped)
+
+**Herramientas:**
+- Chrome DevTools Performance tab
+- Lighthouse CI (si disponible)
+
+**Estado:** Pendiente
+
+---
+
+#### 4.1.5 Búsqueda de servicios (Catalog)
 
 | ID | Descripción | Requisito | Prioridad | Estado |
 |----|-------------|-----------|-----------|--------|

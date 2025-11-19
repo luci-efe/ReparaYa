@@ -1,16 +1,69 @@
 "use client";
 
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useOnboardingRedirect } from '@/hooks/useOnboardingRedirect';
 
 export function DashboardContent({ userId }: { userId: string }) {
+  const router = useRouter();
   const { isChecking } = useOnboardingRedirect();
+  const [isRedirecting, setIsRedirecting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  if (isChecking) {
+  // Redirigir contratistas a su dashboard específico
+  useEffect(() => {
+    const checkUserRole = async () => {
+      try {
+        const response = await fetch('/api/users/me');
+        if (!response.ok) {
+          setError('No se pudo verificar tu rol de usuario. Por favor, intenta recargar la página.');
+          return;
+        }
+
+        const profile = await response.json();
+
+        // Si es contratista, redirigir a dashboard de contratistas
+        if (profile.role === 'CONTRACTOR') {
+          setIsRedirecting(true);
+          router.push('/contractors/dashboard');
+        }
+      } catch (error) {
+        console.error('Error checking user role:', error);
+        setError('Ocurrió un error al verificar tu rol. Por favor, intenta recargar la página.');
+      }
+    };
+
+    if (!isChecking) {
+      checkUserRole();
+    }
+  }, [isChecking, router]);
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center max-w-md">
+          <div className="text-red-500 text-5xl mb-4">⚠️</div>
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">Error al cargar el dashboard</h2>
+          <p className="text-gray-600 mb-4">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Recargar página
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (isChecking || isRedirecting) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-          <p className="mt-4 text-gray-600">Verificando perfil...</p>
+          <p className="mt-4 text-gray-600">
+            {isRedirecting ? 'Redirigiendo...' : 'Verificando perfil...'}
+          </p>
         </div>
       </div>
     );
