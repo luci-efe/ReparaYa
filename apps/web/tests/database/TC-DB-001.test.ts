@@ -9,6 +9,9 @@
  * - TC-DB-001-05: Enums de Prisma coinciden con valores de specs
  */
 
+// IMPORTANTE: Desactivar el mock global de Prisma para estos tests de integración
+jest.unmock('@prisma/client');
+
 import { PrismaClient } from '@prisma/client';
 
 describe('TC-DB-001: Infraestructura y Schema de Base de Datos', () => {
