@@ -97,10 +97,10 @@ describe('ServiceAreaCTA', () => {
   describe('TC-CDASH-004: Hide CTA when service area is configured', () => {
     it('should return null when hasServiceArea is true', () => {
       // Arrange & Act
-      const { container: _container } = render(<ServiceAreaCTA hasServiceArea={true} />);
+      const { container } = render(<ServiceAreaCTA hasServiceArea={true} />);
 
-      // Assert - _container declared but not used for firstChild check
-      expect(_container.firstChild).toBeNull();
+      // Assert
+      expect(container.firstChild).toBeNull();
     });
 
     it('should not render any text when service area exists', () => {
