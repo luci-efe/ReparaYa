@@ -226,7 +226,7 @@ describe('MetricsOverview', () => {
 
     it('each card should have flexbox layout', () => {
       // Arrange
-      const { container } = render(<MetricsOverview />);
+      render(<MetricsOverview />);
 
       // Assert
       const cards = screen.getAllByTestId('card');
@@ -247,7 +247,7 @@ describe('MetricsOverview', () => {
 
     it('cards should have h-full class for equal heights', () => {
       // Arrange
-      const { container } = render(<MetricsOverview />);
+      render(<MetricsOverview />);
 
       // Assert
       const cards = screen.getAllByTestId('card');

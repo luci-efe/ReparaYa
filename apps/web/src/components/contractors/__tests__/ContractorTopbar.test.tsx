@@ -165,7 +165,7 @@ describe('ContractorTopbar', () => {
 
     it('should render hamburger icon', () => {
       // Arrange & Act
-      const { container } = render(<ContractorTopbar _user={mockUser} onMenuClick={mockOnMenuClick} />);
+      render(<ContractorTopbar _user={mockUser} onMenuClick={mockOnMenuClick} />);
 
       // Assert
       const menuButton = screen.getByLabelText('Abrir menú de navegación');
@@ -176,7 +176,7 @@ describe('ContractorTopbar', () => {
 
     it('hamburger icon should be decorative', () => {
       // Arrange & Act
-      const { container } = render(<ContractorTopbar _user={mockUser} onMenuClick={mockOnMenuClick} />);
+      render(<ContractorTopbar _user={mockUser} onMenuClick={mockOnMenuClick} />);
 
       // Assert
       const menuButton = screen.getByLabelText('Abrir menú de navegación');
@@ -206,7 +206,7 @@ describe('ContractorTopbar', () => {
 
     it('should render logo icon', () => {
       // Arrange & Act
-      const { container } = render(<ContractorTopbar _user={mockUser} onMenuClick={mockOnMenuClick} />);
+      render(<ContractorTopbar _user={mockUser} onMenuClick={mockOnMenuClick} />);
 
       // Assert
       const logoLink = screen.getByRole('link', { name: /reparaya/i });
@@ -217,7 +217,7 @@ describe('ContractorTopbar', () => {
 
     it('logo icon should be decorative', () => {
       // Arrange & Act
-      const { container } = render(<ContractorTopbar _user={mockUser} onMenuClick={mockOnMenuClick} />);
+      render(<ContractorTopbar _user={mockUser} onMenuClick={mockOnMenuClick} />);
 
       // Assert
       const logoLink = screen.getByRole('link', { name: /reparaya/i });
@@ -235,7 +235,7 @@ describe('ContractorTopbar', () => {
 
     it('logo text should be hidden on small screens', () => {
       // Arrange & Act
-      const { container } = render(<ContractorTopbar _user={mockUser} onMenuClick={mockOnMenuClick} />);
+      render(<ContractorTopbar _user={mockUser} onMenuClick={mockOnMenuClick} />);
 
       // Assert
       const logoText = screen.getByText('ReparaYa');
@@ -310,7 +310,7 @@ describe('ContractorTopbar', () => {
 
     it('should render bell icon', () => {
       // Arrange & Act
-      const { container } = render(<ContractorTopbar _user={mockUser} onMenuClick={mockOnMenuClick} />);
+      render(<ContractorTopbar _user={mockUser} onMenuClick={mockOnMenuClick} />);
 
       // Assert
       const notificationsButton = screen.getByLabelText('Notificaciones');
@@ -321,7 +321,7 @@ describe('ContractorTopbar', () => {
 
     it('bell icon should be decorative', () => {
       // Arrange & Act
-      const { container } = render(<ContractorTopbar _user={mockUser} onMenuClick={mockOnMenuClick} />);
+      render(<ContractorTopbar _user={mockUser} onMenuClick={mockOnMenuClick} />);
 
       // Assert
       const notificationsButton = screen.getByLabelText('Notificaciones');
@@ -351,7 +351,7 @@ describe('ContractorTopbar', () => {
 
     it('should be in a flex container', () => {
       // Arrange & Act
-      const { container } = render(<ContractorTopbar _user={mockUser} onMenuClick={mockOnMenuClick} />);
+      render(<ContractorTopbar _user={mockUser} onMenuClick={mockOnMenuClick} />);
 
       // Assert
       const userButton = screen.getByTestId('user-button');

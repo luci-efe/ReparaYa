@@ -55,9 +55,9 @@ describe('VerificationStatusWidget', () => {
 
     it('should show pulsing clock icon for unverified state', () => {
       // Arrange
-      const { container: _container } = render(<VerificationStatusWidget verified={false} />);
+      render(<VerificationStatusWidget verified={false} />);
 
-      // Assert - _container declared but not used, relying on screen queries instead
+      // Assert
       const badge = screen.getByText('En Revisión').closest('span');
       const svg = badge?.querySelector('svg.animate-pulse');
       expect(svg).toBeInTheDocument();
