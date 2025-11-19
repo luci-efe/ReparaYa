@@ -1,16 +1,46 @@
 "use client";
 
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useOnboardingRedirect } from '@/hooks/useOnboardingRedirect';
 
 export function DashboardContent({ userId }: { userId: string }) {
+  const router = useRouter();
   const { isChecking } = useOnboardingRedirect();
+  const [isRedirecting, setIsRedirecting] = useState(false);
 
-  if (isChecking) {
+  // Redirigir contratistas a su dashboard específico
+  useEffect(() => {
+    const checkUserRole = async () => {
+      try {
+        const response = await fetch('/api/users/me');
+        if (!response.ok) return;
+
+        const profile = await response.json();
+
+        // Si es contratista, redirigir a dashboard de contratistas
+        if (profile.role === 'CONTRACTOR') {
+          setIsRedirecting(true);
+          router.push('/contractors/dashboard');
+        }
+      } catch (error) {
+        console.error('Error checking user role:', error);
+      }
+    };
+
+    if (!isChecking) {
+      checkUserRole();
+    }
+  }, [isChecking, router]);
+
+  if (isChecking || isRedirecting) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-          <p className="mt-4 text-gray-600">Verificando perfil...</p>
+          <p className="mt-4 text-gray-600">
+            {isRedirecting ? 'Redirigiendo...' : 'Verificando perfil...'}
+          </p>
         </div>
       </div>
     );
