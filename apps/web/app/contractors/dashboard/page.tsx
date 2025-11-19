@@ -7,7 +7,6 @@ import { ServiceAreaCTA } from '@/components/contractors/ServiceAreaCTA';
 import { MetricsOverview } from '@/components/contractors/MetricsOverview';
 import { AvailabilitySummary } from '@/components/contractors/AvailabilitySummary';
 import { ContractorProfileNotFoundError } from '@/modules/contractors/errors';
-import { Card } from '@/components/ui';
 import { redirect } from 'next/navigation';
 
 /**
@@ -58,6 +57,7 @@ export default async function ContractorDashboardPage() {
         <VerificationStatusWidget verified={profile.verified} />
 
         {/* 2. Service Area CTA (conditional) */}
+        {/* TODO: Check profile.serviceArea once service area feature is implemented */}
         <ServiceAreaCTA hasServiceArea={false} />
 
         {/* 3. Quick Access Tiles */}
