@@ -15,7 +15,7 @@ import {
   ValidationException,
 } from '@aws-sdk/client-location';
 
-// Import the module to test (will be created)
+// Import the module to test
 import { geocodeAddress, reverseGeocode } from '../locationService';
 import type { Address } from '@/modules/contractors/types/location';
 
@@ -24,6 +24,8 @@ const locationClientMock = mockClient(LocationClient);
 
 describe('AWS Location Service Client', () => {
   beforeEach(() => {
+    // Use real timers for AWS SDK operations
+    jest.useRealTimers();
     locationClientMock.reset();
     // Clear any environment variable mocks
     process.env.AWS_LOCATION_PLACE_INDEX = 'reparaya-places';
@@ -186,10 +188,9 @@ describe('AWS Location Service Client', () => {
     it('TC-RNF-CTR-LOC-005-01: debe reintentar en ThrottlingException', async () => {
       // Arrange
       const throttlingError = new ThrottlingException({
-        Message: 'Rate exceeded',
+        message: 'Rate exceeded',
         $metadata: {},
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } as any);
+      });
 
       locationClientMock
         .on(SearchPlaceIndexForTextCommand)
@@ -234,10 +235,9 @@ describe('AWS Location Service Client', () => {
     it('TC-RF-CTR-LOC-002-04: debe manejar ValidationException con mensaje claro', async () => {
       // Arrange
       const validationError = new ValidationException({
-        Message: 'Invalid address format',
+        message: 'Invalid address format',
         $metadata: {},
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } as any);
+      });
 
       locationClientMock.on(SearchPlaceIndexForTextCommand).rejects(validationError);
 
