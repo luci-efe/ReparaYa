@@ -43,3 +43,34 @@ export class UnauthorizedContractorActionError extends Error {
     this.name = 'UnauthorizedContractorActionError';
   }
 }
+
+/**
+ * Error lanzado cuando una ubicación de contratista no es encontrada
+ */
+export class LocationNotFoundError extends Error {
+  constructor(contractorProfileId: string) {
+    super(`Ubicación para el perfil de contratista ${contractorProfileId} no encontrada`);
+    this.name = 'LocationNotFoundError';
+  }
+}
+
+/**
+ * Error lanzado cuando se intenta crear una ubicación duplicada
+ * Regla de negocio: Un contratista solo puede tener una ubicación
+ */
+export class LocationAlreadyExistsError extends Error {
+  constructor(contractorProfileId: string) {
+    super(`El perfil de contratista ${contractorProfileId} ya tiene una ubicación registrada`);
+    this.name = 'LocationAlreadyExistsError';
+  }
+}
+
+/**
+ * Error lanzado cuando la geocodificación falla
+ */
+export class GeocodingFailedError extends Error {
+  constructor(message: string) {
+    super(`Fallo en geocodificación: ${message}`);
+    this.name = 'GeocodingFailedError';
+  }
+}

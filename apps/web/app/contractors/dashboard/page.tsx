@@ -9,6 +9,9 @@ import { AvailabilitySummary } from '@/components/contractors/AvailabilitySummar
 import { ContractorProfileNotFoundError } from '@/modules/contractors/errors';
 import { redirect } from 'next/navigation';
 
+// Force dynamic rendering since this page uses authentication
+export const dynamic = 'force-dynamic';
+
 /**
  * Contractor Dashboard Page (Server Component)
  *

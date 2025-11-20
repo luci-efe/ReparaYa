@@ -20,3 +20,14 @@ jest.mock('next/link', () => {
     return React.createElement('a', { href, ...props }, children)
   }
 })
+
+// Global test configuration for timers
+beforeEach(() => {
+  // Use fake timers for tests that need time control
+  // Tests that need real timers should call jest.useRealTimers()
+})
+
+afterEach(() => {
+  // Clear all timers after each test to prevent leaks
+  jest.clearAllTimers()
+})
