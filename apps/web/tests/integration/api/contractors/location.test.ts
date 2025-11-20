@@ -26,12 +26,12 @@ import * as clerkNextjs from '@clerk/nextjs';
 
 const auth = clerkNextjs.auth as jest.Mock;
 
-// Import API handlers (will be created)
+// Import API handlers
 import {
   POST as createLocation,
   GET as getLocation,
   PATCH as updateLocation,
-} from '@/app/api/contractors/[id]/location/route';
+} from '../../../../app/api/contractors/[id]/location/route';
 
 // Helper to create mock request
 const createMockRequest = (body?: any, params?: any) => {

@@ -188,10 +188,10 @@ describe('AWS Location Service Client', () => {
     it('TC-RNF-CTR-LOC-005-01: debe reintentar en ThrottlingException', async () => {
       // Arrange
       const throttlingError = new ThrottlingException({
+        message: 'Rate exceeded',
         Message: 'Rate exceeded',
         $metadata: {},
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- AWS SDK exception constructors have incomplete type definitions
-      } as any);
+      });
 
       locationClientMock
         .on(SearchPlaceIndexForTextCommand)
@@ -236,12 +236,12 @@ describe('AWS Location Service Client', () => {
     it('TC-RF-CTR-LOC-002-04: debe manejar ValidationException con mensaje claro', async () => {
       // Arrange
       const validationError = new ValidationException({
+        message: 'Invalid address format',
         Message: 'Invalid address format',
         Reason: undefined,
         FieldList: undefined,
         $metadata: {},
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- AWS SDK exception constructors have incomplete type definitions
-      } as any);
+      });
 
       locationClientMock.on(SearchPlaceIndexForTextCommand).rejects(validationError);
 

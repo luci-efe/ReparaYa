@@ -18,23 +18,40 @@ const UserRole = {
   ADMIN: 'ADMIN' as PrismaUserRole,
 };
 
-// Setup mocks BEFORE any imports
-jest.mock('@/lib/aws/locationService', () => {
-  const actual = jest.requireActual<typeof import('@/lib/aws/locationService')>('@/lib/aws/locationService');
-  return {
-    ...actual,
-    geocodeAddress: jest.fn(),
-  };
-});
+// Create mock function before the jest.mock call
+const mockGeocodeAddressFn = jest.fn();
+
+// Mock the AWS location service module
+jest.mock('@/lib/aws/locationService', () => ({
+  __esModule: true,
+  geocodeAddress: mockGeocodeAddressFn,
+  GeocodingTimeoutError: class GeocodingTimeoutError extends Error {
+    constructor(message = 'Geocoding service timeout') {
+      super(message);
+      this.name = 'GeocodingTimeoutError';
+    }
+  },
+  InvalidAddressFormatError: class InvalidAddressFormatError extends Error {
+    constructor(message = 'Invalid address format') {
+      super(message);
+      this.name = 'InvalidAddressFormatError';
+    }
+  },
+  GeocodingServiceUnavailableError: class GeocodingServiceUnavailableError extends Error {
+    constructor(message = 'Geocoding service unavailable') {
+      super(message);
+      this.name = 'GeocodingServiceUnavailableError';
+    }
+  },
+}));
 
 // Import service and dependencies AFTER mocks
 import { locationService } from '../locationService';
 import { locationRepository } from '../../repositories/locationRepository';
 import { contractorProfileRepository } from '../../repositories/contractorProfileRepository';
-import { geocodeAddress } from '@/lib/aws/locationService';
 
-// Get reference to the mocked function after import
-const mockGeocodeAddress = geocodeAddress as jest.MockedFunction<typeof geocodeAddress>;
+// Use the mock function reference
+const mockGeocodeAddress = mockGeocodeAddressFn;
 
 describe('LocationService', () => {
   // Mock repository methods
@@ -64,6 +81,7 @@ describe('LocationService', () => {
   });
 
   afterEach(() => {
+    // Restore all spies
     jest.restoreAllMocks();
   });
 
@@ -639,8 +657,8 @@ describe('LocationService', () => {
       expect(result.coordinates?.longitude).toBe(-99.13);
 
       // Should NOT include full address or timezone
-      expect('address' in result && result.address).toBeUndefined();
-      expect('timezone' in result && result.timezone).toBeUndefined();
+      expect('address' in result).toBe(false);
+      expect('timezone' in result).toBe(false);
     });
 
     it('TC-RF-CTR-LOC-010-02: debe devolver zona de servicio para todos los roles', async () => {
