@@ -455,7 +455,12 @@ describe('LocationService', () => {
       });
 
       // Act
-      const result = await locationService.updateLocation(profileId, updateData, userId);
+      const result = await locationService.updateLocation(
+        profileId,
+        updateData,
+        userId,
+        UserRole.CONTRACTOR
+      );
 
       // Assert
       expect(result.address.city).toBe('Monterrey');
@@ -586,12 +591,12 @@ describe('LocationService', () => {
 
       // Assert
       expect(result).toBeDefined();
-      expect(result.address).toBeDefined();
-      expect(result.address?.street).toBe('Av. Insurgentes Sur');
-      expect(result.address?.interiorNumber).toBe('Piso 5');
+      expect('address' in result && result.address).toBeDefined();
+      expect('address' in result && result.address?.street).toBe('Av. Insurgentes Sur');
+      expect('address' in result && result.address?.interiorNumber).toBe('Piso 5');
       expect(result.coordinates?.latitude).toBe(19.432608);
       expect(result.coordinates?.longitude).toBe(-99.133209);
-      expect(result.timezone).toBe('America/Mexico_City');
+      expect('timezone' in result && result.timezone).toBe('America/Mexico_City');
     });
 
     it('TC-RF-CTR-LOC-009-03: debe devolver ubicación completa para admin', async () => {
@@ -606,10 +611,10 @@ describe('LocationService', () => {
       const result = await locationService.getLocation(profileId, adminUserId, UserRole.ADMIN);
 
       // Assert
-      expect(result.address).toBeDefined();
-      expect(result.address?.street).toBe('Av. Insurgentes Sur');
+      expect('address' in result && result.address).toBeDefined();
+      expect('address' in result && result.address?.street).toBe('Av. Insurgentes Sur');
       expect(result.coordinates?.latitude).toBe(19.432608);
-      expect(result.timezone).toBe('America/Mexico_City');
+      expect('timezone' in result && result.timezone).toBe('America/Mexico_City');
     });
 
     it('TC-RF-CTR-LOC-010-01: debe devolver vista limitada para cliente', async () => {
@@ -624,16 +629,16 @@ describe('LocationService', () => {
       const result = await locationService.getLocation(profileId, clientUserId, UserRole.CLIENT);
 
       // Assert
-      expect(result.city).toBe('Ciudad de México');
-      expect(result.state).toBe('CDMX');
+      expect('city' in result && result.city).toBe('Ciudad de México');
+      expect('state' in result && result.state).toBe('CDMX');
 
       // Coordinates should be approximated (2 decimals)
       expect(result.coordinates?.latitude).toBe(19.43);
       expect(result.coordinates?.longitude).toBe(-99.13);
 
       // Should NOT include full address or timezone
-      expect(result.address).toBeUndefined();
-      expect(result.timezone).toBeUndefined();
+      expect('address' in result && result.address).toBeUndefined();
+      expect('timezone' in result && result.timezone).toBeUndefined();
     });
 
     it('TC-RF-CTR-LOC-010-02: debe devolver zona de servicio para todos los roles', async () => {
@@ -650,7 +655,9 @@ describe('LocationService', () => {
       // Assert
       expect(result.serviceZone).toBeDefined();
       expect(result.serviceZone?.type).toBe('RADIUS');
-      expect(result.serviceZone?.radiusKm).toBe(15);
+      if (result.serviceZone?.type === 'RADIUS') {
+        expect(result.serviceZone.radiusKm).toBe(15);
+      }
     });
 
     it('TC-RF-CTR-LOC-004-03: debe rechazar si ubicación no existe', async () => {
