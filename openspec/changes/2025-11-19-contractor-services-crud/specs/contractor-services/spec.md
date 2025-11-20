@@ -28,12 +28,9 @@ This specification defines the service catalog functionality for ReparaYa contra
 
 ## ADDED Requirements
 
-### RF-SRV-001: Service CRUD Operations
+### Requirement: Service CRUD Operations
 
-**Priority:** HIGH
-**Type:** Functional
-
-Contractors must be able to create, read, update, and delete their service offerings with comprehensive metadata including title, category, description, pricing, and duration.
+The system SHALL allow contractors to create, read, update, and delete their service offerings with comprehensive metadata including title, category, description, pricing, duration, and state management.
 
 #### Scenario: Contractor creates a new service draft
 
@@ -83,12 +80,9 @@ And the service can be restored by admins only
 
 ---
 
-### RF-SRV-002: Service Retrieval & Filtering
+### Requirement: Service Retrieval & Filtering
 
-**Priority:** HIGH
-**Type:** Functional
-
-The system must provide different service views for public users, contractors (owners), and admins with appropriate data filtering based on role and ownership.
+The system SHALL provide different service views for public users, contractors (owners), and admins with appropriate data filtering based on role and ownership.
 
 #### Scenario: Public user retrieves active services
 
@@ -127,12 +121,9 @@ And each service includes moderation metadata (contractor verification status)
 
 ---
 
-### RF-SRV-003: Service Publication State Machine
+### Requirement: Service Publication State Machine
 
-**Priority:** HIGH
-**Type:** Functional
-
-Services must transition through well-defined states (DRAFT, ACTIVE, PAUSED, ARCHIVED) with business rule validation at each transition point.
+The system SHALL enforce a state machine for services with transitions (DRAFT, ACTIVE, PAUSED, ARCHIVED) and business rule validation at each transition point.
 
 #### Scenario: Contractor publishes a service successfully
 
@@ -195,12 +186,9 @@ And the service becomes visible in public catalog again
 
 ---
 
-### RF-SRV-004: Image Upload & Management
+### Requirement: Image Upload & Management
 
-**Priority:** HIGH
-**Type:** Functional
-
-Contractors must be able to upload service images to AWS S3 via presigned URLs with validation for file type, size, and quantity.
+The system SHALL allow contractors to upload service images to AWS S3 via presigned URLs with validation for file type, size, and quantity.
 
 #### Scenario: Contractor requests presigned URL for image upload
 
@@ -263,12 +251,9 @@ And remaining images maintain their display order
 
 ---
 
-### RF-SRV-005: Authorization & Ownership Validation
+### Requirement: Authorization & Ownership Validation
 
-**Priority:** CRITICAL
-**Type:** Functional
-
-All service mutations must enforce strict ownership validation and role-based access control to prevent unauthorized access.
+The system SHALL enforce strict ownership validation and role-based access control for all service mutations to prevent unauthorized access.
 
 #### Scenario: Contractor creates a service (requires CONTRACTOR role)
 
@@ -312,12 +297,9 @@ And the contractor is notified (future: email/notification)
 
 ---
 
-### RF-SRV-006: Admin Moderation Controls
+### Requirement: Admin Moderation Controls
 
-**Priority:** MEDIUM
-**Type:** Functional
-
-Administrators must be able to pause or archive services for content moderation without deleting contractor data.
+The system SHALL allow administrators to pause or archive services for content moderation without deleting contractor data.
 
 #### Scenario: Admin pauses inappropriate service
 
@@ -333,12 +315,9 @@ And the original contractor can still view the service in their dashboard
 
 ---
 
-### RNF-SRV-001: Performance Requirements
+### Requirement: Performance Requirements
 
-**Priority:** MEDIUM
-**Type:** Non-Functional
-
-Service CRUD operations must meet performance targets to ensure responsive user experience.
+The system SHALL meet performance targets for service CRUD operations to ensure responsive user experience.
 
 #### Scenario: Service creation completes within latency target
 
@@ -361,12 +340,9 @@ And the query uses database indexes on (status, lastPublishedAt)
 
 ---
 
-### RNF-SRV-002: Image Upload Reliability
+### Requirement: Image Upload Reliability
 
-**Priority:** MEDIUM
-**Type:** Non-Functional
-
-Image uploads must handle failures gracefully with retry logic and clear error messaging.
+The system SHALL handle image upload failures gracefully with retry logic and clear error messaging.
 
 #### Scenario: S3 upload fails due to network timeout
 
