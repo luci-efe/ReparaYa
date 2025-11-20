@@ -4,6 +4,9 @@ import { ContractorProfileNotFoundError } from '@/modules/contractors/errors';
 import { redirect } from 'next/navigation';
 import { ContractorLocationOnboardingForm } from '@/components/contractors/ContractorLocationOnboardingForm';
 
+// Force dynamic rendering since this page uses authentication
+export const dynamic = 'force-dynamic';
+
 /**
  * Página de onboarding para capturar ubicación y zona de servicio del contratista (Server Component)
  *

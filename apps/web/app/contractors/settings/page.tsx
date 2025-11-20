@@ -6,6 +6,9 @@ import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { Card } from '@/components/ui';
 
+// Force dynamic rendering since this page uses authentication
+export const dynamic = 'force-dynamic';
+
 /**
  * Contractor Settings Page (Server Component)
  *
