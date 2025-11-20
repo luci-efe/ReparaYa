@@ -57,13 +57,17 @@ export function ContractorLocationOnboardingForm({ contractorProfileId }: Contra
     setGeocodingError(null);
 
     try {
+      // Flatten data structure to match backend schema
+      const payload = {
+        ...address,
+        zoneType: zone.zoneType,
+        radiusKm: zone.radiusKm,
+      };
+
       const response = await fetch(`/api/contractors/${contractorProfileId}/location`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          address,
-          serviceZone: zone,
-        }),
+        body: JSON.stringify(payload),
       });
 
       const data = await response.json();
