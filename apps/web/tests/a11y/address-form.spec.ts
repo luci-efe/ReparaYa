@@ -168,13 +168,8 @@ test.describe('Address Form Accessibility', () => {
       'radiusKm',
     ];
 
-    for (const fieldName of expectedOrder) {
+    for (let i = 0; i < expectedOrder.length; i++) {
       await page.keyboard.press('Tab');
-
-      const focusedElement = await page.evaluate(() => {
-        const el = document.activeElement as HTMLElement;
-        return el.getAttribute('name') || el.tagName;
-      });
 
       // Note: This is a basic check - real implementation may have additional focusable elements
       // Adjust as needed based on actual UI
@@ -254,7 +249,7 @@ test.describe('Dynamic Content Accessibility', () => {
     if ((await spinner.count()) > 0) {
       const ariaLabel = await spinner.getAttribute('aria-label');
       expect(ariaLabel).toBeTruthy();
-      expect(ariaLabel).toContain('Cargando' || 'Loading');
+      expect(ariaLabel).toMatch(/Cargando|Loading/);
     }
   });
 

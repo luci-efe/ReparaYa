@@ -84,7 +84,7 @@ export const locationService = {
       normalizedAddress?: string;
       timezone?: string;
       status: 'PENDING' | 'SUCCESS' | 'FAILED';
-    } = { status: 'PENDING' };
+    };
 
     try {
       const addressInput: AWSAddressInput = {
@@ -231,8 +231,8 @@ export const locationService = {
         const addressInput: AWSAddressInput = {
           street: data.street ?? currentLocation.street,
           exteriorNumber: data.exteriorNumber ?? currentLocation.exteriorNumber,
-          interiorNumber: data.interiorNumber ?? currentLocation.interiorNumber ?? undefined,
-          neighborhood: data.neighborhood ?? currentLocation.neighborhood ?? undefined,
+          interiorNumber: (data.interiorNumber ?? currentLocation.interiorNumber) || undefined,
+          neighborhood: (data.neighborhood ?? currentLocation.neighborhood) || undefined,
           city: data.city ?? currentLocation.city,
           state: data.state ?? currentLocation.state,
           postalCode: data.postalCode ?? currentLocation.postalCode,
