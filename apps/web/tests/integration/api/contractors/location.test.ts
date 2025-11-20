@@ -8,7 +8,7 @@
 
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/db';
-import { UserRole, ContractorProfileStatus, GeocodingStatus } from '@prisma/client';
+import { UserRole, GeocodingStatus } from '@prisma/client';
 
 // Mock Clerk auth
 jest.mock('@clerk/nextjs', () => ({
@@ -21,8 +21,10 @@ jest.mock('@/lib/aws/locationService', () => ({
   reverseGeocode: jest.fn(),
 }));
 
-import { auth } from '@clerk/nextjs';
 import * as awsLocationService from '@/lib/aws/locationService';
+import * as clerkNextjs from '@clerk/nextjs';
+
+const auth = clerkNextjs.auth as jest.Mock;
 
 // Import API handlers (will be created)
 import {
@@ -66,7 +68,6 @@ describe('Contractor Location API Integration Tests', () => {
         description: 'Testing contractor location API',
         specialties: ['plumbing'],
         verified: false,
-        status: ContractorProfileStatus.DRAFT,
       },
     });
 
@@ -219,12 +220,6 @@ describe('Contractor Location API Integration Tests', () => {
         userId: testContractorUser.clerkUserId,
       });
 
-      // Change profile status to ACTIVE
-      await prisma.contractorProfile.update({
-        where: { id: testContractorProfile.id },
-        data: { status: ContractorProfileStatus.ACTIVE },
-      });
-
       const createData = {
         street: 'Test Street',
         exteriorNumber: '1',
@@ -244,12 +239,6 @@ describe('Contractor Location API Integration Tests', () => {
       // Assert
       expect(response.status).toBe(400);
       expect(data.error).toContain('DRAFT');
-
-      // Restore to DRAFT
-      await prisma.contractorProfile.update({
-        where: { id: testContractorProfile.id },
-        data: { status: ContractorProfileStatus.DRAFT },
-      });
     });
 
     it('TC-RF-CTR-LOC-001-API-02: debe rechazar con dirección inválida (400 Zod error)', async () => {
@@ -390,12 +379,6 @@ describe('Contractor Location API Integration Tests', () => {
         userId: testContractorUser.clerkUserId,
       });
 
-      // Change to ACTIVE
-      await prisma.contractorProfile.update({
-        where: { id: testContractorProfile.id },
-        data: { status: ContractorProfileStatus.ACTIVE },
-      });
-
       const updateData = {
         radiusKm: 20,
       };
@@ -408,23 +391,12 @@ describe('Contractor Location API Integration Tests', () => {
       // Assert
       expect(response.status).toBe(403);
       expect(data.error).toContain('admin');
-
-      // Restore to DRAFT
-      await prisma.contractorProfile.update({
-        where: { id: testContractorProfile.id },
-        data: { status: ContractorProfileStatus.DRAFT },
-      });
     });
 
     it('TC-RF-CTR-LOC-009-API-01: debe permitir a ADMIN actualizar perfil ACTIVE', async () => {
       // Arrange
       (auth as jest.Mock).mockReturnValue({
         userId: testAdminUser.clerkUserId,
-      });
-
-      await prisma.contractorProfile.update({
-        where: { id: testContractorProfile.id },
-        data: { status: ContractorProfileStatus.ACTIVE },
       });
 
       const updateData = {
@@ -439,12 +411,6 @@ describe('Contractor Location API Integration Tests', () => {
       // Assert
       expect(response.status).toBe(200);
       expect(data.radiusKm).toBe(30);
-
-      // Restore
-      await prisma.contractorProfile.update({
-        where: { id: testContractorProfile.id },
-        data: { status: ContractorProfileStatus.DRAFT },
-      });
     });
 
     it('TC-RF-CTR-LOC-004-API-01: debe validar datos con Zod en actualización', async () => {
