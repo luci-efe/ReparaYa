@@ -46,6 +46,8 @@ describe('LocationService', () => {
   let mockProfileFindById: ReturnType<typeof jest.spyOn>;
 
   beforeEach(() => {
+    // Use real timers for this test suite
+    jest.useRealTimers();
     // Clear all mocks
     jest.clearAllMocks();
 

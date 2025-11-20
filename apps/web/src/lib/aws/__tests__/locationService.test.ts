@@ -24,6 +24,8 @@ const locationClientMock = mockClient(LocationClient);
 
 describe('AWS Location Service Client', () => {
   beforeEach(() => {
+    // Use real timers for AWS SDK operations
+    jest.useRealTimers();
     locationClientMock.reset();
     // Clear any environment variable mocks
     process.env.AWS_LOCATION_PLACE_INDEX = 'reparaya-places';
