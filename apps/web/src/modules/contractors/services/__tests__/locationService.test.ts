@@ -9,7 +9,6 @@ import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals
 
 // Import types
 import type { CreateLocationDTO, UpdateLocationDTO } from '../../types/location';
-import type { AddressInput, GeocodingResult } from '@/lib/aws/locationService';
 import { UserRole as PrismaUserRole } from '@prisma/client';
 
 // Create a const object that mimics the enum for easier access
@@ -19,13 +18,10 @@ const UserRole = {
   ADMIN: 'ADMIN' as PrismaUserRole,
 };
 
-// Create mock function before the jest.mock call with proper typing
-const mockGeocodeAddressFn = jest.fn<(address: AddressInput) => Promise<GeocodingResult>>();
-
-// Mock the AWS location service module
+// Mock the AWS location service module with inline jest.fn()
 jest.mock('@/lib/aws/locationService', () => ({
   __esModule: true,
-  geocodeAddress: mockGeocodeAddressFn,
+  geocodeAddress: jest.fn(),
   GeocodingTimeoutError: class GeocodingTimeoutError extends Error {
     constructor(message = 'Geocoding service timeout') {
       super(message);
@@ -50,9 +46,14 @@ jest.mock('@/lib/aws/locationService', () => ({
 import { locationService } from '../locationService';
 import { locationRepository } from '../../repositories/locationRepository';
 import { contractorProfileRepository } from '../../repositories/contractorProfileRepository';
+// Import the mocked geocodeAddress and its types
+import { geocodeAddress } from '@/lib/aws/locationService';
+import type { AddressInput, GeocodingResult } from '@/lib/aws/locationService';
 
-// Use the mock function reference
-const mockGeocodeAddress = mockGeocodeAddressFn;
+// Cast to properly typed jest.Mock
+const mockGeocodeAddress = geocodeAddress as jest.MockedFunction<
+  (address: AddressInput) => Promise<GeocodingResult>
+>;
 
 describe('LocationService', () => {
   // Mock repository methods
