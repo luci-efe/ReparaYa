@@ -2674,7 +2674,1224 @@ npm run test:coverage
 
 ---
 
-#### 4.1.6 Búsqueda de servicios (Catalog)
+#### 4.1.6 Gestión de Servicios del Contratista (Contractor Services)
+
+**Referencia de spec:** `/openspec/specs/contractor-services/spec.md`
+**Propuesta relacionada:** `/openspec/changes/2025-11-19-contractor-services-crud/proposal.md`
+
+**Criterios de aceptación generales:**
+- Cobertura de código ≥ 70% en módulo `src/modules/services`
+- Todos los tests unitarios, de integración y performance automatizados deben pasar
+- Endpoints API protegidos por autenticación y autorización por rol
+- Solo contratistas verificados pueden publicar servicios (DRAFT → ACTIVE)
+- Imágenes validadas (MIME type, tamaño, límite de 5 por servicio)
+- Transiciones de estado validadas según máquina de estados
+- Presigned URLs de S3 expiran en 1 hora
+- Performance: P95 < 500ms para mutaciones, P95 < 300ms para listados
+
+**Casos de prueba:**
+
+| ID | Descripción | Tipo | Prioridad | Requisito | Estado |
+|----|-------------|------|-----------|-----------|--------|
+| **A. Unit Tests (Service Logic & Validation)** |
+| TC-SERVICE-001 | Validar creación de servicio con datos válidos | Unitaria | Alta | RF-SRV-001 | Pendiente de ejecución |
+| TC-SERVICE-002 | Rechazar creación con título inválido (< 5 chars) | Unitaria | Alta | RF-SRV-001 | Pendiente de ejecución |
+| TC-SERVICE-003 | Rechazar creación con precio inválido (< 50 MXN) | Unitaria | Alta | RF-SRV-001 | Pendiente de ejecución |
+| TC-SERVICE-004 | Rechazar creación con duración inválida (< 30 min) | Unitaria | Alta | RF-SRV-001 | Pendiente de ejecución |
+| TC-SERVICE-005 | Validar transición DRAFT → ACTIVE con requisitos completos | Unitaria | Alta | RF-SRV-003 | Pendiente de ejecución |
+| TC-SERVICE-006 | Bloquear transición DRAFT → ACTIVE si contratista no verificado | Unitaria | Alta | RF-SRV-003 | Pendiente de ejecución |
+| TC-SERVICE-007 | Bloquear transición DRAFT → ACTIVE si faltan imágenes | Unitaria | Alta | RF-SRV-003 | Pendiente de ejecución |
+| TC-SERVICE-008 | Permitir transición ACTIVE ↔ PAUSED | Unitaria | Media | RF-SRV-003 | Pendiente de ejecución |
+| TC-SERVICE-009 | Validar metadata de imagen (MIME type, tamaño) | Unitaria | Alta | RF-SRV-004 | Pendiente de ejecución |
+| TC-SERVICE-010 | Rechazar imagen que excede 10 MB | Unitaria | Alta | RF-SRV-004 | Pendiente de ejecución |
+| TC-SERVICE-011 | Rechazar imagen si servicio ya tiene 5 imágenes | Unitaria | Media | RF-SRV-004 | Pendiente de ejecución |
+| **B. Integration Tests (API Endpoints)** |
+| TC-SERVICE-012 | POST /api/services crea servicio para contratista autenticado | Integración | Alta | RF-SRV-001 | Pendiente de ejecución |
+| TC-SERVICE-013 | POST /api/services retorna 403 para usuarios no contratistas | Integración | Alta | RF-SRV-005 | Pendiente de ejecución |
+| TC-SERVICE-014 | POST /api/services retorna 400 para payload inválido | Integración | Alta | RF-SRV-001 | Pendiente de ejecución |
+| TC-SERVICE-015 | GET /api/services/:id retorna servicio ACTIVE a público | Integración | Alta | RF-SRV-002 | Pendiente de ejecución |
+| TC-SERVICE-016 | GET /api/services/:id retorna 404 para servicio DRAFT a no propietario | Integración | Alta | RF-SRV-005 | Pendiente de ejecución |
+| TC-SERVICE-017 | GET /api/services/me retorna todos los servicios del contratista | Integración | Alta | RF-SRV-002 | Pendiente de ejecución |
+| TC-SERVICE-018 | PATCH /api/services/:id actualiza servicio para propietario | Integración | Alta | RF-SRV-001 | Pendiente de ejecución |
+| TC-SERVICE-019 | PATCH /api/services/:id retorna 403 para no propietario | Integración | Alta | RF-SRV-005 | Pendiente de ejecución |
+| TC-SERVICE-020 | PATCH /api/services/:id/publish transiciona DRAFT → ACTIVE | Integración | Alta | RF-SRV-003 | Pendiente de ejecución |
+| TC-SERVICE-021 | PATCH /api/services/:id/publish retorna 400 si requisitos no cumplidos | Integración | Alta | RF-SRV-003 | Pendiente de ejecución |
+| TC-SERVICE-022 | PATCH /api/services/:id/pause transiciona ACTIVE → PAUSED | Integración | Media | RF-SRV-003 | Pendiente de ejecución |
+| TC-SERVICE-023 | DELETE /api/services/:id soft-delete para propietario | Integración | Media | RF-SRV-001 | Pendiente de ejecución |
+| TC-SERVICE-024 | DELETE /api/services/:id retorna 403 para no propietario | Integración | Alta | RF-SRV-005 | Pendiente de ejecución |
+| **C. Image Upload Tests** |
+| TC-SERVICE-025 | POST /api/services/:id/images/upload-url genera presigned URL | Integración | Alta | RF-SRV-004 | Pendiente de ejecución |
+| TC-SERVICE-026 | POST /api/services/:id/images/upload-url valida propiedad del servicio | Integración | Alta | RF-SRV-005 | Pendiente de ejecución |
+| TC-SERVICE-027 | POST /api/services/:id/images/upload-url rechaza MIME type inválido | Integración | Alta | RF-SRV-004 | Pendiente de ejecución |
+| TC-SERVICE-028 | POST /api/services/:id/images/confirm guarda metadata de imagen | Integración | Alta | RF-SRV-004 | Pendiente de ejecución |
+| TC-SERVICE-029 | DELETE /api/services/:id/images/:imageId elimina imagen de S3 | Integración | Media | RF-SRV-004 | Pendiente de ejecución |
+| TC-SERVICE-030 | Upload fallido reintenta 3 veces antes de error | Unitaria | Media | RNF-SRV-002 | Pendiente de ejecución |
+| **D. Authorization & Security Tests** |
+| TC-SERVICE-031 | Verificar solo role CONTRACTOR puede crear servicios | Integración | Alta | RF-SRV-005 | Pendiente de ejecución |
+| TC-SERVICE-032 | Verificar propietario puede editar servicios propios | Integración | Alta | RF-SRV-005 | Pendiente de ejecución |
+| TC-SERVICE-033 | Verificar no propietario no puede editar servicios ajenos | Integración | Alta | RF-SRV-005 | Pendiente de ejecución |
+| TC-SERVICE-034 | Verificar ADMIN puede pausar servicios (moderación) | Integración | Media | RF-SRV-006 | Pendiente de ejecución |
+| TC-SERVICE-035 | Verificar CLIENT no puede crear ni editar servicios | Integración | Alta | RF-SRV-005 | Pendiente de ejecución |
+| TC-SERVICE-036 | Verificar usuarios no autenticados solo leen servicios ACTIVE | Integración | Alta | RF-SRV-005 | Pendiente de ejecución |
+| **E. Performance & Non-Functional Tests** |
+| TC-SERVICE-037 | Creación de servicio completa en < 500ms (P95) | Performance (k6) | Media | RNF-SRV-001 | Pendiente de ejecución |
+| TC-SERVICE-038 | Listado paginado completa en < 300ms (P95) | Performance (k6) | Media | RNF-SRV-001 | Pendiente de ejecución |
+| TC-SERVICE-039 | Generación de presigned URL completa en < 200ms (P95) | Performance (k6) | Media | RNF-SRV-001 | Pendiente de ejecución |
+| TC-SERVICE-040 | Upload de imagen 5MB a S3 completa en < 5s | Performance (k6) | Baja | RNF-SRV-002 | Pendiente de ejecución |
+
+---
+
+**Procedimientos de prueba detallados:**
+
+##### TC-SERVICE-001: Validar creación de servicio con datos válidos
+
+**Objetivo:** Validar que el sistema acepta y crea un servicio cuando todos los datos son válidos.
+
+**Precondiciones:**
+- Usuario autenticado con role=CONTRACTOR
+- Contratista tiene perfil verificado (verified=true)
+- Al menos una categoría de servicio existe en la base de datos
+
+**Procedimiento:**
+1. Preparar datos válidos de servicio:
+   ```typescript
+   const validServiceData = {
+     title: "Reparación de Fugas",
+     categoryId: "uuid-de-categoria-plomeria",
+     description: "Servicio profesional de reparación de fugas en tuberías, grifos y sistemas de agua. Incluye diagnóstico y reparación.",
+     basePrice: 350.00,
+     currency: "MXN",
+     durationMinutes: 120
+   }
+   ```
+2. Ejecutar validación con Zod schema: `serviceCreateSchema.parse(validServiceData)`
+3. Verificar que no se lanzan excepciones de validación
+4. Verificar que todos los campos son parseados correctamente
+
+**Datos de prueba:**
+- title: "Reparación de Fugas" (15 caracteres, dentro del rango 5-100)
+- basePrice: 350.00 MXN (dentro del rango 50-50000)
+- durationMinutes: 120 (dentro del rango 30-480)
+
+**Resultado esperado:**
+- ✅ Validación pasa sin errores
+- ✅ Objeto parseado contiene todos los campos esperados
+- ✅ Tipos de datos correctos (string, number, enum)
+- ✅ Estado inicial es DRAFT por defecto
+
+**Estado:** Pendiente de ejecución
+
+---
+
+##### TC-SERVICE-002: Rechazar creación con título inválido (< 5 chars)
+
+**Objetivo:** Validar que el sistema rechaza servicios con títulos demasiado cortos.
+
+**Precondiciones:**
+- Zod schema configurado con validación de longitud mínima
+
+**Procedimiento:**
+1. Preparar datos con título inválido:
+   ```typescript
+   const invalidData = {
+     title: "Fuga", // 4 caracteres, menor que mínimo de 5
+     categoryId: "uuid-valido",
+     description: "Descripción válida de al menos 50 caracteres para cumplir con el requisito mínimo de longitud.",
+     basePrice: 350.00,
+     currency: "MXN",
+     durationMinutes: 120
+   }
+   ```
+2. Ejecutar validación: `serviceCreateSchema.parse(invalidData)`
+3. Capturar excepción ZodError
+4. Verificar mensaje de error
+
+**Resultado esperado:**
+- ✅ Se lanza ZodError
+- ✅ Mensaje de error indica: "El título debe tener al menos 5 caracteres"
+- ✅ Campo `title` identificado en error.issues
+- ✅ Servicio no se crea en base de datos
+
+**Estado:** Pendiente de ejecución
+
+---
+
+##### TC-SERVICE-003: Rechazar creación con precio inválido (< 50 MXN)
+
+**Objetivo:** Validar que el sistema rechaza servicios con precio menor al mínimo permitido.
+
+**Precondiciones:**
+- Zod schema configurado con validación de precio mínimo
+
+**Procedimiento:**
+1. Preparar datos con precio inválido:
+   ```typescript
+   const invalidData = {
+     title: "Servicio Barato",
+     categoryId: "uuid-valido",
+     description: "Descripción válida de al menos 50 caracteres para cumplir con el requisito mínimo de longitud.",
+     basePrice: 25.00, // Menor que mínimo de 50 MXN
+     currency: "MXN",
+     durationMinutes: 120
+   }
+   ```
+2. Ejecutar validación
+3. Capturar error
+
+**Resultado esperado:**
+- ✅ Se lanza ZodError
+- ✅ Mensaje de error indica: "El precio base debe ser al menos 50.00 MXN"
+- ✅ Campo `basePrice` identificado en error.issues
+
+**Estado:** Pendiente de ejecución
+
+---
+
+##### TC-SERVICE-004: Rechazar creación con duración inválida (< 30 min)
+
+**Objetivo:** Validar que el sistema rechaza servicios con duración menor al mínimo permitido.
+
+**Precondiciones:**
+- Zod schema configurado con validación de duración mínima
+
+**Procedimiento:**
+1. Preparar datos con duración inválida:
+   ```typescript
+   const invalidData = {
+     title: "Servicio Rápido",
+     categoryId: "uuid-valido",
+     description: "Descripción válida de al menos 50 caracteres para cumplir con el requisito mínimo de longitud.",
+     basePrice: 100.00,
+     currency: "MXN",
+     durationMinutes: 15 // Menor que mínimo de 30 minutos
+   }
+   ```
+2. Ejecutar validación
+
+**Resultado esperado:**
+- ✅ Se lanza ZodError
+- ✅ Mensaje de error indica: "La duración debe ser al menos 30 minutos"
+- ✅ Campo `durationMinutes` identificado en error.issues
+
+**Estado:** Pendiente de ejecución
+
+---
+
+##### TC-SERVICE-005: Validar transición DRAFT → ACTIVE con requisitos completos
+
+**Objetivo:** Validar que un servicio puede publicarse cuando cumple todos los requisitos.
+
+**Precondiciones:**
+- Servicio existe en estado DRAFT
+- Servicio tiene al menos 1 imagen
+- Todos los campos requeridos están completos
+- Contratista está verificado (verified=true)
+
+**Procedimiento:**
+1. Crear servicio en estado DRAFT con todos los datos completos
+2. Agregar al menos 1 imagen al servicio
+3. Ejecutar lógica de transición de estado:
+   ```typescript
+   await serviceService.publishService(serviceId, contractorId)
+   ```
+4. Verificar nuevo estado y timestamp
+
+**Datos de prueba:**
+- Service con title, description, category, price, duration válidos
+- Al menos 1 ServiceImage asociada
+- ContractorProfile con verified=true
+
+**Resultado esperado:**
+- ✅ Servicio cambia de DRAFT a ACTIVE
+- ✅ Campo `lastPublishedAt` actualizado a timestamp actual
+- ✅ Campo `updatedAt` actualizado
+- ✅ No se lanzan excepciones
+
+**Estado:** Pendiente de ejecución
+
+---
+
+##### TC-SERVICE-006: Bloquear transición DRAFT → ACTIVE si contratista no verificado
+
+**Objetivo:** Validar que solo contratistas verificados pueden publicar servicios.
+
+**Precondiciones:**
+- Servicio en estado DRAFT con todos los datos completos
+- Contratista NO verificado (verified=false)
+
+**Procedimiento:**
+1. Intentar publicar servicio:
+   ```typescript
+   await serviceService.publishService(serviceId, unverifiedContractorId)
+   ```
+2. Capturar excepción
+
+**Resultado esperado:**
+- ✅ Se lanza error de negocio
+- ✅ Mensaje: "Solo contratistas verificados pueden publicar servicios"
+- ✅ Estado permanece en DRAFT
+- ✅ `lastPublishedAt` sigue siendo null
+
+**Estado:** Pendiente de ejecución
+
+---
+
+##### TC-SERVICE-007: Bloquear transición DRAFT → ACTIVE si faltan imágenes
+
+**Objetivo:** Validar que no se puede publicar un servicio sin imágenes.
+
+**Precondiciones:**
+- Servicio en estado DRAFT
+- Servicio NO tiene imágenes (serviceImages = [])
+- Contratista verificado
+
+**Procedimiento:**
+1. Intentar publicar servicio sin imágenes
+2. Capturar error
+
+**Resultado esperado:**
+- ✅ Se lanza error de validación
+- ✅ Mensaje: "El servicio debe tener al menos 1 imagen para publicarse"
+- ✅ Estado permanece en DRAFT
+
+**Estado:** Pendiente de ejecución
+
+---
+
+##### TC-SERVICE-008: Permitir transición ACTIVE ↔ PAUSED
+
+**Objetivo:** Validar que servicios activos pueden pausarse y viceversa.
+
+**Precondiciones:**
+- Servicio en estado ACTIVE
+
+**Procedimiento:**
+1. Pausar servicio activo:
+   ```typescript
+   await serviceService.pauseService(serviceId, contractorId)
+   ```
+2. Verificar estado PAUSED
+3. Reactivar servicio:
+   ```typescript
+   await serviceService.activateService(serviceId, contractorId)
+   ```
+4. Verificar estado ACTIVE nuevamente
+
+**Resultado esperado:**
+- ✅ Primera transición ACTIVE → PAUSED exitosa
+- ✅ Segunda transición PAUSED → ACTIVE exitosa
+- ✅ Campo `updatedAt` actualizado en ambas transiciones
+- ✅ No se requiere re-validación de imágenes al reactivar
+
+**Estado:** Pendiente de ejecución
+
+---
+
+##### TC-SERVICE-009: Validar metadata de imagen (MIME type, tamaño)
+
+**Objetivo:** Validar que solo se aceptan tipos de imagen válidos y tamaños apropiados.
+
+**Precondiciones:**
+- Configuración de tipos MIME permitidos: image/jpeg, image/png, image/webp
+- Tamaño máximo configurado: 10 MB
+
+**Procedimiento:**
+1. Preparar metadata de imagen válida:
+   ```typescript
+   const validImageMetadata = {
+     mimeType: "image/jpeg",
+     size: 5242880 // 5 MB
+   }
+   ```
+2. Ejecutar validación: `validateImageMetadata(validImageMetadata)`
+3. Verificar que pasa
+
+**Resultado esperado:**
+- ✅ Validación exitosa para MIME types permitidos
+- ✅ Validación exitosa para tamaños ≤ 10 MB
+
+**Estado:** Pendiente de ejecución
+
+---
+
+##### TC-SERVICE-010: Rechazar imagen que excede 10 MB
+
+**Objetivo:** Validar que se rechazan imágenes demasiado grandes.
+
+**Precondiciones:**
+- Configuración de tamaño máximo: 10 MB
+
+**Procedimiento:**
+1. Preparar metadata con tamaño excesivo:
+   ```typescript
+   const invalidMetadata = {
+     mimeType: "image/jpeg",
+     size: 15728640 // 15 MB
+   }
+   ```
+2. Ejecutar validación
+
+**Resultado esperado:**
+- ✅ Se lanza error de validación
+- ✅ Mensaje: "La imagen no debe exceder 10 MB"
+- ✅ No se genera presigned URL
+
+**Estado:** Pendiente de ejecución
+
+---
+
+##### TC-SERVICE-011: Rechazar imagen si servicio ya tiene 5 imágenes
+
+**Objetivo:** Validar límite máximo de 5 imágenes por servicio.
+
+**Precondiciones:**
+- Servicio ya tiene 5 imágenes asociadas
+
+**Procedimiento:**
+1. Verificar conteo de imágenes existentes: `count = 5`
+2. Intentar solicitar presigned URL para imagen adicional
+3. Capturar error
+
+**Resultado esperado:**
+- ✅ Se lanza error de validación
+- ✅ Mensaje: "El servicio ya tiene el máximo de 5 imágenes"
+- ✅ No se genera presigned URL
+
+**Estado:** Pendiente de ejecución
+
+---
+
+##### TC-SERVICE-012: POST /api/services crea servicio para contratista autenticado
+
+**Objetivo:** Validar endpoint de creación de servicios.
+
+**Precondiciones:**
+- Usuario autenticado con role=CONTRACTOR
+- Base de datos de prueba disponible
+- Al menos una categoría de servicio seeded
+
+**Procedimiento:**
+1. Autenticarse como contratista
+2. Ejecutar `POST /api/services` con body:
+   ```json
+   {
+     "title": "Instalación de Lavabo",
+     "categoryId": "uuid-categoria-plomeria",
+     "description": "Instalación profesional de lavabos de baño y cocina, incluye conexión de drenaje y suministro de agua.",
+     "basePrice": 450.00,
+     "currency": "MXN",
+     "durationMinutes": 90
+   }
+   ```
+3. Verificar respuesta HTTP
+
+**Resultado esperado:**
+- ✅ Status: 201 Created
+- ✅ Body contiene: id, title, categoryId, contractorId, visibilityStatus=DRAFT, createdAt, updatedAt
+- ✅ Servicio asociado al contratista autenticado
+- ✅ Campo `contractorId` coincide con el usuario autenticado
+
+**Estado:** Pendiente de ejecución
+
+---
+
+##### TC-SERVICE-013: POST /api/services retorna 403 para usuarios no contratistas
+
+**Objetivo:** Validar que solo contratistas pueden crear servicios.
+
+**Precondiciones:**
+- Usuario autenticado con role=CLIENT
+
+**Procedimiento:**
+1. Autenticarse como CLIENT
+2. Intentar `POST /api/services` con datos válidos
+3. Verificar rechazo
+
+**Resultado esperado:**
+- ✅ Status: 403 Forbidden
+- ✅ Mensaje: "Solo contratistas pueden crear servicios"
+- ✅ No se crea servicio en base de datos
+
+**Estado:** Pendiente de ejecución
+
+---
+
+##### TC-SERVICE-014: POST /api/services retorna 400 para payload inválido
+
+**Objetivo:** Validar que datos inválidos son rechazados.
+
+**Precondiciones:**
+- Usuario autenticado con role=CONTRACTOR
+
+**Procedimiento:**
+1. Enviar payload inválido:
+   ```json
+   {
+     "title": "ABC", // Muy corto
+     "description": "Corta", // Muy corta
+     "basePrice": 10 // Muy bajo
+   }
+   ```
+2. Verificar respuesta de error
+
+**Resultado esperado:**
+- ✅ Status: 400 Bad Request
+- ✅ Body contiene errores de validación Zod
+- ✅ Errores especifican campos inválidos: title, description, basePrice
+
+**Estado:** Pendiente de ejecución
+
+---
+
+##### TC-SERVICE-015: GET /api/services/:id retorna servicio ACTIVE a público
+
+**Objetivo:** Validar que servicios activos son accesibles públicamente.
+
+**Precondiciones:**
+- Servicio existe con visibilityStatus=ACTIVE
+- Usuario NO autenticado (petición pública)
+
+**Procedimiento:**
+1. Ejecutar `GET /api/services/:serviceId` SIN header de autenticación
+2. Verificar respuesta
+
+**Resultado esperado:**
+- ✅ Status: 200 OK
+- ✅ Body contiene: id, title, description, basePrice, categoryId, images
+- ✅ NO expone: contractorId privado, campos internos
+
+**Estado:** Pendiente de ejecución
+
+---
+
+##### TC-SERVICE-016: GET /api/services/:id retorna 404 para servicio DRAFT a no propietario
+
+**Objetivo:** Validar que servicios en borrador no son públicos.
+
+**Precondiciones:**
+- Servicio existe con visibilityStatus=DRAFT
+- Usuario NO es propietario del servicio
+
+**Procedimiento:**
+1. Ejecutar `GET /api/services/:serviceId` como usuario distinto al propietario
+2. Verificar respuesta
+
+**Resultado esperado:**
+- ✅ Status: 404 Not Found
+- ✅ Mensaje: "Servicio no encontrado"
+- ✅ No se expone información del servicio en borrador
+
+**Estado:** Pendiente de ejecución
+
+---
+
+##### TC-SERVICE-017: GET /api/services/me retorna todos los servicios del contratista
+
+**Objetivo:** Validar endpoint privado de listado de servicios propios.
+
+**Precondiciones:**
+- Usuario autenticado con role=CONTRACTOR
+- Contratista tiene 3 servicios: 1 DRAFT, 1 ACTIVE, 1 PAUSED
+
+**Procedimiento:**
+1. Autenticarse como contratista
+2. Ejecutar `GET /api/services/me`
+3. Verificar respuesta
+
+**Resultado esperado:**
+- ✅ Status: 200 OK
+- ✅ Body contiene array de 3 servicios
+- ✅ Incluye servicios en TODOS los estados (DRAFT, ACTIVE, PAUSED)
+- ✅ Cada servicio incluye campos completos (incluyendo visibilityStatus)
+
+**Estado:** Pendiente de ejecución
+
+---
+
+##### TC-SERVICE-018: PATCH /api/services/:id actualiza servicio para propietario
+
+**Objetivo:** Validar que propietarios pueden editar sus servicios.
+
+**Precondiciones:**
+- Usuario autenticado es propietario del servicio
+- Servicio en estado DRAFT
+
+**Procedimiento:**
+1. Autenticarse como propietario
+2. Ejecutar `PATCH /api/services/:serviceId` con body:
+   ```json
+   {
+     "description": "Descripción actualizada con más detalles sobre el servicio profesional de plomería."
+   }
+   ```
+3. Verificar actualización
+
+**Resultado esperado:**
+- ✅ Status: 200 OK
+- ✅ Campo `description` actualizado en base de datos
+- ✅ Campo `updatedAt` refleja cambio reciente
+- ✅ Otros campos no modificados permanecen iguales
+
+**Estado:** Pendiente de ejecución
+
+---
+
+##### TC-SERVICE-019: PATCH /api/services/:id retorna 403 para no propietario
+
+**Objetivo:** Validar que no propietarios no pueden editar servicios ajenos.
+
+**Precondiciones:**
+- Usuario autenticado NO es propietario del servicio
+
+**Procedimiento:**
+1. Autenticarse como contratista diferente
+2. Intentar `PATCH /api/services/:serviceId` de otro contratista
+3. Verificar rechazo
+
+**Resultado esperado:**
+- ✅ Status: 403 Forbidden
+- ✅ Mensaje: "No tienes permiso para editar este servicio"
+- ✅ Servicio no modificado en base de datos
+
+**Estado:** Pendiente de ejecución
+
+---
+
+##### TC-SERVICE-020: PATCH /api/services/:id/publish transiciona DRAFT → ACTIVE
+
+**Objetivo:** Validar endpoint de publicación de servicios.
+
+**Precondiciones:**
+- Servicio en estado DRAFT con todos los requisitos cumplidos
+- Contratista verificado
+- Al menos 1 imagen asociada
+
+**Procedimiento:**
+1. Autenticarse como propietario
+2. Ejecutar `PATCH /api/services/:serviceId/publish`
+3. Verificar transición de estado
+
+**Resultado esperado:**
+- ✅ Status: 200 OK
+- ✅ Campo `visibilityStatus` cambia a ACTIVE
+- ✅ Campo `lastPublishedAt` actualizado a timestamp actual
+- ✅ Servicio ahora visible en catálogo público
+
+**Estado:** Pendiente de ejecución
+
+---
+
+##### TC-SERVICE-021: PATCH /api/services/:id/publish retorna 400 si requisitos no cumplidos
+
+**Objetivo:** Validar que no se puede publicar sin cumplir requisitos.
+
+**Precondiciones:**
+- Servicio en estado DRAFT SIN imágenes
+- Contratista verificado
+
+**Procedimiento:**
+1. Intentar publicar servicio sin imágenes
+2. Verificar rechazo
+
+**Resultado esperado:**
+- ✅ Status: 400 Bad Request
+- ✅ Mensaje: "El servicio debe tener al menos 1 imagen para publicarse"
+- ✅ Estado permanece en DRAFT
+
+**Estado:** Pendiente de ejecución
+
+---
+
+##### TC-SERVICE-022: PATCH /api/services/:id/pause transiciona ACTIVE → PAUSED
+
+**Objetivo:** Validar endpoint de pausa de servicios.
+
+**Precondiciones:**
+- Servicio en estado ACTIVE
+
+**Procedimiento:**
+1. Autenticarse como propietario
+2. Ejecutar `PATCH /api/services/:serviceId/pause`
+3. Verificar transición
+
+**Resultado esperado:**
+- ✅ Status: 200 OK
+- ✅ Campo `visibilityStatus` cambia a PAUSED
+- ✅ Servicio ya NO visible en catálogo público
+- ✅ Servicio aún visible en `/api/services/me` (lista privada)
+
+**Estado:** Pendiente de ejecución
+
+---
+
+##### TC-SERVICE-023: DELETE /api/services/:id soft-delete para propietario
+
+**Objetivo:** Validar eliminación lógica de servicios.
+
+**Precondiciones:**
+- Usuario autenticado es propietario
+- Servicio en estado DRAFT o PAUSED
+
+**Procedimiento:**
+1. Ejecutar `DELETE /api/services/:serviceId`
+2. Verificar soft-delete
+
+**Resultado esperado:**
+- ✅ Status: 200 OK o 204 No Content
+- ✅ Campo `visibilityStatus` cambia a ARCHIVED (si implementado) o registro marcado como eliminado
+- ✅ Servicio ya no aparece en listados normales
+- ✅ Datos preservados en base de datos
+
+**Estado:** Pendiente de ejecución
+
+---
+
+##### TC-SERVICE-024: DELETE /api/services/:id retorna 403 para no propietario
+
+**Objetivo:** Validar que no propietarios no pueden eliminar servicios.
+
+**Precondiciones:**
+- Usuario autenticado NO es propietario
+
+**Procedimiento:**
+1. Intentar eliminar servicio ajeno
+2. Verificar rechazo
+
+**Resultado esperado:**
+- ✅ Status: 403 Forbidden
+- ✅ Servicio no eliminado
+
+**Estado:** Pendiente de ejecución
+
+---
+
+##### TC-SERVICE-025: POST /api/services/:id/images/upload-url genera presigned URL
+
+**Objetivo:** Validar generación de URL presignada para upload a S3.
+
+**Precondiciones:**
+- Usuario autenticado es propietario del servicio
+- Servicio tiene menos de 5 imágenes
+- AWS S3 bucket configurado
+
+**Procedimiento:**
+1. Ejecutar `POST /api/services/:serviceId/images/upload-url` con body:
+   ```json
+   {
+     "fileName": "lavabo-instalacion.jpg",
+     "mimeType": "image/jpeg",
+     "size": 2097152
+   }
+   ```
+2. Verificar respuesta
+
+**Resultado esperado:**
+- ✅ Status: 200 OK
+- ✅ Body contiene: uploadUrl (presigned URL), key (S3 object key), expiresIn (segundos)
+- ✅ Presigned URL válida para PUT a S3
+- ✅ URL expira en 3600 segundos (1 hora)
+
+**Estado:** Pendiente de ejecución
+
+---
+
+##### TC-SERVICE-026: POST /api/services/:id/images/upload-url valida propiedad del servicio
+
+**Objetivo:** Validar que solo propietarios pueden subir imágenes.
+
+**Precondiciones:**
+- Usuario autenticado NO es propietario
+
+**Procedimiento:**
+1. Intentar solicitar presigned URL para servicio ajeno
+2. Verificar rechazo
+
+**Resultado esperado:**
+- ✅ Status: 403 Forbidden
+- ✅ Mensaje: "No tienes permiso para subir imágenes a este servicio"
+
+**Estado:** Pendiente de ejecución
+
+---
+
+##### TC-SERVICE-027: POST /api/services/:id/images/upload-url rechaza MIME type inválido
+
+**Objetivo:** Validar que solo se aceptan tipos de imagen permitidos.
+
+**Precondiciones:**
+- Usuario autenticado es propietario
+
+**Procedimiento:**
+1. Solicitar presigned URL con MIME type inválido:
+   ```json
+   {
+     "fileName": "documento.pdf",
+     "mimeType": "application/pdf",
+     "size": 1048576
+   }
+   ```
+2. Verificar rechazo
+
+**Resultado esperado:**
+- ✅ Status: 400 Bad Request
+- ✅ Mensaje: "Tipo de archivo no permitido. Use image/jpeg, image/png o image/webp"
+
+**Estado:** Pendiente de ejecución
+
+---
+
+##### TC-SERVICE-028: POST /api/services/:id/images/confirm guarda metadata de imagen
+
+**Objetivo:** Validar confirmación de upload exitoso.
+
+**Precondiciones:**
+- Imagen subida exitosamente a S3 usando presigned URL
+- Usuario autenticado es propietario
+
+**Procedimiento:**
+1. Ejecutar `POST /api/services/:serviceId/images/confirm` con body:
+   ```json
+   {
+     "s3Key": "contractor-services/contractor-uuid/service-uuid/image-uuid.jpg",
+     "order": 0,
+     "altText": "Instalación de lavabo en baño moderno"
+   }
+   ```
+2. Verificar que metadata se guarda
+
+**Resultado esperado:**
+- ✅ Status: 201 Created
+- ✅ Registro ServiceImage creado en base de datos
+- ✅ Campos: id, serviceId, s3Url, s3Key, order, altText, uploadedAt
+- ✅ Contador de imágenes del servicio incrementado
+
+**Estado:** Pendiente de ejecución
+
+---
+
+##### TC-SERVICE-029: DELETE /api/services/:id/images/:imageId elimina imagen de S3
+
+**Objetivo:** Validar eliminación de imágenes.
+
+**Precondiciones:**
+- Imagen existe asociada al servicio
+- Usuario es propietario
+
+**Procedimiento:**
+1. Ejecutar `DELETE /api/services/:serviceId/images/:imageId`
+2. Verificar eliminación
+
+**Resultado esperado:**
+- ✅ Status: 200 OK o 204 No Content
+- ✅ Registro ServiceImage eliminado de base de datos
+- ✅ Objeto eliminado de S3 (usando DeleteObjectCommand)
+- ✅ Contador de imágenes del servicio decrementado
+
+**Estado:** Pendiente de ejecución
+
+---
+
+##### TC-SERVICE-030: Upload fallido reintenta 3 veces antes de error
+
+**Objetivo:** Validar lógica de retry en cliente para uploads fallidos.
+
+**Precondiciones:**
+- Presigned URL generada
+- Simulación de fallo de red en primeros 2 intentos
+
+**Procedimiento:**
+1. Intentar upload a S3
+2. Simular fallo de red (timeout o error 5xx)
+3. Verificar que se reintenta automáticamente
+4. Tercer intento exitoso
+
+**Resultado esperado:**
+- ✅ Primer intento falla
+- ✅ Segundo intento falla
+- ✅ Tercer intento exitoso
+- ✅ Upload completado sin intervención manual
+- ✅ Total de intentos: 3
+
+**Estado:** Pendiente de ejecución
+
+---
+
+##### TC-SERVICE-031: Verificar solo role CONTRACTOR puede crear servicios
+
+**Objetivo:** Validar control de acceso por rol para creación.
+
+**Precondiciones:**
+- Tres usuarios de prueba: CONTRACTOR, CLIENT, ADMIN
+
+**Procedimiento:**
+1. Intentar crear servicio con cada rol
+2. Verificar comportamiento
+
+**Resultado esperado:**
+- ✅ CONTRACTOR: Status 201 Created (permitido)
+- ✅ CLIENT: Status 403 Forbidden (bloqueado)
+- ✅ ADMIN: Status 403 Forbidden (bloqueado, solo pueden moderar)
+
+**Estado:** Pendiente de ejecución
+
+---
+
+##### TC-SERVICE-032: Verificar propietario puede editar servicios propios
+
+**Objetivo:** Validar autorización de edición para propietarios.
+
+**Precondiciones:**
+- Contratista A es propietario del servicio X
+
+**Procedimiento:**
+1. Autenticarse como Contratista A
+2. Ejecutar `PATCH /api/services/X`
+3. Verificar éxito
+
+**Resultado esperado:**
+- ✅ Status: 200 OK
+- ✅ Cambios aplicados correctamente
+
+**Estado:** Pendiente de ejecución
+
+---
+
+##### TC-SERVICE-033: Verificar no propietario no puede editar servicios ajenos
+
+**Objetivo:** Validar bloqueo de edición para no propietarios.
+
+**Precondiciones:**
+- Contratista B NO es propietario del servicio X (propiedad de A)
+
+**Procedimiento:**
+1. Autenticarse como Contratista B
+2. Intentar `PATCH /api/services/X`
+3. Verificar rechazo
+
+**Resultado esperado:**
+- ✅ Status: 403 Forbidden
+- ✅ Servicio no modificado
+
+**Estado:** Pendiente de ejecución
+
+---
+
+##### TC-SERVICE-034: Verificar ADMIN puede pausar servicios (moderación)
+
+**Objetivo:** Validar capacidad de moderación de administradores.
+
+**Precondiciones:**
+- Usuario con role=ADMIN
+- Servicio ACTIVE existe
+
+**Procedimiento:**
+1. Autenticarse como ADMIN
+2. Ejecutar `PATCH /api/admin/services/:serviceId/pause`
+3. Verificar pausa
+
+**Resultado esperado:**
+- ✅ Status: 200 OK
+- ✅ Servicio cambia a PAUSED
+- ✅ Acción registrada en logs de auditoría (si implementado)
+
+**Estado:** Pendiente de ejecución
+
+---
+
+##### TC-SERVICE-035: Verificar CLIENT no puede crear ni editar servicios
+
+**Objetivo:** Validar que clientes no tienen permisos de gestión de servicios.
+
+**Precondiciones:**
+- Usuario con role=CLIENT
+
+**Procedimiento:**
+1. Intentar `POST /api/services` como CLIENT
+2. Intentar `PATCH /api/services/:id` como CLIENT
+3. Verificar ambos rechazados
+
+**Resultado esperado:**
+- ✅ POST: Status 403 Forbidden
+- ✅ PATCH: Status 403 Forbidden
+
+**Estado:** Pendiente de ejecución
+
+---
+
+##### TC-SERVICE-036: Verificar usuarios no autenticados solo leen servicios ACTIVE
+
+**Objetivo:** Validar acceso público limitado a catálogo.
+
+**Precondiciones:**
+- 3 servicios: 1 DRAFT, 1 ACTIVE, 1 PAUSED
+- Usuario NO autenticado
+
+**Procedimiento:**
+1. Ejecutar `GET /api/services` SIN token de autenticación
+2. Verificar filtrado de resultados
+
+**Resultado esperado:**
+- ✅ Solo retorna servicio ACTIVE
+- ✅ DRAFT y PAUSED no incluidos en respuesta
+- ✅ Status: 200 OK
+
+**Estado:** Pendiente de ejecución
+
+---
+
+##### TC-SERVICE-037: Creación de servicio completa en < 500ms (P95)
+
+**Objetivo:** Validar performance de endpoint de creación.
+
+**Precondiciones:**
+- k6 configurado con script de carga
+- Base de datos con datos de prueba seeded
+
+**Procedimiento:**
+1. Ejecutar script k6:
+   ```javascript
+   import http from 'k6/http';
+   export default function() {
+     const payload = JSON.stringify({
+       title: 'Servicio de Prueba',
+       categoryId: 'uuid-categoria',
+       description: 'Descripción válida de al menos 50 caracteres...',
+       basePrice: 350,
+       currency: 'MXN',
+       durationMinutes: 120
+     });
+     http.post('https://app/api/services', payload, {
+       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer token' }
+     });
+   }
+   ```
+2. Ejecutar con 10 RPS durante 60 segundos
+3. Analizar métricas P95
+
+**Resultado esperado:**
+- ✅ P95 latency ≤ 500ms
+- ✅ P99 latency ≤ 800ms
+- ✅ Sin errores 5xx
+- ✅ Tasa de éxito ≥ 99%
+
+**Estado:** Pendiente de ejecución
+
+---
+
+##### TC-SERVICE-038: Listado paginado completa en < 300ms (P95)
+
+**Objetivo:** Validar performance de listado de servicios.
+
+**Precondiciones:**
+- Base de datos con 300+ servicios
+- k6 configurado
+
+**Procedimiento:**
+1. Ejecutar script k6 para `GET /api/services?page=1&limit=20`
+2. Ejecutar con 10 RPS durante 60 segundos
+3. Analizar métricas
+
+**Resultado esperado:**
+- ✅ P95 latency ≤ 300ms
+- ✅ P99 latency ≤ 500ms
+- ✅ Paginación funciona correctamente bajo carga
+
+**Estado:** Pendiente de ejecución
+
+---
+
+##### TC-SERVICE-039: Generación de presigned URL completa en < 200ms (P95)
+
+**Objetivo:** Validar performance de generación de URLs de S3.
+
+**Precondiciones:**
+- AWS SDK configurado
+- k6 configurado
+
+**Procedimiento:**
+1. Ejecutar script k6 para `POST /api/services/:id/images/upload-url`
+2. Ejecutar con 5 RPS durante 60 segundos
+3. Analizar métricas
+
+**Resultado esperado:**
+- ✅ P95 latency ≤ 200ms
+- ✅ Presigned URLs generadas correctamente
+- ✅ Sin errores de AWS SDK
+
+**Estado:** Pendiente de ejecución
+
+---
+
+##### TC-SERVICE-040: Upload de imagen 5MB a S3 completa en < 5s
+
+**Objetivo:** Validar performance de uploads a S3.
+
+**Precondiciones:**
+- Presigned URL generada
+- Archivo de prueba de 5MB
+
+**Procedimiento:**
+1. Generar presigned URL
+2. Ejecutar PUT a S3 con archivo de 5MB
+3. Medir tiempo total de upload
+4. Repetir 10 veces
+
+**Resultado esperado:**
+- ✅ Promedio de upload ≤ 3s
+- ✅ P95 upload time ≤ 5s
+- ✅ Sin errores de timeout
+- ✅ Todos los uploads exitosos
+
+**Estado:** Pendiente de ejecución
+
+---
+
+### Matriz de Trazabilidad: Requisitos ↔ Casos de Prueba
+
+| Requisito | Descripción | Casos de Prueba Relacionados |
+|-----------|-------------|------------------------------|
+| RF-SRV-001 | CRUD de servicios del contratista | TC-SERVICE-001, TC-SERVICE-002, TC-SERVICE-003, TC-SERVICE-004, TC-SERVICE-012, TC-SERVICE-014, TC-SERVICE-018, TC-SERVICE-023 |
+| RF-SRV-002 | Lectura de servicios (público y privado) | TC-SERVICE-015, TC-SERVICE-016, TC-SERVICE-017 |
+| RF-SRV-003 | Máquina de estados (DRAFT/ACTIVE/PAUSED) | TC-SERVICE-005, TC-SERVICE-006, TC-SERVICE-007, TC-SERVICE-008, TC-SERVICE-020, TC-SERVICE-021, TC-SERVICE-022 |
+| RF-SRV-004 | Upload de imágenes a S3 (presigned URLs) | TC-SERVICE-009, TC-SERVICE-010, TC-SERVICE-011, TC-SERVICE-025, TC-SERVICE-026, TC-SERVICE-027, TC-SERVICE-028, TC-SERVICE-029 |
+| RF-SRV-005 | Autorización por rol y propiedad | TC-SERVICE-013, TC-SERVICE-016, TC-SERVICE-019, TC-SERVICE-024, TC-SERVICE-026, TC-SERVICE-031, TC-SERVICE-032, TC-SERVICE-033, TC-SERVICE-035, TC-SERVICE-036 |
+| RF-SRV-006 | Moderación por administradores | TC-SERVICE-034 |
+| RNF-SRV-001 | Performance (latencia P95) | TC-SERVICE-037, TC-SERVICE-038, TC-SERVICE-039 |
+| RNF-SRV-002 | Confiabilidad (retry de uploads) | TC-SERVICE-030, TC-SERVICE-040 |
+
+### Configuración de Ambiente de Pruebas
+
+#### Mocks y Fixtures
+
+**Clerk SDK (Autenticación):**
+```typescript
+// tests/mocks/clerkMock.ts
+export const mockClerkClient = {
+  users: {
+    getUser: jest.fn().mockResolvedValue({
+      id: 'user_test123',
+      publicMetadata: { role: 'CONTRACTOR' }
+    })
+  }
+}
+```
+
+**AWS S3 SDK (Presigned URLs):**
+```typescript
+// tests/mocks/s3Mock.ts
+import { mockClient } from 'aws-sdk-client-mock';
+import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+
+const s3Mock = mockClient(S3Client);
+s3Mock.on(PutObjectCommand).resolves({});
+```
+
+**Fixtures de Servicios:**
+```typescript
+// tests/fixtures/services.ts
+export const draftService = {
+  id: 'service-draft-uuid',
+  title: 'Reparación de Fugas',
+  categoryId: 'category-plomeria-uuid',
+  description: 'Servicio profesional de reparación de fugas...',
+  basePrice: 350.00,
+  currency: 'MXN',
+  durationMinutes: 120,
+  visibilityStatus: 'DRAFT',
+  contractorId: 'contractor-verified-uuid',
+  images: []
+};
+
+export const activeService = {
+  ...draftService,
+  id: 'service-active-uuid',
+  visibilityStatus: 'ACTIVE',
+  images: [
+    { id: 'img1', s3Url: 'https://s3.../image1.jpg', order: 0 }
+  ],
+  lastPublishedAt: new Date('2025-11-19T10:00:00Z')
+};
+```
+
+**Fixtures de Contratistas:**
+```typescript
+// tests/fixtures/contractors.ts
+export const verifiedContractor = {
+  id: 'contractor-verified-uuid',
+  userId: 'user-contractor-uuid',
+  businessName: 'Plomería Profesional',
+  verified: true
+};
+
+export const unverifiedContractor = {
+  id: 'contractor-unverified-uuid',
+  userId: 'user-unverified-uuid',
+  businessName: 'Nuevo Contratista',
+  verified: false
+};
+```
+
+#### Base de Datos de Prueba
+
+**Configuración:**
+- Base de datos PostgreSQL separada para testing
+- Migración automática antes de cada suite de tests
+- Seed de categorías de servicio
+- Limpieza de datos después de cada test
+
+**Script de Setup:**
+```bash
+# tests/setup.ts
+import { execSync } from 'child_process';
+
+beforeAll(async () => {
+  // Aplicar migraciones
+  execSync('npx prisma migrate deploy', { env: { DATABASE_URL: process.env.TEST_DATABASE_URL } });
+
+  // Seed de categorías
+  await prisma.serviceCategory.createMany({
+    data: [
+      { name: 'Plomería', slug: 'plomeria' },
+      { name: 'Electricidad', slug: 'electricidad' },
+      { name: 'Carpintería', slug: 'carpinteria' }
+    ]
+  });
+});
+
+afterEach(async () => {
+  // Limpiar datos de prueba
+  await prisma.serviceImage.deleteMany();
+  await prisma.service.deleteMany();
+  await prisma.contractorProfile.deleteMany();
+});
+```
+
+#### Variables de Entorno para Testing
+
+```bash
+# .env.test
+DATABASE_URL="postgresql://user:pass@localhost:5432/reparaya_test"
+AWS_S3_BUCKET_MEDIA="reparaya-media-test"
+AWS_REGION="us-west-2"
+CLERK_SECRET_KEY="test_clerk_secret"
+```
+
+---
+
+**Resumen de Cobertura de Testing:**
+- ✅ 40 casos de prueba documentados
+- ✅ Cobertura de todos los requisitos funcionales (RF-SRV-001 a RF-SRV-006)
+- ✅ Cobertura de requisitos no funcionales (performance, confiabilidad)
+- ✅ Tests unitarios: 11 casos (validación y lógica de negocio)
+- ✅ Tests de integración: 19 casos (API endpoints y flujos completos)
+- ✅ Tests de seguridad: 6 casos (autorización y control de acceso)
+- ✅ Tests de performance: 4 casos (latencia P95/P99)
+- ✅ Matriz de trazabilidad completa
+- ✅ Configuración de ambiente y mocks documentada
+
+---
+
+#### 4.1.7 Búsqueda de servicios (Catalog)
 
 | ID | Descripción | Requisito | Prioridad | Estado |
 |----|-------------|-----------|-----------|--------|
@@ -2683,7 +3900,7 @@ npm run test:coverage
 | TC-RF-001-03 | Performance: P95 ≤ 1.2s con 10 RPS | RNF-3.5.1 | Alta | Pendiente |
 | TC-RF-002-01 | Visualización de detalle de servicio | RF-002 | Media | Pendiente |
 
-#### 4.1.5 Reservas y Checkout (Booking)
+#### 4.1.8 Reservas y Checkout (Booking)
 
 | ID | Descripción | Requisito | Prioridad | Estado |
 |----|-------------|-----------|-----------|--------|
@@ -2692,7 +3909,7 @@ npm run test:coverage
 | TC-RF-006-01 | Transiciones válidas de estado | RF-006 | Alta | Pendiente |
 | TC-RF-006-02 | Rechazo de transiciones inválidas | RF-006 | Alta | Pendiente |
 
-#### 4.1.6 Pagos y Webhooks (Payments)
+#### 4.1.9 Pagos y Webhooks (Payments)
 
 | ID | Descripción | Requisito | Prioridad | Estado |
 |----|-------------|-----------|-----------|--------|
@@ -2701,7 +3918,7 @@ npm run test:coverage
 | TC-RF-010-01 | Liquidación correcta según comisiones (BR-002) | RF-010 | Alta | Pendiente |
 | TC-BR-002-01 | Cálculo de comisiones (Ic = B - C%) | BR-002 | Alta | Pendiente |
 
-#### 4.1.7 Mensajería (Messaging)
+#### 4.1.10 Mensajería (Messaging)
 
 | ID | Descripción | Requisito | Prioridad | Estado |
 |----|-------------|-----------|-----------|--------|
@@ -2709,7 +3926,7 @@ npm run test:coverage
 | TC-RF-008-02 | Sanitización anti-XSS en mensajes | RF-008 | Alta | Pendiente |
 | TC-RF-008-03 | Retención de mensajes (7 días post-cierre) | RF-008 | Media | Pendiente |
 
-#### 4.1.8 Calificaciones (Ratings)
+#### 4.1.11 Calificaciones (Ratings)
 
 | ID | Descripción | Requisito | Prioridad | Estado |
 |----|-------------|-----------|-----------|--------|
@@ -2717,7 +3934,7 @@ npm run test:coverage
 | TC-RF-009-02 | Rechazo de calificación duplicada | RF-009 | Media | Pendiente |
 | TC-RF-009-03 | Cálculo correcto de promedio | RF-009 | Media | Pendiente |
 
-#### 4.1.9 Administración (Admin)
+#### 4.1.12 Administración (Admin)
 
 | ID | Descripción | Requisito | Prioridad | Estado |
 |----|-------------|-----------|-----------|--------|
@@ -2725,7 +3942,7 @@ npm run test:coverage
 | TC-RF-011-02 | Bloqueo de usuario | RF-011 | Media | Pendiente |
 | TC-BR-005-01 | Resolución de disputa | BR-005 | Media | Pendiente |
 
-#### 4.1.10 Base de Datos y Schema Prisma (Database)
+#### 4.1.13 Base de Datos y Schema Prisma (Database)
 
 | ID | Descripción | Requisito | Prioridad | Estado |
 |----|-------------|-----------|-----------|--------|

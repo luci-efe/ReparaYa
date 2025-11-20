@@ -94,28 +94,49 @@ model Service {
   id               String              @id @default(uuid())
   contractorId     String
   categoryId       String
-  title            String
-  description      String
+  title            String              @db.VarChar(100)
+  description      String              @db.VarChar(2000)
   basePrice        Decimal             @db.Decimal(12, 2)
-  locationLat      Decimal             @db.Decimal(10, 8)
-  locationLng      Decimal             @db.Decimal(11, 8)
-  locationAddress  String
-  coverageRadiusKm Int
-  images           String[]
+  currency         String              @default("MXN") @db.VarChar(3)
+  durationMinutes  Int
+  visibilityStatus VisibilityStatus    @default(DRAFT)
+  locationLat      Decimal?            @db.Decimal(10, 8)
+  locationLng      Decimal?            @db.Decimal(11, 8)
+  locationAddress  String?
+  coverageRadiusKm Int?
   status           ServiceStatus       @default(ACTIVE)
   createdAt        DateTime            @default(now())
   updatedAt        DateTime            @updatedAt
+  lastPublishedAt  DateTime?
   availabilities   Availability[]
   bookings         Booking[]
   ratings          Rating[]
+  serviceImages    ServiceImage[]
   category         Category            @relation(fields: [categoryId], references: [id])
   contractor       User                @relation(fields: [contractorId], references: [id], onDelete: Cascade)
   ratingStats      ServiceRatingStats?
 
   @@index([contractorId])
-  @@index([categoryId, status])
+  @@index([categoryId, visibilityStatus])
   @@index([locationLat, locationLng])
-  @@index([status])
+  @@index([visibilityStatus])
+  @@index([contractorId, visibilityStatus])
+}
+
+model ServiceImage {
+  id         String   @id @default(uuid())
+  serviceId  String
+  s3Url      String   @db.Text
+  s3Key      String   @db.Text
+  order      Int
+  width      Int?
+  height     Int?
+  altText    String?  @db.VarChar(500)
+  uploadedAt DateTime @default(now())
+  service    Service  @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  @@index([serviceId, order])
+  @@index([serviceId])
 }
 
 model Availability {
@@ -301,6 +322,13 @@ enum ServiceStatus {
   ACTIVE
   INACTIVE
   UNDER_REVIEW
+}
+
+enum VisibilityStatus {
+  DRAFT
+  ACTIVE
+  PAUSED
+  ARCHIVED
 }
 
 enum AvailabilityStatus {

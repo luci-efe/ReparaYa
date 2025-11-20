@@ -7,8 +7,9 @@
 // Ejecutar con: npm run prisma:seed
 // (definido en package.json como "prisma": { "seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts" })
 
-import { PrismaClient, UserRole, ServiceStatus } from '@prisma/client';
+import { PrismaClient, UserRole, ServiceStatus, VisibilityStatus } from '@prisma/client';
 import { Decimal } from '@prisma/client/runtime/library';
+import { seedServiceCategories } from './seeds/serviceCategories';
 
 const prisma = new PrismaClient();
 
@@ -53,9 +54,11 @@ async function main() {
   await prisma.bookingStateHistory.deleteMany();
   await prisma.booking.deleteMany();
   await prisma.availability.deleteMany();
+  await prisma.serviceImage.deleteMany();
   await prisma.service.deleteMany();
   await prisma.category.deleteMany();
   await prisma.address.deleteMany();
+  await prisma.contractorServiceLocation.deleteMany();
   await prisma.contractorProfile.deleteMany();
   await prisma.user.deleteMany();
 
@@ -138,38 +141,20 @@ async function main() {
   console.log(`✅ Created ${1 + clients.length + contractors.length} users`);
 
   // ========================================
-  // 3. Crear categorías
+  // 3. Crear categorías usando el seed especializado
   // ========================================
-  console.log('📁 Creating categories...');
+  await seedServiceCategories();
 
-  const categories = await Promise.all([
-    prisma.category.create({
-      data: {
-        name: 'Plomería',
-        slug: 'plomeria',
-        description: 'Reparaciones e instalaciones de tuberías y sistemas de agua',
-      },
-    }),
-    prisma.category.create({
-      data: {
-        name: 'Electricidad',
-        slug: 'electricidad',
-        description: 'Instalaciones y reparaciones eléctricas',
-      },
-    }),
-    prisma.category.create({
-      data: {
-        name: 'Carpintería',
-        slug: 'carpinteria',
-        description: 'Trabajos en madera, muebles y estructuras',
-      },
-    }),
-  ]);
+  // Obtener algunas categorías para usar en los servicios de ejemplo
+  const plomeria = await prisma.category.findUnique({ where: { slug: 'plomeria' } });
+  const electricidad = await prisma.category.findUnique({ where: { slug: 'electricidad' } });
 
-  console.log(`✅ Created ${categories.length} categories`);
+  if (!plomeria || !electricidad) {
+    throw new Error('Failed to find seeded categories');
+  }
 
   // ========================================
-  // 4. Crear servicios
+  // 4. Crear servicios con el nuevo schema
   // ========================================
   console.log('🔧 Creating services...');
 
@@ -177,36 +162,55 @@ async function main() {
     prisma.service.create({
       data: {
         contractorId: contractors[0].id,
-        categoryId: categories[0].id, // Plomería
+        categoryId: plomeria.id,
         title: 'Reparación de fugas',
-        description: 'Detección y reparación de fugas de agua en tuberías',
+        description: 'Detección y reparación de fugas de agua en tuberías. Incluye revisión completa del sistema, detección con equipo especializado y reparación garantizada.',
         basePrice: new Decimal('500.00'),
-        locationLat: new Decimal('19.4326'),
-        locationLng: new Decimal('-99.1332'),
-        locationAddress: 'Ciudad de México, CDMX',
+        currency: 'MXN',
+        durationMinutes: 120,
+        visibilityStatus: VisibilityStatus.ACTIVE,
+        locationLat: new Decimal('20.6597'),
+        locationLng: new Decimal('-103.3496'),
+        locationAddress: 'Guadalajara, Jalisco',
         coverageRadiusKm: 10,
-        images: [],
         status: ServiceStatus.ACTIVE,
+        lastPublishedAt: new Date(),
       },
     }),
     prisma.service.create({
       data: {
         contractorId: contractors[1].id,
-        categoryId: categories[1].id, // Electricidad
+        categoryId: electricidad.id,
         title: 'Instalación de luminarias',
-        description: 'Instalación de lámparas, spots y sistemas de iluminación',
+        description: 'Instalación profesional de lámparas, spots, plafones y sistemas de iluminación LED. Incluye materiales básicos y garantía de instalación.',
         basePrice: new Decimal('800.00'),
-        locationLat: new Decimal('19.4326'),
-        locationLng: new Decimal('-99.1332'),
-        locationAddress: 'Ciudad de México, CDMX',
+        currency: 'MXN',
+        durationMinutes: 90,
+        visibilityStatus: VisibilityStatus.ACTIVE,
+        locationLat: new Decimal('20.6597'),
+        locationLng: new Decimal('-103.3496'),
+        locationAddress: 'Guadalajara, Jalisco',
         coverageRadiusKm: 15,
-        images: [],
+        status: ServiceStatus.ACTIVE,
+        lastPublishedAt: new Date(),
+      },
+    }),
+    prisma.service.create({
+      data: {
+        contractorId: contractors[0].id,
+        categoryId: plomeria.id,
+        title: 'Instalación de calentador (borrador)',
+        description: 'Servicio en preparación: Instalación de calentadores de agua a gas o eléctricos.',
+        basePrice: new Decimal('1500.00'),
+        currency: 'MXN',
+        durationMinutes: 180,
+        visibilityStatus: VisibilityStatus.DRAFT, // Este servicio está en borrador
         status: ServiceStatus.ACTIVE,
       },
     }),
   ]);
 
-  console.log(`✅ Created ${services.length} services`);
+  console.log(`✅ Created ${services.length} services (${services.filter(s => s.visibilityStatus === VisibilityStatus.ACTIVE).length} active, ${services.filter(s => s.visibilityStatus === VisibilityStatus.DRAFT).length} draft)`);
 
   // ========================================
   // 5. Crear disponibilidad
@@ -241,10 +245,12 @@ async function main() {
   // ========================================
   // DONE
   // ========================================
+  const totalCategories = await prisma.category.count();
+
   console.log('');
   console.log('✨ Seed completed successfully!');
   console.log(`   - Users: ${1 + clients.length + contractors.length}`);
-  console.log(`   - Categories: ${categories.length}`);
+  console.log(`   - Categories: ${totalCategories}`);
   console.log(`   - Services: ${services.length}`);
   console.log(`   - Availability slots: ${availabilities.length}`);
   console.log('');

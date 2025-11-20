@@ -69,7 +69,6 @@ export {
 
 // Service Layer (Business Logic)
 export { serviceService } from './services/serviceService';
-export { imageService } from './services/imageService';
 
 // Repository Layer (Data Access)
 export { serviceRepository } from './repositories/serviceRepository';

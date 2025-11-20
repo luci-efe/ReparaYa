@@ -3,24 +3,21 @@
  *
  * POST /api/services - Create new service (CONTRACTOR only)
  * GET /api/services - List public active services (catalog)
- *
- * TODO: Implement all route handlers
- * TODO: Add authentication middleware
- * TODO: Add validation and error handling
- * TODO: Add rate limiting
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { auth, currentUser } from '@clerk/nextjs/server';
+import { serviceService } from '@/modules/services/services/serviceService';
+import { createServiceSchema, serviceQuerySchema } from '@/modules/services/validators';
+import {
+  UnauthorizedServiceActionError,
+  CategoryNotFoundError
+} from '@/modules/services/errors';
+import { ServiceStatus } from '@/modules/services/types';
 
 /**
  * POST /api/services
  * Create a new service draft
- *
- * TODO: Implement service creation
- * TODO: Validate user is authenticated with CONTRACTOR role
- * TODO: Validate request body with createServiceSchema
- * TODO: Call serviceService.createService()
- * TODO: Return 201 Created with service data
  *
  * Auth: Required (CONTRACTOR)
  * Request Body: CreateServiceDTO
@@ -28,15 +25,64 @@ import { NextRequest, NextResponse } from 'next/server';
  */
 export async function POST(request: NextRequest) {
   try {
-    // TODO: Implement
-    return NextResponse.json(
-      { error: 'Not yet implemented' },
-      { status: 501 }
-    );
+    // Authenticate user
+    const { userId } = await auth();
+    if (!userId) {
+      return NextResponse.json(
+        { error: 'No autenticado' },
+        { status: 401 }
+      );
+    }
+
+    // Get user details to check role
+    const user = await currentUser();
+    const userRole = user?.publicMetadata?.role as string | undefined;
+
+    if (userRole !== 'contractor') {
+      return NextResponse.json(
+        { error: 'Solo contratistas pueden crear servicios' },
+        { status: 403 }
+      );
+    }
+
+    // Parse and validate request body
+    const body = await request.json();
+    const validation = createServiceSchema.safeParse(body);
+
+    if (!validation.success) {
+      return NextResponse.json(
+        {
+          error: 'Datos de entrada inválidos',
+          details: validation.error.errors
+        },
+        { status: 400 }
+      );
+    }
+
+    // Create service
+    const service = await serviceService.createService(userId, validation.data);
+
+    return NextResponse.json(service, { status: 201 });
+
   } catch (error) {
     console.error('Error in POST /api/services:', error);
+
+    if (error instanceof UnauthorizedServiceActionError) {
+      return NextResponse.json(
+        { error: error.message },
+        { status: 403 }
+      );
+    }
+
+    if (error instanceof CategoryNotFoundError) {
+      return NextResponse.json(
+        { error: error.message },
+        { status: 400 }
+      );
+    }
+
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Error interno del servidor' },
       { status: 500 }
     );
   }
@@ -46,27 +92,55 @@ export async function POST(request: NextRequest) {
  * GET /api/services
  * List public active services (catalog)
  *
- * TODO: Implement public service listing
- * TODO: Parse query params (categoryId, page, limit, minPrice, maxPrice)
- * TODO: Validate query params with serviceQuerySchema
- * TODO: Call serviceService.getPublicServices()
- * TODO: Return 200 OK with paginated services
- *
  * Auth: None required
  * Query Params: categoryId?, page?, limit?, minPrice?, maxPrice?
  * Response: 200 OK | 400 Bad Request | 500 Internal Server Error
  */
 export async function GET(request: NextRequest) {
   try {
-    // TODO: Implement
-    return NextResponse.json(
-      { error: 'Not yet implemented' },
-      { status: 501 }
-    );
+    // Parse query parameters
+    const { searchParams } = new URL(request.url);
+    const queryParams = {
+      categoryId: searchParams.get('categoryId') || undefined,
+      minPrice: searchParams.get('minPrice') ? parseFloat(searchParams.get('minPrice')!) : undefined,
+      maxPrice: searchParams.get('maxPrice') ? parseFloat(searchParams.get('maxPrice')!) : undefined,
+      page: searchParams.get('page') ? parseInt(searchParams.get('page')!) : 1,
+      limit: searchParams.get('limit') ? parseInt(searchParams.get('limit')!) : 20,
+    };
+
+    // Validate query params
+    const validation = serviceQuerySchema.safeParse(queryParams);
+    if (!validation.success) {
+      return NextResponse.json(
+        {
+          error: 'Parámetros de consulta inválidos',
+          details: validation.error.errors
+        },
+        { status: 400 }
+      );
+    }
+
+    // Get public services (ACTIVE only)
+    const filters = {
+      ...validation.data,
+      visibilityStatus: ServiceStatus.ACTIVE,
+    };
+
+    const services = await serviceService.getPublicServices(filters);
+
+    return NextResponse.json({
+      services,
+      pagination: {
+        page: validation.data.page,
+        limit: validation.data.limit,
+        total: services.length, // TODO: Get actual count from repository
+      }
+    });
+
   } catch (error) {
     console.error('Error in GET /api/services:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Error interno del servidor' },
       { status: 500 }
     );
   }
