@@ -18,42 +18,25 @@ const UserRole = {
   ADMIN: 'ADMIN' as PrismaUserRole,
 };
 
-// Mock the AWS location service module with inline jest.fn()
-jest.mock('@/lib/aws/locationService', () => ({
-  __esModule: true,
-  geocodeAddress: jest.fn(),
-  GeocodingTimeoutError: class GeocodingTimeoutError extends Error {
-    constructor(message = 'Geocoding service timeout') {
-      super(message);
-      this.name = 'GeocodingTimeoutError';
-    }
-  },
-  InvalidAddressFormatError: class InvalidAddressFormatError extends Error {
-    constructor(message = 'Invalid address format') {
-      super(message);
-      this.name = 'InvalidAddressFormatError';
-    }
-  },
-  GeocodingServiceUnavailableError: class GeocodingServiceUnavailableError extends Error {
-    constructor(message = 'Geocoding service unavailable') {
-      super(message);
-      this.name = 'GeocodingServiceUnavailableError';
-    }
-  },
-}));
+// Create the mock function BEFORE the mock declaration to preserve Jest methods
+const mockGeocodeAddressFn = jest.fn<any>();
+
+// Setup mocks BEFORE any imports
+jest.mock('@/lib/aws/locationService', () => {
+  const actual = jest.requireActual<typeof import('@/lib/aws/locationService')>('@/lib/aws/locationService');
+  return {
+    ...actual,
+    geocodeAddress: (...args: any[]) => mockGeocodeAddressFn(...args),
+  };
+});
 
 // Import service and dependencies AFTER mocks
 import { locationService } from '../locationService';
 import { locationRepository } from '../../repositories/locationRepository';
 import { contractorProfileRepository } from '../../repositories/contractorProfileRepository';
-// Import the mocked geocodeAddress and its types
-import { geocodeAddress } from '@/lib/aws/locationService';
-import type { AddressInput, GeocodingResult } from '@/lib/aws/locationService';
 
-// Cast to properly typed jest.Mock
-const mockGeocodeAddress = geocodeAddress as jest.MockedFunction<
-  (address: AddressInput) => Promise<GeocodingResult>
->;
+// Use the pre-declared mock function
+const mockGeocodeAddress = mockGeocodeAddressFn;
 
 describe('LocationService', () => {
   // Mock repository methods
@@ -65,8 +48,6 @@ describe('LocationService', () => {
   let mockProfileFindById: ReturnType<typeof jest.spyOn>;
 
   beforeEach(() => {
-    // Use real timers for this test suite
-    jest.useRealTimers();
     // Clear all mocks
     jest.clearAllMocks();
 
@@ -83,7 +64,6 @@ describe('LocationService', () => {
   });
 
   afterEach(() => {
-    // Restore all spies
     jest.restoreAllMocks();
   });
 
@@ -477,12 +457,7 @@ describe('LocationService', () => {
       });
 
       // Act
-      const result = await locationService.updateLocation(
-        profileId,
-        updateData,
-        userId,
-        UserRole.CONTRACTOR
-      );
+      const result = await locationService.updateLocation(profileId, updateData, userId);
 
       // Assert
       expect(result.address.city).toBe('Monterrey');
@@ -613,12 +588,12 @@ describe('LocationService', () => {
 
       // Assert
       expect(result).toBeDefined();
-      expect('address' in result && result.address).toBeDefined();
-      expect('address' in result && result.address?.street).toBe('Av. Insurgentes Sur');
-      expect('address' in result && result.address?.interiorNumber).toBe('Piso 5');
+      expect(result.address).toBeDefined();
+      expect(result.address?.street).toBe('Av. Insurgentes Sur');
+      expect(result.address?.interiorNumber).toBe('Piso 5');
       expect(result.coordinates?.latitude).toBe(19.432608);
       expect(result.coordinates?.longitude).toBe(-99.133209);
-      expect('timezone' in result && result.timezone).toBe('America/Mexico_City');
+      expect(result.timezone).toBe('America/Mexico_City');
     });
 
     it('TC-RF-CTR-LOC-009-03: debe devolver ubicación completa para admin', async () => {
@@ -633,10 +608,10 @@ describe('LocationService', () => {
       const result = await locationService.getLocation(profileId, adminUserId, UserRole.ADMIN);
 
       // Assert
-      expect('address' in result && result.address).toBeDefined();
-      expect('address' in result && result.address?.street).toBe('Av. Insurgentes Sur');
+      expect(result.address).toBeDefined();
+      expect(result.address?.street).toBe('Av. Insurgentes Sur');
       expect(result.coordinates?.latitude).toBe(19.432608);
-      expect('timezone' in result && result.timezone).toBe('America/Mexico_City');
+      expect(result.timezone).toBe('America/Mexico_City');
     });
 
     it('TC-RF-CTR-LOC-010-01: debe devolver vista limitada para cliente', async () => {
@@ -651,16 +626,16 @@ describe('LocationService', () => {
       const result = await locationService.getLocation(profileId, clientUserId, UserRole.CLIENT);
 
       // Assert
-      expect('city' in result && result.city).toBe('Ciudad de México');
-      expect('state' in result && result.state).toBe('CDMX');
+      expect(result.city).toBe('Ciudad de México');
+      expect(result.state).toBe('CDMX');
 
       // Coordinates should be approximated (2 decimals)
       expect(result.coordinates?.latitude).toBe(19.43);
       expect(result.coordinates?.longitude).toBe(-99.13);
 
       // Should NOT include full address or timezone
-      expect('address' in result).toBe(false);
-      expect('timezone' in result).toBe(false);
+      expect(result.address).toBeUndefined();
+      expect(result.timezone).toBeUndefined();
     });
 
     it('TC-RF-CTR-LOC-010-02: debe devolver zona de servicio para todos los roles', async () => {
@@ -677,9 +652,7 @@ describe('LocationService', () => {
       // Assert
       expect(result.serviceZone).toBeDefined();
       expect(result.serviceZone?.type).toBe('RADIUS');
-      if (result.serviceZone?.type === 'RADIUS') {
-        expect(result.serviceZone.radiusKm).toBe(15);
-      }
+      expect(result.serviceZone?.radiusKm).toBe(15);
     });
 
     it('TC-RF-CTR-LOC-004-03: debe rechazar si ubicación no existe', async () => {
