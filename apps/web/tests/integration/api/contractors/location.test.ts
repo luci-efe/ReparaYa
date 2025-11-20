@@ -632,7 +632,6 @@ describe('Contractor Location API Integration Tests', () => {
       // Act
       const req = createMockRequest(createData);
       const response = await createLocation(req, { params: { id: testContractorProfile.id } });
-      const data = await response.json();
 
       // Assert
       expect(response.status).toBe(403);

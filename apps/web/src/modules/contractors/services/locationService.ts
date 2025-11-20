@@ -84,7 +84,7 @@ export const locationService = {
       normalizedAddress?: string;
       timezone?: string;
       status: 'PENDING' | 'SUCCESS' | 'FAILED';
-    } = { status: 'PENDING' };
+    };
 
     try {
       const addressInput: AWSAddressInput = {
