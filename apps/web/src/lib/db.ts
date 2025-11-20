@@ -9,6 +9,12 @@ import { PrismaClient } from "@prisma/client";
  *
  * Solución: Almacenar la instancia en globalThis, que persiste entre
  * hot reloads pero se reinicia en producción.
+ *
+ * IMPORTANTE: Para entornos serverless (Vercel) con poolers (PgBouncer):
+ * - Se desactivan los prepared statements con pgbouncer=true
+ * - Se establece statement_cache_size=0
+ * - Esto previene el error "prepared statement 's0' already exists"
+ * - El pooler de Supabase usa transaction mode que no soporta prepared statements
  */
 
 const globalForPrisma = globalThis as unknown as {
@@ -23,6 +29,13 @@ export const prisma =
       process.env.NODE_ENV === "development"
         ? ["query", "error", "warn"]
         : ["error"],
+    // Desactivar prepared statements para compatibilidad con PgBouncer/poolers
+    // Esto previene el error "prepared statement 's0' already exists" en Vercel
+    datasourceUrl: process.env.DATABASE_URL
+      ? `${process.env.DATABASE_URL}${
+          process.env.DATABASE_URL.includes("?") ? "&" : "?"
+        }pgbouncer=true&statement_cache_size=0`
+      : undefined,
   });
 
 if (process.env.NODE_ENV !== "production") {
@@ -47,4 +60,5 @@ export const db = prisma;
  * - No agota conexiones en desarrollo
  * - Logs en desarrollo, silencioso en producción
  * - Compatible con Vercel Serverless Functions
+ * - Configurado para trabajar con PgBouncer/poolers (sin prepared statements)
  */
