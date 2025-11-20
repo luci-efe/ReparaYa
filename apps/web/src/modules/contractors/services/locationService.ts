@@ -231,8 +231,8 @@ export const locationService = {
         const addressInput: AWSAddressInput = {
           street: data.street ?? currentLocation.street,
           exteriorNumber: data.exteriorNumber ?? currentLocation.exteriorNumber,
-          interiorNumber: (data.interiorNumber ?? currentLocation.interiorNumber) ?? undefined,
-          neighborhood: (data.neighborhood ?? currentLocation.neighborhood) ?? undefined,
+          interiorNumber: data.interiorNumber ?? currentLocation.interiorNumber ?? undefined,
+          neighborhood: data.neighborhood ?? currentLocation.neighborhood ?? undefined,
           city: data.city ?? currentLocation.city,
           state: data.state ?? currentLocation.state,
           postalCode: data.postalCode ?? currentLocation.postalCode,
@@ -330,13 +330,17 @@ export const locationService = {
       country: location.country,
     };
 
-    const coordinates: Coordinates | null =
-      location.baseLatitude && location.baseLongitude
-        ? {
-            latitude: Number(location.baseLatitude),
-            longitude: Number(location.baseLongitude),
-          }
-        : null;
+    const hasCoords =
+      location.baseLatitude !== null &&
+      location.baseLatitude !== undefined &&
+      location.baseLongitude !== null &&
+      location.baseLongitude !== undefined;
+    const coordinates: Coordinates | null = hasCoords
+      ? {
+          latitude: Number(location.baseLatitude),
+          longitude: Number(location.baseLongitude),
+        }
+      : null;
 
     const serviceZone: ServiceZoneConfig =
       location.zoneType === 'RADIUS'
@@ -369,14 +373,18 @@ export const locationService = {
    */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   toPublicLocationResponseDTO(location: any): PublicLocationResponseDTO {
-    const coordinates =
-      location.baseLatitude && location.baseLongitude
-        ? {
-            // Aproximar a 2 decimales (~1km precisión)
-            latitude: Math.round(Number(location.baseLatitude) * 100) / 100,
-            longitude: Math.round(Number(location.baseLongitude) * 100) / 100,
-          }
-        : null;
+    const hasCoords =
+      location.baseLatitude !== null &&
+      location.baseLatitude !== undefined &&
+      location.baseLongitude !== null &&
+      location.baseLongitude !== undefined;
+    const coordinates = hasCoords
+      ? {
+          // Aproximar a 2 decimales (~1km precisión)
+          latitude: Math.round(Number(location.baseLatitude) * 100) / 100,
+          longitude: Math.round(Number(location.baseLongitude) * 100) / 100,
+        }
+      : null;
 
     const serviceZone: ServiceZoneConfig =
       location.zoneType === 'RADIUS'
