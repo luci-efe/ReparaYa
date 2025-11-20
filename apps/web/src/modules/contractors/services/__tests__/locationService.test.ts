@@ -9,6 +9,7 @@ import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals
 
 // Import types
 import type { CreateLocationDTO, UpdateLocationDTO } from '../../types/location';
+import type { AddressInput, GeocodingResult } from '@/lib/aws/locationService';
 import { UserRole as PrismaUserRole } from '@prisma/client';
 
 // Create a const object that mimics the enum for easier access
@@ -18,8 +19,8 @@ const UserRole = {
   ADMIN: 'ADMIN' as PrismaUserRole,
 };
 
-// Create mock function before the jest.mock call
-const mockGeocodeAddressFn = jest.fn();
+// Create mock function before the jest.mock call with proper typing
+const mockGeocodeAddressFn = jest.fn<(address: AddressInput) => Promise<GeocodingResult>>();
 
 // Mock the AWS location service module
 jest.mock('@/lib/aws/locationService', () => ({
