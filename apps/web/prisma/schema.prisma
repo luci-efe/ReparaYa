@@ -38,17 +38,18 @@ model User {
 }
 
 model ContractorProfile {
-  id                     String   @id @default(uuid())
-  userId                 String   @unique
+  id                     String                     @id @default(uuid())
+  userId                 String                     @unique
   businessName           String
   description            String
   specialties            String[]
-  verified               Boolean  @default(false)
+  verified               Boolean                    @default(false)
   verificationDocuments  Json?
   stripeConnectAccountId String?
-  createdAt              DateTime @default(now())
-  updatedAt              DateTime @updatedAt
-  user                   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt              DateTime                   @default(now())
+  updatedAt              DateTime                   @updatedAt
+  user                   User                       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  serviceLocation        ContractorServiceLocation?
 
   @@index([verified])
 }
@@ -343,4 +344,50 @@ enum DisputeStatus {
   RESOLVED_REFUND_CLIENT
   RESOLVED_PAYOUT_CONTRACTOR
   RESOLVED_PARTIAL
+}
+
+enum GeocodingStatus {
+  PENDING
+  SUCCESS
+  FAILED
+}
+
+enum ServiceZoneType {
+  RADIUS
+  POLYGON
+}
+
+model ContractorServiceLocation {
+  id                  String            @id @default(uuid())
+  contractorProfileId String            @unique
+  contractorProfile   ContractorProfile @relation(fields: [contractorProfileId], references: [id], onDelete: Cascade)
+
+  // Dirección estructurada
+  street         String  @db.VarChar(200)
+  exteriorNumber String  @db.VarChar(20)
+  interiorNumber String? @db.VarChar(20)
+  neighborhood   String? @db.VarChar(100)
+  city           String  @db.VarChar(100)
+  state          String  @db.VarChar(100)
+  postalCode     String  @db.VarChar(10)
+  country        String  @db.VarChar(2) // ISO 3166-1 alpha-2
+
+  // Geocodificación
+  baseLatitude      Decimal?        @db.Decimal(10, 8) // Rango: -90.00000000 a 90.00000000
+  baseLongitude     Decimal?        @db.Decimal(11, 8) // Rango: -180.00000000 a 180.00000000
+  normalizedAddress String?         @db.Text // Dirección devuelta por AWS
+  timezone          String?         @db.VarChar(50) // IANA timezone (ej. "America/Mexico_City")
+  geocodingStatus   GeocodingStatus @default(PENDING)
+
+  // Zona de operación
+  zoneType           ServiceZoneType
+  radiusKm           Int? // Para tipo RADIUS (1-100)
+  polygonCoordinates Json? // Para tipo POLYGON (futuro)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Índices para búsquedas geográficas
+  @@index([baseLatitude, baseLongitude])
+  @@index([city, state])
 }
