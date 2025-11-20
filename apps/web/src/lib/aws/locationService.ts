@@ -3,6 +3,7 @@ import {
   SearchPlaceIndexForTextCommand,
   SearchPlaceIndexForPositionCommand,
 } from '@aws-sdk/client-location';
+import { find as findTimezone } from 'geo-tz';
 
 /**
  * Cliente AWS Location Service para geocodificación
@@ -122,27 +123,17 @@ function buildSearchText(address: AddressInput): string {
 }
 
 /**
- * Infiere timezone por coordenadas usando una aproximación simple
- *
- * Nota: En producción se debería usar una librería como 'geo-tz'
- * Por ahora retornamos timezones comunes de México
+ * Infiere timezone por coordenadas usando la librería geo-tz
  */
-function inferTimezone(latitude: number, longitude: number, country: string): string {
-  if (country === 'MX') {
-    // Aproximación simple para México
-    if (longitude > -102) {
-      return 'America/Mexico_City'; // Zona Centro/Este
-    } else if (longitude > -108) {
-      return 'America/Chihuahua'; // Zona Montaña
-    } else if (longitude > -113) {
-      return 'America/Hermosillo'; // Zona Pacífico (no observa DST)
-    } else {
-      return 'America/Tijuana'; // Zona Pacífico
-    }
+function inferTimezone(latitude: number, longitude: number): string {
+  try {
+    const timezones = findTimezone(latitude, longitude);
+    return timezones[0] || 'America/Mexico_City';
+  } catch (error) {
+    console.error('Error inferring timezone:', error);
+    // Fallback para otros países
+    return 'America/Mexico_City';
   }
-
-  // Fallback para otros países
-  return 'America/Mexico_City';
 }
 
 /**
@@ -219,7 +210,7 @@ export async function geocodeAddress(address: AddressInput): Promise<GeocodingRe
       const normalizedAddress = place.Label || searchText;
 
       // Inferir timezone
-      const timezone = inferTimezone(latitude, longitude, address.country);
+      const timezone = inferTimezone(latitude, longitude);
 
       console.log(`[Geocoding] Éxito en intento ${attempt}/${MAX_RETRIES}`, {
         searchText,
