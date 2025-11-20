@@ -9,6 +9,7 @@ import { describe, it, expect, afterEach, beforeAll, afterAll } from '@jest/glob
 import { prisma } from '@/lib/db';
 import { locationRepository } from '../locationRepository';
 import { UserRole as PrismaUserRole, GeocodingStatus, ServiceZoneType, User, ContractorProfile } from '@prisma/client';
+import type { LocationCreateInput } from '../../types/location';
 
 // Create a const object that mimics the enum for easier access
 const UserRole = {
@@ -110,7 +111,7 @@ describe('LocationRepository Integration Tests', () => {
 
     it('TC-RF-CTR-LOC-001-DB-02: debe insertar ubicación con geocoding FAILED', async () => {
       // Arrange
-      const locationData = {
+      const locationData: LocationCreateInput = {
         contractorProfileId: testProfile.id,
         street: 'Calle Ambigua',
         exteriorNumber: '1',
@@ -118,10 +119,6 @@ describe('LocationRepository Integration Tests', () => {
         state: 'Test State',
         postalCode: '12345',
         country: 'MX',
-        baseLatitude: null,
-        baseLongitude: null,
-        normalizedAddress: null,
-        timezone: null,
         geocodingStatus: GeocodingStatus.FAILED,
         zoneType: ServiceZoneType.RADIUS,
         radiusKm: 10,

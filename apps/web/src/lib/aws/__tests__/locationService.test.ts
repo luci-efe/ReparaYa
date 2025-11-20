@@ -17,7 +17,7 @@ import {
 
 // Import the module to test (will be created)
 import { geocodeAddress, reverseGeocode } from '../locationService';
-import type { AddressInput } from '@/modules/contractors/types/location';
+import type { Address } from '@/modules/contractors/types/location';
 
 // Create mock client
 const locationClientMock = mockClient(LocationClient);
@@ -35,7 +35,7 @@ describe('AWS Location Service Client', () => {
   });
 
   describe('geocodeAddress', () => {
-    const validAddress: AddressInput = {
+    const validAddress: Address = {
       street: 'Av. Insurgentes Sur',
       exteriorNumber: '123',
       interiorNumber: 'Piso 5',
@@ -186,9 +186,10 @@ describe('AWS Location Service Client', () => {
     it('TC-RNF-CTR-LOC-005-01: debe reintentar en ThrottlingException', async () => {
       // Arrange
       const throttlingError = new ThrottlingException({
-        message: 'Rate exceeded',
+        Message: 'Rate exceeded',
         $metadata: {},
-      });
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } as any);
 
       locationClientMock
         .on(SearchPlaceIndexForTextCommand)
@@ -233,9 +234,10 @@ describe('AWS Location Service Client', () => {
     it('TC-RF-CTR-LOC-002-04: debe manejar ValidationException con mensaje claro', async () => {
       // Arrange
       const validationError = new ValidationException({
-        message: 'Invalid address format',
+        Message: 'Invalid address format',
         $metadata: {},
-      });
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } as any);
 
       locationClientMock.on(SearchPlaceIndexForTextCommand).rejects(validationError);
 
@@ -318,16 +320,22 @@ describe('AWS Location Service Client', () => {
     it('TC-RF-CTR-LOC-002-08: debe obtener dirección desde coordenadas exitosamente', async () => {
       // Arrange
       const mockResponse = {
+        Summary: {
+          Position: [-99.133209, 19.432608],
+          DataSource: 'Esri',
+        },
         Results: [
           {
             Place: {
               Label: 'Avenida Insurgentes Sur, Roma Norte, Ciudad de México, CDMX, México',
             },
+            Distance: 0,
           },
         ],
       };
 
-      locationClientMock.on(SearchPlaceIndexForPositionCommand).resolves(mockResponse);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      locationClientMock.on(SearchPlaceIndexForPositionCommand).resolves(mockResponse as any);
 
       // Act
       const result = await reverseGeocode(19.432608, -99.133209);
@@ -384,7 +392,7 @@ describe('AWS Location Service Client', () => {
         ],
       });
 
-      const validAddress: AddressInput = {
+      const validAddress: Address = {
         street: 'Test St',
         exteriorNumber: '1',
         city: 'Test City',
