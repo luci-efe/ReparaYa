@@ -1,1365 +1,1304 @@
-# contractor-availability Specification
+# Contractor Availability Specification
 
-## Purpose
+## Overview
 
-This module enables contractors to define and manage their work availability through a comprehensive scheduling system. Contractors can configure weekly recurring schedules, create exceptions for holidays and special dates, and block specific time slots manually for unforeseen circumstances. This is essential for enabling the booking system to validate available time slots, prevent double-booking, and provide clients with accurate availability information.
+### Purpose
 
-Without availability management, the marketplace cannot offer realistic scheduling options, contractors cannot control their workload, and the system risks accepting bookings that cannot be fulfilled.
+Este módulo permite a los contratistas gestionar su disponibilidad de horarios mediante:
 
-## Scope
+- **Reglas semanales recurrentes**: Definir horarios base por día de la semana (lunes-domingo)
+- **Excepciones puntuales**: Sobrescribir la regla semanal para fechas específicas (feriados, días especiales)
+- **Bloqueos manuales**: Marcar intervalos como no disponibles (vacaciones, mantenimiento de equipo)
+- **Motor de generación de slots**: Combinar reglas + excepciones + bloqueos para producir slots disponibles consultables
 
-**In scope:**
-- Weekly recurring schedule configuration (Monday-Sunday with multiple time intervals per day)
-- Configurable time slot granularity (15/30/60 minute intervals) at system level
-- Timezone handling: contractor timezone (IANA) with UTC normalization for storage
-- Exception management: one-off closures and recurring holidays that override weekly rules
-- Manual blockouts: ad-hoc time blocks for emergencies or personal time
-- Availability slot generation engine: combines weekly rules + exceptions + blockouts to produce available slots
-- Validation: prevent overlaps, ensure intervals are valid, verify compatibility with service durations
-- CRUD APIs for rules, exceptions, and blockouts
-- UI components for schedule management (calendar/weekly view with navigation)
-- Permission controls: only CONTRACTOR owner can manage availability, ADMIN can read/audit
-- Accessibility: keyboard navigation, ARIA labels, screen reader support
-- Mobile-first responsive design
+### Scope
 
-**Out of scope (future):**
-- Integration with external calendars (Google Calendar, Outlook)
-- Automatic availability adjustment based on historical booking patterns
-- Team/employee scheduling (multiple people per contractor)
-- Buffer time configuration between appointments
-- Travel time calculation based on distance
-- Availability quotas (max bookings per day/week)
-- Client-facing availability widget (embedded in service pages)
-- SMS/email reminders for upcoming blocked periods
-- Batch operations (bulk create exceptions, import holidays)
-- Reporting and analytics on availability utilization
+**In Scope:**
+- CRUD de reglas semanales (por día de la semana)
+- CRUD de excepciones por fecha
+- CRUD de bloqueos manuales (intervalos de tiempo)
+- Motor de combinación que genera slots disponibles finales
+- Normalización de zona horaria (IANA → UTC para persistencia)
+- Validación de intervalos (no traslapes, rangos válidos, compatibilidad con duración de servicios)
+- UI para gestionar disponibilidad (vista semanal, calendario mensual, formularios accesibles)
+- Permisos: solo CONTRACTOR dueño; ADMIN puede consultar
 
----
+**Out of Scope (para versiones futuras):**
+- Sincronización con calendarios externos (Google Calendar, Outlook)
+- Sugerencias inteligentes de horarios (ML)
+- Disponibilidad específica por servicio (v1 es a nivel de contratista)
+- Notificaciones push cuando se crea/edita disponibilidad
 
-## Functional Requirements
+### Dependencies
 
-### Requirement: RF-CTR-AVAIL-001 - Configure weekly recurring schedule
+**Backend:**
+- `auth`: Verificación de rol `CONTRACTOR` y ownership
+- `contractors`: `ContractorProfile` (relación 1:1 con reglas/excepciones/bloqueos)
+- `services`: Duración de servicios para validar compatibilidad de slots
+- `booking`: Lectura de reservas confirmadas para evitar colisiones
 
-**Priority:** HIGH
-**Type:** Core Functionality
+**Frontend:**
+- `DashboardShell` (layout de contratistas)
+- Componentes UI: `Card`, `Button`, `Input`, formularios con `react-hook-form` + `Zod`
+- Librerías de calendario: `date-fns` o `dayjs` (para manipulación de fechas/TZ)
 
-The system SHALL allow contractors to define their standard weekly availability with multiple time intervals per day.
-
-**Criteria:**
-- Configure availability for each day of the week (Monday-Sunday)
-- Support multiple time intervals per day (e.g., Monday 08:00-12:00 and 14:00-18:00)
-- Time intervals stored in contractor's local timezone (IANA format, e.g., "America/Mexico_City")
-- Validation: intervals must not overlap within the same day
-- Validation: start time must be before end time
-- Validation: intervals must align with system granularity (configurable: 15/30/60 minutes)
-- Default state: no availability configured (contractor must explicitly set hours)
-
-#### Scenario: Contractor creates weekly schedule
-
-**GIVEN** an authenticated contractor
-**WHEN** they submit POST `/api/contractors/me/availability/schedule` with:
-```json
-{
-  "timezone": "America/Mexico_City",
-  "weeklyRules": [
-    {
-      "dayOfWeek": "MONDAY",
-      "intervals": [
-        { "startTime": "08:00", "endTime": "12:00" },
-        { "startTime": "14:00", "endTime": "18:00" }
-      ]
-    },
-    {
-      "dayOfWeek": "TUESDAY",
-      "intervals": [
-        { "startTime": "09:00", "endTime": "17:00" }
-      ]
-    },
-    {
-      "dayOfWeek": "WEDNESDAY",
-      "intervals": []
-    }
-  ]
-}
-```
-**THEN** the system SHALL:
-- Validate all intervals align with granularity (default: 30 min)
-- Validate no overlaps within each day
-- Store rules in `ContractorWeeklySchedule` table
-- Return HTTP 201 with created schedule
-- Store contractor timezone for future slot generation
-
-#### Scenario: Reject overlapping intervals
-
-**GIVEN** contractor attempts to create schedule
-**WHEN** they provide overlapping intervals on same day:
-```json
-{
-  "dayOfWeek": "MONDAY",
-  "intervals": [
-    { "startTime": "08:00", "endTime": "12:00" },
-    { "startTime": "11:00", "endTime": "15:00" }
-  ]
-}
-```
-**THEN** the system SHALL reject with HTTP 400 Bad Request
-**AND** return error: "Overlapping intervals detected for MONDAY: 11:00 conflicts with existing 08:00-12:00"
-
-#### Scenario: Reject invalid time intervals
-
-**GIVEN** contractor attempts to create schedule
-**WHEN** they provide invalid intervals:
-- Start time after end time: `{ "startTime": "18:00", "endTime": "08:00" }`
-- Intervals not aligned with granularity: `{ "startTime": "08:15", "endTime": "12:37" }` (with 30min granularity)
-
-**THEN** the system SHALL reject with HTTP 400 Bad Request
-**AND** return specific validation errors
+**External:**
+- Zona horaria IANA del contratista (desde `ContractorServiceLocation.timezone`)
+- UTC como estándar de persistencia
 
 ---
 
-### Requirement: RF-CTR-AVAIL-002 - Create and manage exceptions (holidays/closures)
+## Requirements
 
-**Priority:** HIGH
-**Type:** Core Functionality
+### Functional Requirements
 
-The system SHALL allow contractors to create exceptions that override weekly recurring schedules.
+#### RF-CTR-AVAIL-001: Gestión de Horarios Semanales
 
-**Criteria:**
-- Two types of exceptions:
-  - **One-off closure**: Specific date (e.g., December 25, 2025)
-  - **Recurring holiday**: Recurring date (e.g., every December 25)
-- Exceptions can be:
-  - Full-day closure (no availability)
-  - Partial closure (custom intervals that override weekly rule for that day)
-- Exceptions take precedence over weekly schedule
-- Validation: exception date/intervals must be valid
-- Contractors can edit/delete exceptions
-- UI shows exception indicators on calendar view
+**Descripción:**
+El contratista puede crear, actualizar, listar y eliminar reglas semanales que definen su disponibilidad recurrente por día de la semana.
 
-#### Scenario: Create full-day closure exception
+**Criterios de aceptación:**
+- ✅ Crear regla semanal: `POST /api/contractors/me/availability/weekly`
+  - Payload: `{ dayOfWeek: 0-6, intervals: [{ startTime: "HH:MM", endTime: "HH:MM" }] }`
+  - Validación:
+    - `dayOfWeek` ∈ [0, 6] (0=domingo, 1=lunes, ..., 6=sábado)
+    - `startTime < endTime`
+    - Intervalos no se traslapan entre sí para el mismo día
+    - Formato de tiempo: HH:MM (24 horas)
+  - Respuesta: 201 con regla creada (ID, dayOfWeek, intervals, createdAt, updatedAt)
+- ✅ Listar reglas semanales: `GET /api/contractors/me/availability/weekly`
+  - Respuesta: 200 con array de reglas (agrupadas por día)
+- ✅ Actualizar regla semanal: `PATCH /api/contractors/me/availability/weekly/:ruleId`
+  - Payload: `{ intervals: [...] }`
+  - Validación: misma que crear
+  - Respuesta: 200 con regla actualizada
+- ✅ Eliminar regla semanal: `DELETE /api/contractors/me/availability/weekly/:ruleId`
+  - Respuesta: 204 (no content)
+- ✅ Solo el contratista dueño puede modificar sus reglas
+- ✅ ADMIN puede leer (no modificar) para auditoría
 
-**GIVEN** contractor has weekly schedule (works Monday-Friday)
-**WHEN** they submit POST `/api/contractors/me/availability/exceptions` with:
-```json
-{
-  "type": "ONE_OFF",
-  "date": "2025-12-25",
-  "isFullDayClosure": true,
-  "reason": "Navidad"
-}
-```
-**THEN** the system SHALL:
-- Create exception in `ContractorAvailabilityException` table
-- Mark December 25, 2025 as fully unavailable
-- Return HTTP 201 with created exception
-- On slot generation, skip this date entirely
-
-#### Scenario: Create recurring holiday
-
-**GIVEN** contractor wants to block all September 16 (Mexican Independence Day)
-**WHEN** they submit:
-```json
-{
-  "type": "RECURRING",
-  "recurringMonth": 9,
-  "recurringDay": 16,
-  "isFullDayClosure": true,
-  "reason": "Día de la Independencia"
-}
-```
-**THEN** the system SHALL:
-- Create recurring exception
-- Apply to all future September 16 dates
-- Skip these dates during slot generation
-
-#### Scenario: Create partial closure exception
-
-**GIVEN** contractor works Monday 08:00-18:00 normally
-**WHEN** they create one-off exception for specific Monday:
-```json
-{
-  "type": "ONE_OFF",
-  "date": "2025-11-24",
-  "isFullDayClosure": false,
-  "customIntervals": [
-    { "startTime": "08:00", "endTime": "12:00" }
-  ],
-  "reason": "Cita médica por la tarde"
-}
-```
-**THEN** the system SHALL:
-- Override weekly rule for that specific day
-- Generate slots only for 08:00-12:00 (not full 08:00-18:00)
-- Return HTTP 201
+**Casos de prueba relacionados:**
+TC-RF-CTR-AVAIL-001, TC-RF-CTR-AVAIL-002, TC-RF-CTR-AVAIL-003
 
 ---
 
-### Requirement: RF-CTR-AVAIL-003 - Create manual blockouts (ad-hoc)
+#### RF-CTR-AVAIL-002: Gestión de Excepciones
 
-**Priority:** HIGH
-**Type:** Core Functionality
+**Descripción:**
+El contratista puede definir excepciones a la regla semanal para fechas específicas (ej: "El 16 de septiembre estoy disponible de 10-14h en vez de mi horario habitual").
 
-The system SHALL allow contractors to block specific time slots manually for unforeseen circumstances.
+**Criterios de aceptación:**
+- ✅ Crear excepción: `POST /api/contractors/me/availability/exceptions`
+  - Payload: `{ date: "YYYY-MM-DD", intervals: [{ startTime: "HH:MM", endTime: "HH:MM" }], type: "AVAILABLE" | "BLOCKED" }`
+  - Validación:
+    - `date` es fecha futura o presente
+    - Intervalos válidos (startTime < endTime, no traslapes)
+    - `type` indica si la excepción agrega disponibilidad o bloquea
+  - Respuesta: 201 con excepción creada
+- ✅ Listar excepciones: `GET /api/contractors/me/availability/exceptions?startDate=YYYY-MM-DD&endDate=YYYY-MM-DD`
+  - Query params opcionales para filtrar rango de fechas
+  - Respuesta: 200 con array de excepciones
+- ✅ Actualizar excepción: `PATCH /api/contractors/me/availability/exceptions/:exceptionId`
+  - Payload: `{ intervals: [...], type: "..." }`
+  - Respuesta: 200 con excepción actualizada
+- ✅ Eliminar excepción: `DELETE /api/contractors/me/availability/exceptions/:exceptionId`
+  - Respuesta: 204
+- ✅ Permisos: solo dueño modifica; ADMIN lee
 
-**Criteria:**
-- Blockouts are one-time, date-specific time intervals
-- Can block any time range (not limited to working hours)
-- Optional reason field for contractor's records
-- Validation: cannot block time slots with confirmed bookings
-- Validation: start datetime must be in the future (at least 1 hour from now)
-- Contractors can delete blockouts (if no booking exists in that slot)
-- UI shows blockouts distinctly on calendar view
-
-#### Scenario: Create valid blockout
-
-**GIVEN** contractor needs to block specific afternoon
-**WHEN** they submit POST `/api/contractors/me/availability/blockouts` with:
-```json
-{
-  "date": "2025-11-28",
-  "startTime": "14:00",
-  "endTime": "16:00",
-  "reason": "Emergencia familiar"
-}
-```
-**AND** no confirmed booking exists in that time range
-**THEN** the system SHALL:
-- Create blockout in `ContractorAvailabilityBlockout` table
-- Remove those time slots from available slots for November 28
-- Return HTTP 201
-- Prevent new bookings in that range
-
-#### Scenario: Reject blockout overlapping confirmed booking
-
-**GIVEN** contractor has confirmed booking on November 28, 14:00-15:00
-**WHEN** they attempt to create blockout for 13:30-15:30
-**THEN** the system SHALL reject with HTTP 409 Conflict
-**AND** return error: "Cannot block time range 14:00-15:00: confirmed booking exists (ID: xyz)"
-
-#### Scenario: Reject blockout in the past
-
-**GIVEN** current time is November 28, 2025 at 15:00
-**WHEN** contractor attempts to block November 28, 14:00-16:00
-**THEN** the system SHALL reject with HTTP 400 Bad Request
-**AND** return error: "Blockout must be at least 1 hour in the future"
+**Casos de prueba relacionados:**
+TC-RF-CTR-AVAIL-004, TC-RF-CTR-AVAIL-005, TC-RF-CTR-AVAIL-006
 
 ---
 
-### Requirement: RF-CTR-AVAIL-004 - Generate available time slots (combination engine)
+#### RF-CTR-AVAIL-003: Gestión de Bloqueos Manuales
 
-**Priority:** HIGH
-**Type:** Core Functionality
+**Descripción:**
+El contratista puede crear bloqueos ad-hoc para intervalos de tiempo específicos (ej: "Vacaciones del 20-25 dic", "Mantenimiento de equipo 10-12h del 5 nov").
 
-The system SHALL generate available time slots by combining weekly schedule, exceptions, blockouts, and existing bookings.
+**Criterios de aceptación:**
+- ✅ Crear bloqueo: `POST /api/contractors/me/availability/blocks`
+  - Payload: `{ startDateTime: "ISO8601", endDateTime: "ISO8601", reason?: string }`
+  - Validación:
+    - `startDateTime < endDateTime`
+    - Fechas futuras o presentes
+    - No se permite bloquear intervalos con reservas CONFIRMADAS (validar vs `booking`)
+  - Respuesta: 201 con bloqueo creado
+- ✅ Listar bloqueos: `GET /api/contractors/me/availability/blocks?startDate=YYYY-MM-DD&endDate=YYYY-MM-DD`
+  - Respuesta: 200 con array de bloqueos
+- ✅ Eliminar bloqueo: `DELETE /api/contractors/me/availability/blocks/:blockId`
+  - Respuesta: 204
+- ✅ Validación de colisiones con reservas:
+  - Si el intervalo del bloqueo cubre una reserva CONFIRMADA → error 400 con mensaje descriptivo
+  - Se permite bloquear sobre reservas PENDING_PAYMENT o CANCELLED
+- ✅ Permisos: solo dueño crea/elimina; ADMIN lee
 
-**Criteria:**
-- Algorithm priority (highest to lowest):
-  1. Confirmed bookings (always block)
-  2. Manual blockouts (block)
-  3. Exceptions (override weekly schedule)
-  4. Weekly recurring schedule (baseline)
-- Slots generated in contractor's timezone, then converted to UTC for storage/API responses
-- Time slot granularity configurable (default: 30 minutes)
-- Generate slots for configurable time range (default: next 8 weeks)
-- Slots compatible with service durations (e.g., if service duration is 2 hours, generate 2-hour blocks)
-- Performance: paginated generation, cache generated slots
-- Return slots in ISO 8601 format with timezone info
-
-#### Scenario: Generate slots for contractor with weekly schedule
-
-**GIVEN** contractor has:
-- Weekly schedule: Monday 08:00-12:00 and 14:00-18:00 (America/Mexico_City)
-- No exceptions or blockouts
-- Slot granularity: 30 minutes
-- Service duration: 1 hour
-
-**WHEN** system generates slots for next Monday (November 24, 2025)
-**THEN** the system SHALL return slots:
-```json
-[
-  { "startTime": "2025-11-24T08:00:00-06:00", "endTime": "2025-11-24T09:00:00-06:00", "startTimeUTC": "2025-11-24T14:00:00Z", "endTimeUTC": "2025-11-24T15:00:00Z" },
-  { "startTime": "2025-11-24T08:30:00-06:00", "endTime": "2025-11-24T09:30:00-06:00", "startTimeUTC": "2025-11-24T14:30:00Z", "endTimeUTC": "2025-11-24T15:30:00Z" },
-  { "startTime": "2025-11-24T09:00:00-06:00", "endTime": "2025-11-24T10:00:00-06:00", "startTimeUTC": "2025-11-24T15:00:00Z", "endTimeUTC": "2025-11-24T16:00:00Z" },
-  // ... (continues for all 30-minute intervals within 08:00-12:00 and 14:00-18:00)
-]
-```
-
-#### Scenario: Generate slots excluding exceptions and blockouts
-
-**GIVEN** contractor has:
-- Weekly schedule: Monday-Friday 09:00-17:00
-- Exception: December 25, 2025 (full-day closure)
-- Blockout: November 28, 14:00-16:00
-
-**WHEN** system generates slots for week of November 24-28, 2025
-**THEN** the system SHALL:
-- Include normal slots for Nov 24, 25, 26, 27
-- For Nov 28: include 09:00-14:00 slots, skip 14:00-16:00 (blockout), include 16:00-17:00 slots
-- Skip December 25 entirely (exception)
-
-#### Scenario: Generate slots excluding existing bookings
-
-**GIVEN** contractor has:
-- Weekly schedule: Monday 08:00-18:00
-- Confirmed booking: November 24, 10:00-11:00
-
-**WHEN** generating slots for November 24
-**THEN** the system SHALL:
-- Include all slots except 10:00-11:00 (and overlapping slots for services with duration > 1 hour)
-- Exclude 09:00-10:00 slot if service duration is 2 hours (would overlap with booking)
+**Casos de prueba relacionados:**
+TC-RF-CTR-AVAIL-007, TC-RF-CTR-AVAIL-008, TC-RF-CTR-AVAIL-009
 
 ---
 
-### Requirement: RF-CTR-AVAIL-005 - Timezone normalization and UTC storage
+#### RF-CTR-AVAIL-004: Generación de Slots Disponibles
 
-**Priority:** HIGH
-**Type:** Integration
+**Descripción:**
+Motor de combinación que produce slots disponibles finales para un contratista en un rango de fechas, aplicando: reglas semanales → excepciones → bloqueos → reservas confirmadas.
 
-The system SHALL handle timezone conversions correctly to support contractors in different timezones.
+**Criterios de aceptación:**
+- ✅ Endpoint: `GET /api/contractors/:contractorId/availability/slots?startDate=YYYY-MM-DD&endDate=YYYY-MM-DD&serviceId=UUID`
+  - Query params:
+    - `startDate`, `endDate` (obligatorios, máximo 8 semanas de rango)
+    - `serviceId` (opcional): si se provee, filtra slots compatibles con la duración del servicio
+  - Respuesta: 200 con array de slots:
+    ```json
+    [
+      {
+        "date": "2025-11-21",
+        "startTime": "09:00",
+        "endTime": "12:00",
+        "durationMinutes": 180,
+        "timezone": "America/Mexico_City"
+      }
+    ]
+    ```
+- ✅ Algoritmo de combinación:
+  1. Para cada día en `[startDate, endDate]`:
+     - Obtener `dayOfWeek` del día
+     - Buscar regla semanal para ese `dayOfWeek`
+     - Si hay excepción para esa fecha exacta, usar intervalos de la excepción (sobrescribe regla semanal)
+     - Si no hay regla ni excepción → día sin disponibilidad
+  2. Restar bloqueos manuales que se intersecten con intervalos del día
+  3. Restar reservas CONFIRMADAS que se intersecten
+  4. Retornar slots resultantes
+- ✅ Normalización de zona horaria:
+  - Entrada: fechas/horas en TZ del contratista (desde `ContractorServiceLocation.timezone`)
+  - Salida: slots en TZ del contratista (para UI)
+  - Persistencia interna: UTC (para cálculos consistentes)
+- ✅ Performance:
+  - Limitar rango máximo a 8 semanas (~56 días) para evitar carga excesiva
+  - Índices en BD para búsquedas rápidas (ver Data Model)
+  - P95 ≤ 800ms para generación de slots (ver RNF-CTR-AVAIL-001)
+- ✅ Acceso público: lectura de slots es pública (clientes necesitan ver disponibilidad)
 
-**Criteria:**
-- Store contractor's timezone (IANA format) with schedule configuration
-- Accept time intervals in contractor's local timezone (API requests)
-- Convert to UTC before storing generated slots in database
-- Return slots in both local timezone AND UTC in API responses
-- Use `date-fns-tz` or similar library for timezone conversions
-- Validate timezone is valid IANA timezone
-- Default to ContractorServiceLocation.timezone if available
-
-#### Scenario: Store weekly schedule with timezone
-
-**GIVEN** contractor in Guadalajara (America/Mexico_City, UTC-6)
-**WHEN** they configure Monday 08:00-12:00 availability
-**THEN** the system SHALL:
-- Store intervals as local time: 08:00-12:00
-- Store timezone: "America/Mexico_City"
-- When generating slots, convert to UTC: 14:00-18:00 UTC
-- Return API responses with both formats
-
-#### Scenario: Handle DST transitions
-
-**GIVEN** contractor in timezone with DST (America/Mexico_City)
-**WHEN** generating slots across DST transition dates
-**THEN** the system SHALL:
-- Apply correct UTC offset for each date
-- Before DST: UTC-6
-- After DST: UTC-5
-- Ensure slot times remain consistent in local timezone
-
----
-
-### Requirement: RF-CTR-AVAIL-006 - Permission controls
-
-**Priority:** HIGH
-**Type:** Security
-
-The system SHALL enforce access controls for availability management.
-
-**Criteria:**
-- CONTRACTOR (owner) can: create, read, update, delete their own availability
-- CONTRACTOR cannot: access other contractors' availability management
-- ADMIN can: read any contractor's availability (audit), cannot modify
-- CLIENT can: read available slots via booking API (public-facing, filtered view)
-- All write operations validate ownership
-- Repository layer enforces guards
-
-#### Scenario: Owner manages their schedule
-
-**GIVEN** authenticated contractor with ID "abc"
-**WHEN** they call POST `/api/contractors/me/availability/schedule`
-**THEN** the system SHALL:
-- Verify user owns contractor profile
-- Allow creation
-- Return HTTP 201
-
-#### Scenario: Block cross-contractor access
-
-**GIVEN** authenticated contractor with ID "abc"
-**WHEN** they attempt DELETE `/api/contractors/xyz/availability/blockouts/123`
-**THEN** the system SHALL reject with HTTP 403 Forbidden
-**AND** return error: "You can only manage your own availability"
-
-#### Scenario: Admin can read availability
-
-**GIVEN** authenticated user with role ADMIN
-**WHEN** they call GET `/api/contractors/xyz/availability/schedule`
-**THEN** the system SHALL:
-- Allow read access
-- Return full schedule data
-- Log audit trail (future enhancement)
+**Casos de prueba relacionados:**
+TC-RF-CTR-AVAIL-010, TC-RF-CTR-AVAIL-011, TC-RF-CTR-AVAIL-012, TC-RF-CTR-AVAIL-013
 
 ---
 
-### Requirement: RF-CTR-AVAIL-007 - Validation of compatibility with service durations
+#### RF-CTR-AVAIL-005: Conversiones de Zona Horaria
 
-**Priority:** MEDIUM
-**Type:** Business Logic
+**Descripción:**
+Todas las operaciones de disponibilidad deben normalizar correctamente entre la zona horaria del contratista (IANA) y UTC.
 
-The system SHALL validate that generated slots are compatible with service durations.
+**Criterios de aceptación:**
+- ✅ Al crear/actualizar reglas/excepciones/bloqueos:
+  - Input: tiempos en TZ del contratista
+  - Persistencia: conversión a UTC
+  - Output: conversión de vuelta a TZ del contratista
+- ✅ Manejo de DST (Daylight Saving Time):
+  - Usar librerías robustas (`date-fns-tz` o `dayjs` con plugin timezone)
+  - Ajustar correctamente transiciones DST (ej: horario de verano México)
+- ✅ Validación de TZ:
+  - Verificar que `ContractorServiceLocation.timezone` sea válido (IANA format)
+  - Si no está configurado → error 400 al intentar crear disponibilidad
+- ✅ Documentación clara en API:
+  - Todos los endpoints especifican en qué TZ esperan/retornan datos
+  - Ejemplo: "startTime is in contractor's local timezone (IANA)"
 
-**Criteria:**
-- Contractor services have `estimatedDurationMinutes` field
-- Generated slots must accommodate longest service duration
-- Validation: warn contractor if availability intervals are shorter than service durations
-- Slot generation: filter out slots that cannot fit service duration
-- UI: show warning if contractor configures 1-hour availability but offers 2-hour services
-
-#### Scenario: Warn contractor about incompatible durations
-
-**GIVEN** contractor has service with duration 120 minutes (2 hours)
-**AND** contractor configures availability interval 08:00-09:00 (1 hour)
-**WHEN** they save the schedule
-**THEN** the system SHALL:
-- Accept the schedule (allow partial availability)
-- Return warning message: "Some services require 120 minutes but availability interval is only 60 minutes. Ensure sufficient time blocks."
-- Generate slots: skip 08:00-09:00 for 2-hour services
-
-#### Scenario: Generate slots compatible with service duration
-
-**GIVEN** contractor offers services with durations: 60 min, 90 min, 120 min
-**AND** contractor has availability Monday 08:00-12:00 (4 hours)
-**WHEN** generating slots with 30-minute granularity
-**THEN** the system SHALL:
-- For 60-min services: generate slots 08:00-09:00, 08:30-09:30, ..., 11:00-12:00
-- For 90-min services: generate slots 08:00-09:30, 08:30-10:00, ..., 10:30-12:00
-- For 120-min services: generate slots 08:00-10:00, 08:30-10:30, ..., 10:00-12:00
+**Casos de prueba relacionados:**
+TC-RF-CTR-AVAIL-014, TC-RF-CTR-AVAIL-015
 
 ---
 
-## Non-Functional Requirements
+#### RF-CTR-AVAIL-006: Autorización y Acceso
 
-### Requirement: RNF-CTR-AVAIL-001 - Slot generation performance
+**Descripción:**
+Control de permisos para gestión y lectura de disponibilidad.
 
-**Priority:** HIGH
-**Type:** Performance
+**Criterios de aceptación:**
+- ✅ **CONTRACTOR (dueño)**:
+  - CRUD completo de sus propias reglas/excepciones/bloqueos
+  - Lectura de sus propios slots
+- ✅ **CLIENT / público**:
+  - Solo lectura de slots disponibles (vía `GET /api/contractors/:contractorId/availability/slots`)
+  - No acceso a CRUD de reglas/excepciones/bloqueos
+- ✅ **ADMIN**:
+  - Lectura de reglas/excepciones/bloqueos de cualquier contratista (auditoría)
+  - No modificación (para evitar conflictos con ownership)
+- ✅ Validación en service layer:
+  - Verificar `user.role === 'CONTRACTOR'` para operaciones de escritura
+  - Verificar `contractorProfile.userId === user.id` (ownership)
+  - Retornar 403 si falla autorización
 
-The system SHALL generate available slots efficiently to support real-time booking.
-
-**Criteria:**
-- P95 latency for slot generation API: <= 800 ms (for 8-week range)
-- P99 latency: <= 1.2 seconds
-- Caching strategy: cache generated slots for 1 hour (invalidate on schedule/exception/blockout/booking changes)
-- Pagination: limit slot generation to configurable range (default: 8 weeks, max: 12 weeks)
-- Database query optimization: indexed queries for bookings/blockouts/exceptions
-- Background job: pre-generate slots nightly for active contractors
-
-**Test:** k6 load test with 100 concurrent requests for slot generation, measure P95/P99 latencies.
-
----
-
-### Requirement: RNF-CTR-AVAIL-002 - Data consistency and race conditions
-
-**Priority:** HIGH
-**Type:** Reliability
-
-The system SHALL prevent race conditions when creating bookings against availability.
-
-**Criteria:**
-- Atomic booking creation: check availability + create booking in transaction
-- Database-level constraints: unique constraint on (serviceId, date, startTime) for generated slots (future)
-- Optimistic locking: use row versioning for high-concurrency scenarios
-- Booking validation: re-check availability after acquiring lock
-- Rollback on conflict: return HTTP 409 Conflict if slot taken between check and creation
-
-**Test:** Simulate 10 concurrent booking requests for same slot, verify only 1 succeeds.
+**Casos de prueba relacionados:**
+TC-RF-CTR-AVAIL-016, TC-RF-CTR-AVAIL-017, TC-RF-CTR-AVAIL-018
 
 ---
 
-### Requirement: RNF-CTR-AVAIL-003 - Accessibility (A11y)
+#### RF-CTR-AVAIL-007: Compatibilidad con Duración de Servicios
 
-**Priority:** HIGH
-**Type:** Accessibility
+**Descripción:**
+Validar que los slots generados sean compatibles con la duración de los servicios del contratista.
 
-The system SHALL provide accessible UI for availability management.
+**Criterios de aceptación:**
+- ✅ Cada servicio tiene un campo `durationMinutes` (ej: 60, 120, 180)
+- ✅ Al crear reglas semanales:
+  - Validación opcional: advertir si intervalos < duración de algún servicio del contratista
+  - No bloquear creación (puede tener servicios de diferentes duraciones)
+- ✅ Al generar slots:
+  - Si `serviceId` está en query params:
+    - Obtener `durationMinutes` del servicio
+    - Filtrar solo slots con `durationMinutes >= service.durationMinutes`
+  - Si `serviceId` no está:
+    - Retornar todos los slots disponibles
+- ✅ UI: mostrar warning si se crea regla con intervalo muy corto (< 30 min)
 
-**Criteria:**
-- WCAG 2.1 AA compliance
-- Keyboard navigation: Tab, Shift+Tab, Arrow keys for calendar navigation
-- ARIA roles: `role="grid"` for calendar, `role="gridcell"` for date cells
-- ARIA labels: descriptive labels for all interactive elements
-- Screen reader announcements: announce selected dates, time intervals, validation errors
-- Color contrast: 4.5:1 for normal text, 3:1 for large text
-- Focus indicators: visible 2px outline on focused elements
-- Skip links: allow keyboard users to skip repetitive navigation
-
-**Test:** Automated a11y scan with axe-core, manual testing with screen reader (NVDA/JAWS).
+**Casos de prueba relacionados:**
+TC-RF-CTR-AVAIL-019, TC-RF-CTR-AVAIL-020
 
 ---
 
-### Requirement: RNF-CTR-AVAIL-004 - Mobile-first responsive design
+### Non-Functional Requirements
 
-**Priority:** HIGH
-**Type:** UX
+#### RNF-CTR-AVAIL-001: Performance
 
-The system SHALL provide optimal UX on mobile devices.
+**Descripción:**
+El sistema debe generar slots disponibles con latencia aceptable para UX fluida.
 
-**Criteria:**
-- Mobile-first design: optimize for 375px viewport width (iPhone SE)
-- Touch-friendly targets: minimum 44x44px tap targets
-- Responsive breakpoints: 640px (sm), 768px (md), 1024px (lg)
-- Calendar view: switch from week view (desktop) to day view (mobile)
-- Time pickers: native mobile time pickers (`<input type="time">`) on mobile
-- Performance: minimize JS bundle size, lazy-load calendar components
+**Criterios de aceptación:**
+- ✅ **P95 ≤ 800ms** para `GET /api/contractors/:contractorId/availability/slots`
+  - Rango de prueba: 8 semanas (56 días)
+  - Datos de prueba: 100 reglas semanales, 50 excepciones, 20 bloqueos, 30 reservas
+- ✅ **P99 ≤ 1200ms** para mismo endpoint
+- ✅ Optimizaciones:
+  - Índices en BD: `(contractorProfileId, dayOfWeek)`, `(contractorProfileId, date)`
+  - Limitar rango máximo a 8 semanas
+  - Evitar N+1 queries (usar `Prisma.include` estratégicamente)
+- ✅ Tests de performance: k6 script con 100 VU durante 60s
 
-**Test:** Manual testing on iOS Safari, Android Chrome; automated responsive testing with Playwright.
+**Casos de prueba relacionados:**
+TC-RNF-CTR-AVAIL-001
+
+---
+
+#### RNF-CTR-AVAIL-002: Concurrencia y Consistencia
+
+**Descripción:**
+Evitar race conditions cuando múltiples operaciones modifican disponibilidad o reservas simultáneamente.
+
+**Criterios de aceptación:**
+- ✅ **Transacciones atómicas**:
+  - Crear bloqueo + validar reservas confirmadas → en transacción Prisma
+  - Evitar que dos clientes reserven el mismo slot simultáneamente (esto es más crítico en módulo `booking`)
+- ✅ **Validación idempotente**:
+  - Si se intenta crear regla duplicada (mismo día, mismos intervalos) → error 409
+  - Si se intenta crear excepción duplicada (misma fecha) → error 409 o merge inteligente (a definir)
+- ✅ **Lock optimista (futuro)**:
+  - Para v1: validaciones síncronas en transacción son suficientes
+  - Para v2: considerar versioning con `updatedAt` + `version` field
+
+**Casos de prueba relacionados:**
+TC-RNF-CTR-AVAIL-002
+
+---
+
+#### RNF-CTR-AVAIL-003: Accesibilidad (A11y)
+
+**Descripción:**
+La UI de gestión de disponibilidad debe ser completamente accesible según WCAG 2.1 AA.
+
+**Criterios de aceptación:**
+- ✅ **Navegación por teclado**:
+  - Tab order natural en formularios (reglas → excepciones → bloqueos)
+  - Escape cierra modales
+  - Enter/Space activa botones
+  - Flechas navegan en calendario
+- ✅ **ARIA labels completos**:
+  - `aria-label` en botones de calendario (ej: "Día 21 de noviembre")
+  - `aria-current="date"` en día seleccionado
+  - `aria-invalid` en inputs con errores
+  - `aria-describedby` para mensajes de error
+  - `role="alert"` en mensajes de validación
+- ✅ **Lector de pantalla**:
+  - Anuncios cuando se crea/elimina regla
+  - Estados de carga audibles ("Cargando disponibilidad...")
+- ✅ **Focus rings visibles**:
+  - `focus:ring-2 focus:ring-blue-500 focus:ring-offset-2` en todos los elementos interactivos
+- ✅ **Contraste de color**:
+  - Ratio ≥ 4.5:1 para texto normal
+  - Ratio ≥ 3:1 para UI components
+- ✅ **Tests**:
+  - Playwright + axe-core en TC-RNF-CTR-AVAIL-003 y 004
+  - 0 violaciones de accesibilidad
+
+**Casos de prueba relacionados:**
+TC-RNF-CTR-AVAIL-003, TC-RNF-CTR-AVAIL-004
+
+---
+
+#### RNF-CTR-AVAIL-004: Responsiveness
+
+**Descripción:**
+La UI debe ser completamente funcional en dispositivos móviles y desktop.
+
+**Criterios de aceptación:**
+- ✅ **Mobile-first design**:
+  - Viewport mínimo: 375px (iPhone SE)
+  - Breakpoints: sm (640px), md (768px), lg (1024px)
+- ✅ **Componentes adaptativos**:
+  - Calendario: vista semanal en mobile, mensual en desktop
+  - Formularios: inputs full-width en mobile, grid 2-col en desktop
+  - Sidebar: overlay en mobile, fixed en desktop
+- ✅ **Touch targets**:
+  - Botones ≥ 44x44px (guía iOS/Android)
+  - Espaciado suficiente entre elementos táctiles
+- ✅ **Tests**:
+  - Playwright con viewports: 375px, 768px, 1024px, 1920px
+  - Verificar que todos los elementos sean clicables/tocables
+
+**Casos de prueba relacionados:**
+TC-RNF-CTR-AVAIL-005
 
 ---
 
 ## Data Model
 
-### ContractorWeeklySchedule
+### Database Schema
 
-**Table:** `ContractorWeeklySchedule`
-**Relationship:** 1:1 with `ContractorProfile` (one schedule per contractor)
+#### ContractorWeeklyRule
 
-**Schema:**
+**Propósito:** Almacenar reglas de disponibilidad recurrente por día de la semana.
 
 ```prisma
-model ContractorWeeklySchedule {
-  id                  String            @id @default(uuid())
-  contractorProfileId String            @unique
-  contractorProfile   ContractorProfile @relation(fields: [contractorProfileId], references: [id], onDelete: Cascade)
+model ContractorWeeklyRule {
+  id                    String   @id @default(uuid())
+  contractorProfileId   String
+  dayOfWeek             Int      @db.SmallInt // 0=Sunday, 1=Monday, ..., 6=Saturday
+  intervals             Json     // [{ startTime: "09:00", endTime: "12:00" }, ...]
+  enabled               Boolean  @default(true)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
 
-  // Timezone del contratista (IANA format)
-  timezone String @db.VarChar(50) // e.g., "America/Mexico_City"
+  contractorProfile     ContractorProfile @relation(fields: [contractorProfileId], references: [id], onDelete: Cascade)
 
-  // Configuración de granularidad (minutos)
-  slotGranularityMinutes Int @default(30) // 15, 30, 60
-
-  // Reglas semanales (JSON con estructura: { dayOfWeek: string, intervals: Array<{startTime, endTime}> })
-  weeklyRules Json
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([contractorProfileId])
+  @@index([contractorProfileId, dayOfWeek])
+  @@map("contractor_weekly_rules")
 }
 ```
 
-**weeklyRules JSON Structure:**
-```typescript
-type WeeklyRules = Array<{
-  dayOfWeek: "MONDAY" | "TUESDAY" | "WEDNESDAY" | "THURSDAY" | "FRIDAY" | "SATURDAY" | "SUNDAY";
-  intervals: Array<{
-    startTime: string; // HH:mm format (e.g., "08:00")
-    endTime: string;   // HH:mm format (e.g., "12:00")
-  }>;
-}>;
+**Campos:**
+- `dayOfWeek`: 0-6 (0=domingo según estándar JS Date)
+- `intervals`: JSON array de objetos `{ startTime: "HH:MM", endTime: "HH:MM" }`
+  - **Nota:** Se almacena en JSON para permitir múltiples intervalos por día (ej: 9-12h y 14-18h)
+- `enabled`: flag para desactivar temporalmente sin eliminar
+
+**Índices:**
+- `(contractorProfileId, dayOfWeek)`: búsqueda rápida de reglas por día
+
+---
+
+#### ContractorAvailabilityException
+
+**Propósito:** Sobrescribir la regla semanal para fechas específicas.
+
+```prisma
+model ContractorAvailabilityException {
+  id                    String   @id @default(uuid())
+  contractorProfileId   String
+  date                  DateTime @db.Date
+  intervals             Json     // [{ startTime: "HH:MM", endTime: "HH:MM" }, ...]
+  type                  String   // "AVAILABLE" | "BLOCKED"
+  reason                String?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  contractorProfile     ContractorProfile @relation(fields: [contractorProfileId], references: [id], onDelete: Cascade)
+
+  @@unique([contractorProfileId, date])
+  @@index([contractorProfileId, date])
+  @@map("contractor_availability_exceptions")
+}
 ```
 
-**Example:**
+**Campos:**
+- `date`: fecha exacta (YYYY-MM-DD)
+- `type`:
+  - `"AVAILABLE"`: excepción que agrega disponibilidad (sobrescribe regla semanal)
+  - `"BLOCKED"`: excepción que bloquea el día completo (ej: feriado)
+- `reason`: opcional, para documentar (ej: "Día de la Independencia")
+
+**Constraints:**
+- `@@unique([contractorProfileId, date])`: máximo 1 excepción por día
+
+---
+
+#### ContractorAvailabilityBlock
+
+**Propósito:** Bloqueos ad-hoc para intervalos de tiempo específicos.
+
+```prisma
+model ContractorAvailabilityBlock {
+  id                    String   @id @default(uuid())
+  contractorProfileId   String
+  startDateTime         DateTime
+  endDateTime           DateTime
+  reason                String?  // "Vacation", "Equipment maintenance", etc.
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  contractorProfile     ContractorProfile @relation(fields: [contractorProfileId], references: [id], onDelete: Cascade)
+
+  @@index([contractorProfileId, startDateTime, endDateTime])
+  @@map("contractor_availability_blocks")
+}
+```
+
+**Campos:**
+- `startDateTime`, `endDateTime`: ISO8601 (con TZ → convertir a UTC al persistir)
+- `reason`: opcional, texto libre
+
+**Índices:**
+- `(contractorProfileId, startDateTime, endDateTime)`: detección de solapamientos
+
+---
+
+#### Relación con ContractorProfile
+
+```prisma
+model ContractorProfile {
+  // ... campos existentes ...
+
+  weeklyRules             ContractorWeeklyRule[]
+  availabilityExceptions  ContractorAvailabilityException[]
+  availabilityBlocks      ContractorAvailabilityBlock[]
+}
+```
+
+---
+
+### DTOs and Types
+
+#### WeeklyRuleDTO
+
+```typescript
+// Entrada
+export interface CreateWeeklyRuleDTO {
+  dayOfWeek: number; // 0-6
+  intervals: TimeInterval[];
+}
+
+export interface TimeInterval {
+  startTime: string; // "HH:MM"
+  endTime: string;   // "HH:MM"
+}
+
+// Respuesta
+export interface WeeklyRuleResponseDTO {
+  id: string;
+  contractorProfileId: string;
+  dayOfWeek: number;
+  intervals: TimeInterval[];
+  enabled: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+```
+
+---
+
+#### AvailabilityExceptionDTO
+
+```typescript
+// Entrada
+export interface CreateExceptionDTO {
+  date: string; // "YYYY-MM-DD"
+  intervals: TimeInterval[];
+  type: 'AVAILABLE' | 'BLOCKED';
+  reason?: string;
+}
+
+// Respuesta
+export interface ExceptionResponseDTO {
+  id: string;
+  contractorProfileId: string;
+  date: string;
+  intervals: TimeInterval[];
+  type: 'AVAILABLE' | 'BLOCKED';
+  reason?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+```
+
+---
+
+#### AvailabilityBlockDTO
+
+```typescript
+// Entrada
+export interface CreateBlockDTO {
+  startDateTime: string; // ISO8601
+  endDateTime: string;   // ISO8601
+  reason?: string;
+}
+
+// Respuesta
+export interface BlockResponseDTO {
+  id: string;
+  contractorProfileId: string;
+  startDateTime: string;
+  endDateTime: string;
+  reason?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+```
+
+---
+
+#### AvailableSlotDTO
+
+```typescript
+// Respuesta del motor de generación
+export interface AvailableSlotDTO {
+  date: string;           // "YYYY-MM-DD"
+  startTime: string;      // "HH:MM" (en TZ del contratista)
+  endTime: string;        // "HH:MM"
+  durationMinutes: number;
+  timezone: string;       // "America/Mexico_City" (IANA)
+}
+```
+
+---
+
+## API Contracts
+
+### Reglas Semanales
+
+#### `POST /api/contractors/me/availability/weekly`
+
+**Auth:** Requiere `CONTRACTOR`, ownership implícito (usa userId del token)
+
+**Request:**
+```json
+{
+  "dayOfWeek": 1,
+  "intervals": [
+    { "startTime": "09:00", "endTime": "12:00" },
+    { "startTime": "14:00", "endTime": "18:00" }
+  ]
+}
+```
+
+**Response:** `201 Created`
+```json
+{
+  "id": "uuid",
+  "contractorProfileId": "uuid",
+  "dayOfWeek": 1,
+  "intervals": [...],
+  "enabled": true,
+  "createdAt": "ISO8601",
+  "updatedAt": "ISO8601"
+}
+```
+
+**Errors:**
+- `400`: Validación falla (intervalos inválidos, traslapes, formato)
+- `401`: No autenticado
+- `403`: No es CONTRACTOR o no es dueño
+- `409`: Ya existe regla para ese día (si se decide permitir solo 1 por día)
+
+---
+
+#### `GET /api/contractors/me/availability/weekly`
+
+**Auth:** Requiere `CONTRACTOR`
+
+**Response:** `200 OK`
 ```json
 [
   {
-    "dayOfWeek": "MONDAY",
-    "intervals": [
-      { "startTime": "08:00", "endTime": "12:00" },
-      { "startTime": "14:00", "endTime": "18:00" }
-    ]
-  },
-  {
-    "dayOfWeek": "TUESDAY",
-    "intervals": [
-      { "startTime": "09:00", "endTime": "17:00" }
-    ]
-  },
-  {
-    "dayOfWeek": "WEDNESDAY",
-    "intervals": []
+    "id": "uuid",
+    "dayOfWeek": 1,
+    "intervals": [...],
+    "enabled": true,
+    "createdAt": "ISO8601",
+    "updatedAt": "ISO8601"
   }
 ]
 ```
 
 ---
 
-### ContractorAvailabilityException
+#### `PATCH /api/contractors/me/availability/weekly/:ruleId`
 
-**Table:** `ContractorAvailabilityException`
-**Relationship:** N:1 with `ContractorProfile` (many exceptions per contractor)
-
-**Schema:**
-
-```prisma
-model ContractorAvailabilityException {
-  id                  String            @id @default(uuid())
-  contractorProfileId String
-  contractorProfile   ContractorProfile @relation(fields: [contractorProfileId], references: [id], onDelete: Cascade)
-
-  // Tipo de excepción
-  type ExceptionType // ONE_OFF | RECURRING
-
-  // Para ONE_OFF
-  date DateTime? @db.Date // e.g., 2025-12-25 (nullable para RECURRING)
-
-  // Para RECURRING
-  recurringMonth Int? // 1-12 (nullable para ONE_OFF)
-  recurringDay   Int? // 1-31 (nullable para ONE_OFF)
-
-  // Cierre completo o parcial
-  isFullDayClosure Boolean @default(true)
-
-  // Intervalos personalizados si no es cierre completo
-  customIntervals Json? // Array<{ startTime: string, endTime: string }>
-
-  // Razón opcional
-  reason String? @db.VarChar(200)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([contractorProfileId, type])
-  @@index([contractorProfileId, date])
-  @@index([contractorProfileId, recurringMonth, recurringDay])
-}
-
-enum ExceptionType {
-  ONE_OFF
-  RECURRING
-}
-```
-
-**Constraints:**
-- If `type = ONE_OFF`: `date` must be NOT NULL, `recurringMonth` and `recurringDay` must be NULL
-- If `type = RECURRING`: `recurringMonth` and `recurringDay` must be NOT NULL, `date` must be NULL
-- If `isFullDayClosure = false`: `customIntervals` must be NOT NULL
-
----
-
-### ContractorAvailabilityBlockout
-
-**Table:** `ContractorAvailabilityBlockout`
-**Relationship:** N:1 with `ContractorProfile` (many blockouts per contractor)
-
-**Schema:**
-
-```prisma
-model ContractorAvailabilityBlockout {
-  id                  String            @id @default(uuid())
-  contractorProfileId String
-  contractorProfile   ContractorProfile @relation(fields: [contractorProfileId], references: [id], onDelete: Cascade)
-
-  // Fecha y hora del bloqueo
-  date      DateTime @db.Date
-  startTime String   @db.VarChar(5) // HH:mm format
-  endTime   String   @db.VarChar(5) // HH:mm format
-
-  // Razón opcional
-  reason String? @db.VarChar(200)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([contractorProfileId, date])
-  @@index([contractorProfileId, date, startTime, endTime])
-}
-```
-
-**Constraints:**
-- `startTime` must be before `endTime`
-- `date` must be in the future (validated at application level)
-- Cannot overlap with confirmed bookings (validated at application level)
-
----
-
-### Integration with Existing Models
-
-**Updates to ContractorProfile:**
-```prisma
-model ContractorProfile {
-  // ... existing fields ...
-  weeklySchedule         ContractorWeeklySchedule?
-  availabilityExceptions ContractorAvailabilityException[]
-  availabilityBlockouts  ContractorAvailabilityBlockout[]
-}
-```
-
-**No changes to Availability model:**
-The existing `Availability` model (linked to Service and Booking) remains unchanged. It represents **generated slots** that clients can book. The new availability management system is responsible for **creating** those slots based on contractor's schedule configuration.
-
----
-
-## API Contracts
-
-### POST /api/contractors/me/availability/schedule
-
-**Description:** Create or update weekly recurring schedule.
-
-**Authorization:** Authenticated contractor (owner only)
+**Auth:** Requiere `CONTRACTOR`, ownership
 
 **Request:**
-```typescript
+```json
 {
-  timezone: string;                // IANA timezone, e.g., "America/Mexico_City"
-  slotGranularityMinutes?: number; // 15 | 30 | 60 (default: 30)
-  weeklyRules: Array<{
-    dayOfWeek: "MONDAY" | "TUESDAY" | "WEDNESDAY" | "THURSDAY" | "FRIDAY" | "SATURDAY" | "SUNDAY";
-    intervals: Array<{
-      startTime: string; // HH:mm format
-      endTime: string;   // HH:mm format
-    }>;
-  }>;
+  "intervals": [
+    { "startTime": "10:00", "endTime": "14:00" }
+  ],
+  "enabled": true
 }
 ```
 
-**Response 201 Created:**
-```typescript
-{
-  id: string;
-  contractorProfileId: string;
-  timezone: string;
-  slotGranularityMinutes: number;
-  weeklyRules: Array<{ dayOfWeek: string; intervals: Array<{ startTime: string; endTime: string }> }>;
-  createdAt: string; // ISO 8601
-  updatedAt: string;
-}
-```
+**Response:** `200 OK` (regla actualizada)
 
-**Error Responses:**
-- 400 Bad Request: Invalid input (overlapping intervals, invalid timezone, invalid time format)
-- 401 Unauthorized: Not authenticated
-- 403 Forbidden: Not owner
-- 409 Conflict: Schedule already exists (use PATCH to update)
+**Errors:**
+- `400`: Validación falla
+- `404`: Regla no encontrada
+- `403`: No es dueño
 
 ---
 
-### PATCH /api/contractors/me/availability/schedule
+#### `DELETE /api/contractors/me/availability/weekly/:ruleId`
 
-**Description:** Update existing weekly schedule.
+**Auth:** Requiere `CONTRACTOR`, ownership
 
-**Authorization:** Authenticated contractor (owner only)
+**Response:** `204 No Content`
+
+**Errors:**
+- `404`: Regla no encontrada
+- `403`: No es dueño
+
+---
+
+### Excepciones
+
+#### `POST /api/contractors/me/availability/exceptions`
+
+**Auth:** Requiere `CONTRACTOR`
 
 **Request:**
-```typescript
+```json
 {
-  timezone?: string;
-  slotGranularityMinutes?: number;
-  weeklyRules?: Array<{
-    dayOfWeek: string;
-    intervals: Array<{ startTime: string; endTime: string }>;
-  }>;
+  "date": "2025-11-25",
+  "intervals": [{ "startTime": "10:00", "endTime": "14:00" }],
+  "type": "AVAILABLE",
+  "reason": "Día especial"
 }
 ```
 
-**Response 200 OK:** Same as POST response
+**Response:** `201 Created` (excepción creada)
 
-**Error Responses:**
-- 400 Bad Request: Invalid input
-- 401 Unauthorized: Not authenticated
-- 403 Forbidden: Not owner
-- 404 Not Found: Schedule not found
+**Errors:**
+- `400`: Validación falla
+- `409`: Ya existe excepción para esa fecha
 
 ---
 
-### GET /api/contractors/me/availability/schedule
+#### `GET /api/contractors/me/availability/exceptions?startDate=YYYY-MM-DD&endDate=YYYY-MM-DD`
 
-**Description:** Retrieve contractor's weekly schedule.
+**Auth:** Requiere `CONTRACTOR`
 
-**Authorization:** Authenticated contractor (owner) OR admin
+**Query Params:**
+- `startDate` (opcional): filtrar desde fecha
+- `endDate` (opcional): filtrar hasta fecha
 
-**Response 200 OK:** Same structure as POST response
-
-**Error Responses:**
-- 401 Unauthorized: Not authenticated
-- 403 Forbidden: Not owner or admin
-- 404 Not Found: Schedule not found
+**Response:** `200 OK` (array de excepciones)
 
 ---
 
-### POST /api/contractors/me/availability/exceptions
+#### `PATCH /api/contractors/me/availability/exceptions/:exceptionId`
 
-**Description:** Create availability exception (holiday/closure).
+**Auth:** Requiere `CONTRACTOR`, ownership
 
-**Authorization:** Authenticated contractor (owner only)
+**Request:** (campos a actualizar)
+```json
+{
+  "intervals": [...],
+  "type": "BLOCKED"
+}
+```
+
+**Response:** `200 OK`
+
+---
+
+#### `DELETE /api/contractors/me/availability/exceptions/:exceptionId`
+
+**Auth:** Requiere `CONTRACTOR`, ownership
+
+**Response:** `204 No Content`
+
+---
+
+### Bloqueos
+
+#### `POST /api/contractors/me/availability/blocks`
+
+**Auth:** Requiere `CONTRACTOR`
 
 **Request:**
-```typescript
+```json
 {
-  type: "ONE_OFF" | "RECURRING";
-  date?: string;              // ISO 8601 date, required if type=ONE_OFF
-  recurringMonth?: number;    // 1-12, required if type=RECURRING
-  recurringDay?: number;      // 1-31, required if type=RECURRING
-  isFullDayClosure: boolean;
-  customIntervals?: Array<{   // required if isFullDayClosure=false
-    startTime: string;        // HH:mm
-    endTime: string;
-  }>;
-  reason?: string;
+  "startDateTime": "2025-11-20T09:00:00-06:00",
+  "endDateTime": "2025-11-20T12:00:00-06:00",
+  "reason": "Mantenimiento de equipo"
 }
 ```
 
-**Response 201 Created:**
-```typescript
-{
-  id: string;
-  contractorProfileId: string;
-  type: "ONE_OFF" | "RECURRING";
-  date: string | null;
-  recurringMonth: number | null;
-  recurringDay: number | null;
-  isFullDayClosure: boolean;
-  customIntervals: Array<{ startTime: string; endTime: string }> | null;
-  reason: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
-```
+**Response:** `201 Created`
 
-**Error Responses:**
-- 400 Bad Request: Invalid input (missing required fields based on type)
-- 401 Unauthorized: Not authenticated
-- 403 Forbidden: Not owner
+**Errors:**
+- `400`: Validación falla (intervalo inválido, colisión con reserva confirmada)
+- `409`: Colisión con reserva confirmada
 
 ---
 
-### GET /api/contractors/me/availability/exceptions
+#### `GET /api/contractors/me/availability/blocks?startDate=YYYY-MM-DD&endDate=YYYY-MM-DD`
 
-**Description:** List all exceptions for contractor.
+**Auth:** Requiere `CONTRACTOR`
 
-**Authorization:** Authenticated contractor (owner) OR admin
-
-**Query Parameters:**
-- `type`: Filter by ONE_OFF or RECURRING
-- `startDate`: Filter exceptions from this date (for ONE_OFF)
-- `endDate`: Filter exceptions up to this date (for ONE_OFF)
-
-**Response 200 OK:**
-```typescript
-{
-  exceptions: Array<{
-    id: string;
-    type: string;
-    date: string | null;
-    recurringMonth: number | null;
-    recurringDay: number | null;
-    isFullDayClosure: boolean;
-    customIntervals: Array<{ startTime: string; endTime: string }> | null;
-    reason: string | null;
-    createdAt: string;
-  }>;
-  total: number;
-}
-```
+**Response:** `200 OK` (array de bloqueos)
 
 ---
 
-### DELETE /api/contractors/me/availability/exceptions/[id]
+#### `DELETE /api/contractors/me/availability/blocks/:blockId`
 
-**Description:** Delete an exception.
+**Auth:** Requiere `CONTRACTOR`, ownership
 
-**Authorization:** Authenticated contractor (owner only)
-
-**Response 204 No Content**
-
-**Error Responses:**
-- 401 Unauthorized: Not authenticated
-- 403 Forbidden: Not owner
-- 404 Not Found: Exception not found
+**Response:** `204 No Content`
 
 ---
 
-### POST /api/contractors/me/availability/blockouts
+### Generación de Slots
 
-**Description:** Create manual blockout.
+#### `GET /api/contractors/:contractorId/availability/slots?startDate=YYYY-MM-DD&endDate=YYYY-MM-DD&serviceId=UUID`
 
-**Authorization:** Authenticated contractor (owner only)
+**Auth:** Público (lectura)
 
-**Request:**
-```typescript
-{
-  date: string;       // ISO 8601 date
-  startTime: string;  // HH:mm
-  endTime: string;    // HH:mm
-  reason?: string;
-}
-```
+**Query Params:**
+- `startDate` (requerido): inicio del rango
+- `endDate` (requerido): fin del rango (máximo 8 semanas desde startDate)
+- `serviceId` (opcional): filtrar slots compatibles con duración del servicio
 
-**Response 201 Created:**
-```typescript
-{
-  id: string;
-  contractorProfileId: string;
-  date: string;
-  startTime: string;
-  endTime: string;
-  reason: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
-```
-
-**Error Responses:**
-- 400 Bad Request: Invalid input (past date, invalid time)
-- 401 Unauthorized: Not authenticated
-- 403 Forbidden: Not owner
-- 409 Conflict: Confirmed booking exists in this time range
-
----
-
-### GET /api/contractors/me/availability/blockouts
-
-**Description:** List all blockouts for contractor.
-
-**Authorization:** Authenticated contractor (owner) OR admin
-
-**Query Parameters:**
-- `startDate`: Filter from this date
-- `endDate`: Filter up to this date
-
-**Response 200 OK:**
-```typescript
-{
-  blockouts: Array<{
-    id: string;
-    date: string;
-    startTime: string;
-    endTime: string;
-    reason: string | null;
-    createdAt: string;
-  }>;
-  total: number;
-}
-```
-
----
-
-### DELETE /api/contractors/me/availability/blockouts/[id]
-
-**Description:** Delete a blockout.
-
-**Authorization:** Authenticated contractor (owner only)
-
-**Response 204 No Content**
-
-**Error Responses:**
-- 401 Unauthorized: Not authenticated
-- 403 Forbidden: Not owner
-- 404 Not Found: Blockout not found
-
----
-
-### GET /api/contractors/me/availability/slots
-
-**Description:** Generate available time slots based on schedule, exceptions, blockouts, and bookings.
-
-**Authorization:** Authenticated contractor (owner) OR admin OR public (for booking flow)
-
-**Query Parameters:**
-- `startDate`: Start date for slot generation (ISO 8601, default: today)
-- `endDate`: End date for slot generation (ISO 8601, default: startDate + 8 weeks, max: 12 weeks)
-- `serviceDurationMinutes`: Filter slots compatible with this service duration (optional)
-- `serviceId`: Specific service ID (fetches duration automatically, optional)
-
-**Response 200 OK:**
-```typescript
-{
-  slots: Array<{
-    date: string;             // ISO 8601 date
-    startTime: string;        // HH:mm in contractor timezone
-    endTime: string;          // HH:mm in contractor timezone
-    startTimeUTC: string;     // ISO 8601 UTC
-    endTimeUTC: string;       // ISO 8601 UTC
-    durationMinutes: number;
-  }>;
-  timezone: string;           // Contractor timezone
-  total: number;
-  generatedAt: string;        // ISO 8601 (for caching)
-}
-```
-
-**Error Responses:**
-- 400 Bad Request: Invalid date range (exceeds 12 weeks)
-- 404 Not Found: Schedule not configured
-
----
-
-## Validation Rules
-
-### Zod Schemas
-
-**CreateScheduleInput:**
-```typescript
-import { z } from 'zod';
-
-const timeRegex = /^([01]\d|2[0-3]):([0-5]\d)$/;
-
-export const dayOfWeekEnum = z.enum(["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY"]);
-
-export const timeIntervalSchema = z.object({
-  startTime: z.string().regex(timeRegex, "Time must be in HH:mm format"),
-  endTime: z.string().regex(timeRegex, "Time must be in HH:mm format"),
-}).refine(
-  (data) => data.startTime < data.endTime,
-  { message: "Start time must be before end time" }
-);
-
-export const weeklyRuleSchema = z.object({
-  dayOfWeek: dayOfWeekEnum,
-  intervals: z.array(timeIntervalSchema),
-});
-
-export const createScheduleSchema = z.object({
-  timezone: z.string().min(1).max(50), // TODO: validate IANA timezone
-  slotGranularityMinutes: z.enum([15, 30, 60]).optional().default(30),
-  weeklyRules: z.array(weeklyRuleSchema),
-}).refine(
-  (data) => {
-    // Validate no overlapping intervals within same day
-    for (const rule of data.weeklyRules) {
-      const sortedIntervals = rule.intervals.sort((a, b) => a.startTime.localeCompare(b.startTime));
-      for (let i = 0; i < sortedIntervals.length - 1; i++) {
-        if (sortedIntervals[i].endTime > sortedIntervals[i + 1].startTime) {
-          return false; // Overlap detected
-        }
-      }
-    }
-    return true;
-  },
-  { message: "Overlapping intervals detected within the same day" }
-);
-
-export type CreateScheduleInput = z.infer<typeof createScheduleSchema>;
-export type UpdateScheduleInput = Partial<CreateScheduleInput>;
-```
-
-**CreateExceptionInput:**
-```typescript
-export const createExceptionSchema = z.object({
-  type: z.enum(["ONE_OFF", "RECURRING"]),
-  date: z.string().date().optional(),         // ISO 8601 date
-  recurringMonth: z.number().int().min(1).max(12).optional(),
-  recurringDay: z.number().int().min(1).max(31).optional(),
-  isFullDayClosure: z.boolean(),
-  customIntervals: z.array(timeIntervalSchema).optional(),
-  reason: z.string().max(200).optional(),
-}).refine(
-  (data) => {
-    if (data.type === "ONE_OFF") {
-      return !!data.date && !data.recurringMonth && !data.recurringDay;
-    } else { // RECURRING
-      return !data.date && !!data.recurringMonth && !!data.recurringDay;
-    }
-  },
-  { message: "Invalid exception configuration based on type" }
-).refine(
-  (data) => {
-    if (!data.isFullDayClosure) {
-      return data.customIntervals && data.customIntervals.length > 0;
-    }
-    return true;
-  },
-  { message: "Custom intervals required when isFullDayClosure is false" }
-);
-
-export type CreateExceptionInput = z.infer<typeof createExceptionSchema>;
-```
-
-**CreateBlockoutInput:**
-```typescript
-export const createBlockoutSchema = z.object({
-  date: z.string().date(),                    // ISO 8601 date
-  startTime: z.string().regex(timeRegex, "Time must be in HH:mm format"),
-  endTime: z.string().regex(timeRegex, "Time must be in HH:mm format"),
-  reason: z.string().max(200).optional(),
-}).refine(
-  (data) => data.startTime < data.endTime,
-  { message: "Start time must be before end time" }
-);
-
-export type CreateBlockoutInput = z.infer<typeof createBlockoutSchema>;
-```
-
----
-
-## Security Considerations
-
-### Authorization
-
-**Ownership Checks:**
-- All write operations (POST/PATCH/DELETE) verify `userId` matches `contractorProfile.userId` OR user is admin
-- Read operations allow owner + admin access
-- Public read access for generated slots (booking flow)
-
-**Repository Layer Guards:**
-```typescript
-async function verifyOwnership(contractorProfileId: string, userId: string, userRole: string): Promise<void> {
-  if (userRole === "ADMIN") return;
-
-  const profile = await prisma.contractorProfile.findUnique({
-    where: { id: contractorProfileId },
-    select: { userId: true }
-  });
-
-  if (!profile || profile.userId !== userId) {
-    throw new ForbiddenError("You can only manage your own availability");
+**Response:** `200 OK`
+```json
+[
+  {
+    "date": "2025-11-21",
+    "startTime": "09:00",
+    "endTime": "12:00",
+    "durationMinutes": 180,
+    "timezone": "America/Mexico_City"
   }
-}
+]
 ```
 
-### Data Validation
+**Errors:**
+- `400`: Rango de fechas inválido (> 8 semanas)
+- `404`: Contratista no encontrado
 
-- All time inputs validated via Zod schemas
-- Timezone validation: verify IANA timezone exists (use `Intl.supportedValuesOf('timeZone')`)
-- Date validation: future dates only for blockouts
-- Overlap detection: prevent double-booking via application logic + database queries
+---
 
-### Input Sanitization
+## Algorithm: Slot Generation
 
-- All string inputs trimmed and validated via Zod
-- SQL injection prevented by Prisma parameterized queries
-- XSS prevention: No HTML rendering of user inputs (plain text only)
+### Pseudocódigo
+
+```
+FUNCTION generateSlots(contractorId, startDate, endDate, serviceId?):
+  // 1. Obtener datos base
+  contractor = obtener ContractorProfile con ContractorServiceLocation
+  timezone = contractor.location.timezone (ej: "America/Mexico_City")
+
+  IF NOT timezone:
+    THROW Error("Contratista no tiene timezone configurado")
+
+  // 2. Obtener reglas, excepciones, bloqueos
+  weeklyRules = obtener WeeklyRules WHERE contractorProfileId = contractorId
+  exceptions = obtener Exceptions WHERE contractorProfileId = contractorId AND date IN [startDate, endDate]
+  blocks = obtener Blocks WHERE contractorProfileId = contractorId AND [startDateTime, endDateTime] INTERSECTS [startDate, endDate]
+  bookings = obtener Bookings WHERE contractorId = contractorId AND status = CONFIRMED AND [scheduledStart, scheduledEnd] INTERSECTS [startDate, endDate]
+
+  // 3. Para cada día en el rango
+  slots = []
+  FOR EACH day IN [startDate, endDate]:
+    dayOfWeek = obtener día de la semana (0-6) de day
+
+    // 3a. Obtener intervalos base
+    intervals = []
+    exception = buscar excepción para day exacto
+
+    IF exception:
+      IF exception.type == "BLOCKED":
+        CONTINUE // saltar día completo
+      ELSE:
+        intervals = exception.intervals
+    ELSE:
+      rule = buscar WeeklyRule WHERE dayOfWeek = dayOfWeek
+      IF rule AND rule.enabled:
+        intervals = rule.intervals
+      ELSE:
+        CONTINUE // sin disponibilidad
+
+    // 3b. Restar bloqueos que intersecten con este día
+    FOR EACH block IN blocks:
+      IF block intersecta con day:
+        intervals = restar block de intervals
+
+    // 3c. Restar reservas confirmadas
+    FOR EACH booking IN bookings:
+      IF booking intersecta con day:
+        intervals = restar booking de intervals
+
+    // 3d. Filtrar por duración de servicio (si aplica)
+    IF serviceId:
+      service = obtener Service WHERE id = serviceId
+      intervals = filtrar intervals WHERE (endTime - startTime) >= service.durationMinutes
+
+    // 3e. Agregar slots resultantes
+    FOR EACH interval IN intervals:
+      slots.push({
+        date: day,
+        startTime: interval.startTime (en timezone),
+        endTime: interval.endTime (en timezone),
+        durationMinutes: calcular(interval),
+        timezone: timezone
+      })
+
+  RETURN slots
+```
+
+### Operaciones de Intervalos
+
+**Intersección de intervalos:**
+```
+FUNCTION intervalsIntersect(a, b):
+  RETURN a.start < b.end AND b.start < a.end
+```
+
+**Restar intervalo:**
+```
+FUNCTION subtractInterval(base, toSubtract):
+  result = []
+  IF NOT intervalsIntersect(base, toSubtract):
+    RETURN [base] // no hay intersección
+
+  // Parte antes de la intersección
+  IF base.start < toSubtract.start:
+    result.push({ start: base.start, end: toSubtract.start })
+
+  // Parte después de la intersección
+  IF base.end > toSubtract.end:
+    result.push({ start: toSubtract.end, end: base.end })
+
+  RETURN result
+```
+
+---
+
+## Security & Authorization
+
+### Access Control Matrix
+
+| Rol | Crear Reglas | Editar Reglas | Eliminar Reglas | Leer Reglas | Leer Slots |
+|-----|--------------|---------------|-----------------|-------------|------------|
+| **CONTRACTOR (dueño)** | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **CONTRACTOR (otro)** | ❌ | ❌ | ❌ | ❌ | ✅ (solo slots públicos) |
+| **CLIENT** | ❌ | ❌ | ❌ | ❌ | ✅ (solo slots públicos) |
+| **ADMIN** | ❌ | ❌ | ❌ | ✅ (auditoría) | ✅ |
+| **Público** | ❌ | ❌ | ❌ | ❌ | ✅ (solo slots públicos) |
+
+### Validaciones de Seguridad
+
+1. **Ownership:**
+   - Verificar que `contractorProfile.userId === user.id` antes de modificar
+   - Error 403 si falla
+
+2. **Rol:**
+   - Solo `CONTRACTOR` puede crear/editar/eliminar disponibilidad
+   - Error 403 si `user.role !== 'CONTRACTOR'`
+
+3. **Input Sanitization:**
+   - Validar todos los inputs con Zod antes de persistir
+   - Escapar campos de texto libre (`reason`) para evitar XSS
+
+4. **Rate Limiting (futuro):**
+   - Limitar creación de reglas/excepciones/bloqueos a N por minuto
+   - Prevenir spam o abuso
+
+5. **Auditoría:**
+   - Logs de creación/edición/eliminación (timestamps en `createdAt`/`updatedAt`)
+   - Admin puede consultar historial (futuro: tabla de auditoría)
+
+---
+
+## UI/UX Specifications
+
+### Components
+
+#### AvailabilityManager (Componente principal)
+
+**Ubicación:** `src/components/contractors/availability/AvailabilityManager.tsx`
+
+**Propósito:** Orquestador principal que muestra las 3 secciones (reglas semanales, excepciones, bloqueos)
+
+**Estructura:**
+```tsx
+<DashboardShell>
+  <div className="space-y-6">
+    <header>
+      <h1 className="text-2xl font-bold">Gestionar Disponibilidad</h1>
+      <p className="text-sm text-gray-600">Configura tus horarios...</p>
+    </header>
+
+    {/* Cards de resumen */}
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <Card>Reglas Semanales: {weeklyRules.length}</Card>
+      <Card>Excepciones: {exceptions.length}</Card>
+      <Card>Bloqueos: {blocks.length}</Card>
+    </div>
+
+    {/* Tabs o secciones */}
+    <AvailabilityWeekly />
+    <AvailabilityExceptions />
+    <AvailabilityBlocks />
+  </div>
+</DashboardShell>
+```
+
+**Estados:**
+- Loading: skeleton de cards
+- Error: alert box rojo
+- Empty: "No tienes horarios configurados. Crea tu primer horario semanal."
+
+---
+
+#### AvailabilityWeekly
+
+**Propósito:** Vista semanal con formulario para crear/editar reglas por día
+
+**UI:**
+```
+┌─────────────────────────────────────┐
+│ Horarios Semanales                  │
+├─────────────────────────────────────┤
+│ Lunes   [09:00 - 12:00] [Editar] [X]│
+│         [14:00 - 18:00] [Editar] [X]│
+│ Martes  Sin horarios   [+ Agregar]  │
+│ ...                                  │
+└─────────────────────────────────────┘
+```
+
+**Formulario (modal o inline):**
+- Select día de la semana (lunes-domingo)
+- Input startTime (time picker)
+- Input endTime (time picker)
+- Botón "+ Agregar intervalo" (para múltiples por día)
+- Botón "Guardar"
+
+**Validaciones (Zod):**
+```typescript
+const weeklyRuleSchema = z.object({
+  dayOfWeek: z.number().int().min(0).max(6),
+  intervals: z.array(
+    z.object({
+      startTime: z.string().regex(/^\d{2}:\d{2}$/),
+      endTime: z.string().regex(/^\d{2}:\d{2}$/),
+    })
+  ).refine(
+    (intervals) => {
+      // Validar que no haya traslapes
+      // Validar que startTime < endTime
+    }
+  ),
+});
+```
+
+---
+
+#### AvailabilityExceptions
+
+**Propósito:** Calendario mensual para agregar excepciones en fechas específicas
+
+**UI:**
+```
+┌──────────────────────────────┐
+│   Noviembre 2025            │
+│ L  M  M  J  V  S  D         │
+│             1  2  3         │
+│ 4  5  6  7  8  9 10         │
+│11 12 13 14 15 16 17 ⭐      │ <- 17 tiene excepción
+└──────────────────────────────┘
+
+[Click en día → Modal para agregar excepción]
+```
+
+**Modal:**
+- Fecha (pre-seleccionada)
+- Tipo: Radio buttons (AVAILABLE, BLOCKED)
+- Intervalos (si AVAILABLE): time pickers
+- Razón (opcional): textarea
+- Botón "Guardar"
+
+**Estados del calendario:**
+- Día con excepción: badge azul
+- Día con bloqueo: badge rojo
+- Día normal: sin badge
+
+---
+
+#### AvailabilityBlocks
+
+**Propósito:** Lista de bloqueos con formulario para crear nuevos
+
+**UI:**
+```
+┌─────────────────────────────────────┐
+│ Bloqueos                            │
+├─────────────────────────────────────┤
+│ 20-25 Nov 2025 - Vacaciones [X]    │
+│ 10 Dic 2025 10:00-12:00 - Mtto [X] │
+│                                      │
+│ [+ Nuevo Bloqueo]                   │
+└─────────────────────────────────────┘
+```
+
+**Formulario:**
+- Fecha inicio + hora (datetime-local)
+- Fecha fin + hora (datetime-local)
+- Razón (opcional): input text
+- Botón "Crear Bloqueo"
+
+**Validaciones:**
+- `startDateTime < endDateTime`
+- No permite bloquear sobre reservas confirmadas (mostrar warning)
+
+---
+
+### Navigation
+
+**Ruta:** `/contractors/availability`
+
+**Sidebar:**
+- Item "Disponibilidad" ya existe (icon: calendar)
+- Active highlight cuando estamos en `/contractors/availability`
+
+**Breadcrumb:**
+```
+Dashboard > Disponibilidad
+```
+
+---
+
+### Accessibility
+
+**Checklist:**
+- ✅ Focus rings en todos los elementos interactivos (`focus:ring-2 focus:ring-blue-500`)
+- ✅ ARIA labels en calendario (`aria-label="Día 21 de noviembre"`)
+- ✅ `aria-current="date"` en día seleccionado
+- ✅ `aria-invalid` en inputs con errores
+- ✅ `role="alert"` en mensajes de error
+- ✅ Navegación por teclado:
+  - Tab: entre inputs
+  - Flechas: en calendario (izquierda/derecha para días, arriba/abajo para semanas)
+  - Enter: seleccionar día
+  - Escape: cerrar modal
+- ✅ Skip links: `<a href="#main-content">Ir al contenido</a>` (sr-only)
+
+---
+
+### Responsive Design
+
+**Mobile (375px - 767px):**
+- Calendario: vista semanal (1 semana a la vez)
+- Formularios: inputs full-width
+- Sidebar: overlay
+- Cards: 1 columna
+
+**Tablet (768px - 1023px):**
+- Calendario: vista mensual simplificada
+- Cards: 2 columnas
+
+**Desktop (1024px+):**
+- Calendario: vista mensual completa
+- Cards: 3 columnas
+- Sidebar: fixed
 
 ---
 
 ## Testing Plan
 
-### Test Cases
+### Test Cases Mapping
 
-The following test cases are documented in `/docs/md/STP-ReparaYa.md`:
+Todos los casos están documentados en `/docs/md/STP-ReparaYa.md` sección 4.1.12.
 
-| ID | Description | Type | Priority | Requirement |
-|----|-------------|------|----------|-------------|
-| TC-RF-CTR-AVAIL-001 | Create weekly schedule with valid intervals | Integration | Alta | RF-CTR-AVAIL-001 |
-| TC-RF-CTR-AVAIL-002 | Reject overlapping intervals within same day | Unit | Alta | RF-CTR-AVAIL-001 |
-| TC-RF-CTR-AVAIL-003 | Reject invalid time formats and ranges | Unit | Alta | RF-CTR-AVAIL-001 |
-| TC-RF-CTR-AVAIL-004 | Create one-off full-day closure exception | Integration | Alta | RF-CTR-AVAIL-002 |
-| TC-RF-CTR-AVAIL-005 | Create recurring holiday exception | Integration | Alta | RF-CTR-AVAIL-002 |
-| TC-RF-CTR-AVAIL-006 | Create partial closure exception | Integration | Media | RF-CTR-AVAIL-002 |
-| TC-RF-CTR-AVAIL-007 | Create manual blockout successfully | Integration | Alta | RF-CTR-AVAIL-003 |
-| TC-RF-CTR-AVAIL-008 | Reject blockout overlapping confirmed booking | Integration | Alta | RF-CTR-AVAIL-003 |
-| TC-RF-CTR-AVAIL-009 | Reject blockout in the past | Unit | Alta | RF-CTR-AVAIL-003 |
-| TC-RF-CTR-AVAIL-010 | Generate slots from weekly schedule | Unit | Alta | RF-CTR-AVAIL-004 |
-| TC-RF-CTR-AVAIL-011 | Generate slots excluding exceptions | Integration | Alta | RF-CTR-AVAIL-004 |
-| TC-RF-CTR-AVAIL-012 | Generate slots excluding blockouts | Integration | Alta | RF-CTR-AVAIL-004 |
-| TC-RF-CTR-AVAIL-013 | Generate slots excluding existing bookings | Integration | Alta | RF-CTR-AVAIL-004 |
-| TC-RF-CTR-AVAIL-014 | Convert local timezone to UTC correctly | Unit | Alta | RF-CTR-AVAIL-005 |
-| TC-RF-CTR-AVAIL-015 | Handle DST transitions correctly | Unit | Media | RF-CTR-AVAIL-005 |
-| TC-RF-CTR-AVAIL-016 | Verify ownership - owner can manage availability | Integration | Alta | RF-CTR-AVAIL-006 |
-| TC-RF-CTR-AVAIL-017 | Block cross-contractor access | Integration | Alta | RF-CTR-AVAIL-006 |
-| TC-RF-CTR-AVAIL-018 | Admin can read any contractor availability | Integration | Media | RF-CTR-AVAIL-006 |
-| TC-RF-CTR-AVAIL-019 | Validate slot compatibility with service durations | Unit | Media | RF-CTR-AVAIL-007 |
-| TC-RF-CTR-AVAIL-020 | Warn contractor about incompatible durations | Integration | Baja | RF-CTR-AVAIL-007 |
-| TC-RNF-CTR-AVAIL-001 | Performance - slot generation P95 <= 800ms | Performance | Alta | RNF-CTR-AVAIL-001 |
-| TC-RNF-CTR-AVAIL-002 | Prevent race condition on concurrent bookings | Integration | Alta | RNF-CTR-AVAIL-002 |
-| TC-RNF-CTR-AVAIL-003 | A11y - keyboard navigation in calendar UI | E2E | Alta | RNF-CTR-AVAIL-003 |
-| TC-RNF-CTR-AVAIL-004 | A11y - ARIA labels and screen reader support | E2E | Alta | RNF-CTR-AVAIL-003 |
-| TC-RNF-CTR-AVAIL-005 | Mobile responsive - calendar view on 375px viewport | E2E | Media | RNF-CTR-AVAIL-004 |
+#### Functional Tests (20 casos)
+
+| ID | Descripción | Tipo | Prioridad |
+|----|-------------|------|-----------|
+| TC-RF-CTR-AVAIL-001 | Crear horario semanal exitosamente | Integración | Alta |
+| TC-RF-CTR-AVAIL-002 | Rechazar intervalos superpuestos | Unitaria | Alta |
+| TC-RF-CTR-AVAIL-003 | Listar horarios semanales del contratista | Integración | Alta |
+| TC-RF-CTR-AVAIL-004 | Crear excepción para día específico | Integración | Alta |
+| TC-RF-CTR-AVAIL-005 | Excepción sobrescribe regla semanal | Unitaria | Alta |
+| TC-RF-CTR-AVAIL-006 | Listar excepciones por rango de fechas | Integración | Media |
+| TC-RF-CTR-AVAIL-007 | Crear bloqueo manual | Integración | Alta |
+| TC-RF-CTR-AVAIL-008 | Rechazar bloqueo que colisiona con reserva | Integración | Alta |
+| TC-RF-CTR-AVAIL-009 | Eliminar bloqueo | Integración | Media |
+| TC-RF-CTR-AVAIL-010 | Generar slots disponibles sin excepciones | Integración | Alta |
+| TC-RF-CTR-AVAIL-011 | Generar slots con excepciones aplicadas | Integración | Alta |
+| TC-RF-CTR-AVAIL-012 | Generar slots con bloqueos restados | Integración | Alta |
+| TC-RF-CTR-AVAIL-013 | Generar slots con reservas confirmadas restadas | Integración | Alta |
+| TC-RF-CTR-AVAIL-014 | Conversión correcta de timezone (crear regla) | Unitaria | Alta |
+| TC-RF-CTR-AVAIL-015 | Conversión correcta con DST | Unitaria | Media |
+| TC-RF-CTR-AVAIL-016 | Contratista solo modifica su disponibilidad | Integración | Alta |
+| TC-RF-CTR-AVAIL-017 | Cliente puede leer slots públicos | Integración | Alta |
+| TC-RF-CTR-AVAIL-018 | Admin puede leer reglas de contratistas | Integración | Media |
+| TC-RF-CTR-AVAIL-019 | Filtrar slots por duración de servicio | Integración | Media |
+| TC-RF-CTR-AVAIL-020 | Warning si intervalo < 30 min | E2E | Baja |
+
+#### Non-Functional Tests (5 casos)
+
+| ID | Descripción | Tipo | Prioridad |
+|----|-------------|------|-----------|
+| TC-RNF-CTR-AVAIL-001 | Performance - Slots P95 ≤ 800ms | Performance/k6 | Alta |
+| TC-RNF-CTR-AVAIL-002 | Race condition - bloqueo vs reserva | Integración | Media |
+| TC-RNF-CTR-AVAIL-003 | A11y - Navegación por teclado | E2E/Playwright | Alta |
+| TC-RNF-CTR-AVAIL-004 | A11y - ARIA y lector de pantalla | E2E/Playwright | Alta |
+| TC-RNF-CTR-AVAIL-005 | Responsive - Mobile 375px | E2E/Playwright | Alta |
+
+---
+
+### Test Coverage Goals
+
+- **Módulo `availability`:** ≥ 70% cobertura
+- **Services:** ≥ 80% (lógica crítica de negocio)
+- **Repositories:** ≥ 70% (CRUD básico)
+- **Validators:** ≥ 90% (edge cases de validación)
+- **UI Components:** ≥ 60% (renders + interacciones básicas)
+
+---
+
+### Test Artifacts
+
+**Archivos de test:**
+```
+src/modules/contractors/availability/__tests__/
+├── availabilityService.test.ts        (lógica de negocio)
+├── availabilityRepository.test.ts     (CRUD)
+├── validators.test.ts                 (Zod schemas)
+└── slotGenerator.test.ts              (algoritmo de combinación)
+
+tests/integration/api/contractors/
+└── availability.test.ts               (endpoints HTTP)
+
+tests/performance/
+└── availability-slot-generation.js    (k6 script)
+
+tests/e2e/
+└── contractor-availability.spec.ts    (Playwright)
+
+src/components/contractors/availability/__tests__/
+├── AvailabilityManager.test.tsx
+├── AvailabilityWeekly.test.tsx
+└── AvailabilityBlocks.test.tsx
+```
+
+---
 
 ### Acceptance Criteria
 
-**Code:**
-- Migration applied successfully (ContractorWeeklySchedule, ContractorAvailabilityException, ContractorAvailabilityBlockout tables created)
-- Service layer implements slot generation algorithm correctly
-- API routes implement authorization checks
-- Zod validators cover all edge cases
-- Timezone conversion library integrated (date-fns-tz)
+**Para archivar este cambio (`/openspec:archive`):**
 
-**Testing:**
-- Cobertura >= 70% in `src/modules/contractors/availability/`
-- All 25 test cases pass (TC-RF-CTR-AVAIL-001 to TC-RNF-CTR-AVAIL-005)
-- Integration tests validate authorization and persistence
-- E2E test of availability management flow passes
-- Performance: P95 <= 800ms for slot generation (k6 test)
-- A11y: axe-core scan passes with 0 violations
-
-**Documentation:**
-- This spec complete and approved
-- STP updated with test cases
-- `openspec/project.md` references this module
-
-**UI/UX:**
-- Mobile-first calendar component implemented
-- Loading/error/empty states handled gracefully
-- Validation errors displayed accessibly
-- Responsive design tested on mobile/tablet/desktop
+- ✅ Todos los 25 casos de prueba (TC-RF-CTR-AVAIL-* + TC-RNF-CTR-AVAIL-*) pasan
+- ✅ Cobertura ≥ 70% en `src/modules/contractors/availability`
+- ✅ Performance: P95 ≤ 800ms (k6 test)
+- ✅ Accesibilidad: 0 violaciones (axe-core)
+- ✅ Responsive: tests pasan en 375px, 768px, 1024px (Playwright)
+- ✅ CI/CD en verde (GitHub Actions)
+- ✅ STP actualizado con resultados de ejecución
+- ✅ PR mergeado a `dev`
 
 ---
 
 ## Integration Points
 
-### ContractorServiceLocation Module
+### Con Módulo `services`
 
-**Dependency:** Contractor timezone
-**Usage:** Default to `ContractorServiceLocation.timezone` if available when creating schedule
+**Flujo:**
+1. Al crear/editar servicio → validar que `durationMinutes` sea razonable (15-480 min)
+2. Al generar slots → si `serviceId` está en query → filtrar slots compatibles
 
-**Integration:**
-```typescript
-async function createSchedule(contractorProfileId: string, input: CreateScheduleInput) {
-  let timezone = input.timezone;
-
-  // Fallback to location timezone if not provided
-  if (!timezone) {
-    const location = await prisma.contractorServiceLocation.findUnique({
-      where: { contractorProfileId },
-      select: { timezone: true }
-    });
-    timezone = location?.timezone || "America/Mexico_City"; // Default fallback
-  }
-
-  // ... create schedule
-}
-```
+**Contrato:**
+- `Service.durationMinutes`: number (minutos)
+- `availabilityService.generateSlots(contractorId, startDate, endDate, serviceId?)`
 
 ---
 
-### Booking Module
+### Con Módulo `booking`
 
-**Dependency:** Available slots
-**Usage:** Booking creation validates against available slots generated by this module
+**Flujo:**
+1. Al crear reserva → validar que el slot esté disponible (llamar `isAvailableOnDateTime`)
+2. Al crear bloqueo → validar que no haya reservas CONFIRMADAS en ese intervalo
 
-**Integration:**
-```typescript
-// In booking creation flow
-const availableSlots = await availabilityService.generateSlots({
-  contractorProfileId,
-  startDate: bookingDate,
-  endDate: bookingDate,
-  serviceDurationMinutes: service.estimatedDurationMinutes
-});
-
-const isSlotAvailable = availableSlots.some(slot =>
-  slot.startTime === requestedStartTime && slot.endTime === requestedEndTime
-);
-
-if (!isSlotAvailable) {
-  throw new BookingValidationError("Requested time slot is not available");
-}
-```
+**Contrato:**
+- `bookingService.getConfirmedBookingsByContractor(contractorId, startDate, endDate)`
+- `availabilityService.isAvailableOnDateTime(contractorId, date, startTime, endTime): boolean`
 
 ---
 
-### Service Module
+### Con Módulo `messaging`
 
-**Dependency:** Service duration
-**Usage:** Filter generated slots to match service duration requirements
-
-**Integration:**
-```typescript
-// Service model adds estimatedDurationMinutes field (future migration)
-model Service {
-  // ... existing fields ...
-  estimatedDurationMinutes Int @default(60) // Default 1 hour
-}
-```
-
----
-
-## UI/UX Components
-
-### Components to Create
-
-**1. AvailabilityManagerPage.tsx**
-- Container page for `/contractors/availability`
-- Tabs: "Weekly Schedule" | "Exceptions" | "Blockouts"
-- State management for active tab
-
-**2. WeeklyScheduleEditor.tsx**
-- Form to configure weekly recurring schedule
-- Day-of-week selector with checkboxes
-- Time range inputs per day (add/remove multiple intervals)
-- Timezone selector dropdown
-- Granularity selector (15/30/60 min)
-- Preview of configured schedule
-
-**3. ExceptionManager.tsx**
-- List view of existing exceptions
-- Add exception button → modal
-- Filter by type (ONE_OFF / RECURRING)
-- Calendar view with exception indicators
-
-**4. ExceptionFormModal.tsx**
-- Modal form for creating exception
-- Type selector: One-off / Recurring
-- Date picker (for one-off) or month/day selectors (for recurring)
-- Full-day closure checkbox
-- Custom intervals editor (if partial closure)
-- Reason text input
-
-**5. BlockoutManager.tsx**
-- List view of existing blockouts
-- Add blockout button → modal
-- Calendar view with blockout indicators
-- Filter by date range
-
-**6. BlockoutFormModal.tsx**
-- Modal form for creating blockout
-- Date picker
-- Time range inputs (start/end time)
-- Reason text input
-- Validation warning if overlaps with booking
-
-**7. AvailabilityCalendar.tsx**
-- Calendar grid component (month/week view)
-- Visual indicators: available (green), blocked (red), exception (yellow), booked (blue)
-- Click date to add exception/blockout
-- Navigation: prev/next month/week
-- Responsive: week view on desktop, day view on mobile
-
-**8. TimeRangeInput.tsx**
-- Reusable component for time range selection
-- Start time input + End time input
-- Validation indicator
-- Remove button (for multiple intervals)
-
-**9. DayScheduleConfigurator.tsx**
-- Component for configuring single day schedule
-- Day label (e.g., "Monday")
-- Enable/disable toggle
-- Multiple time range inputs
-- Add interval button
+**Futuro:** Enviar recordatorios cuando se crea/edita/elimina disponibilidad que afecte reservas futuras.
 
 ---
 
 ## Future Enhancements
 
-### External Calendar Integration
+### v2: Disponibilidad por Servicio
 
-**Goal:** Sync availability with Google Calendar, Outlook, etc.
+- Cada servicio tiene su propia disponibilidad (en vez de a nivel de contratista)
+- Más granular pero más complejo de gestionar
 
-**Implementation:**
-- OAuth2 integration for Google/Microsoft APIs
-- Two-way sync: ReparaYa → Calendar (create blocks), Calendar → ReparaYa (import busy slots)
-- Conflict resolution: manual override settings
-- Privacy: only sync "busy" status, not details
+### v3: Sincronización con Calendarios Externos
 
----
+- Google Calendar, Outlook
+- Importar eventos externos como bloqueos automáticos
+- Exportar disponibilidad a calendarios externos
 
-### Automatic Availability Adjustment
+### v4: Sugerencias Inteligentes
 
-**Goal:** Suggest optimal availability based on historical booking patterns.
+- ML para sugerir horarios basados en:
+  - Patrones de reservas pasadas
+  - Zonas de alta demanda
+  - Horarios de competidores
 
-**Implementation:**
-- Analytics: track booking frequency by day/time
-- ML model: predict high-demand time slots
-- Recommendations: suggest expanding availability during high-demand periods
-- A/B testing: test different availability configurations
+### v5: Disponibilidad Dinámica
 
----
-
-### Team Scheduling
-
-**Goal:** Support contractors with multiple employees/technicians.
-
-**Implementation:**
-- Add `ContractorTeamMember` model
-- Assign availability to specific team members
-- Booking flow: select preferred team member or auto-assign
-- Dashboard: view team availability heatmap
+- Ajustar disponibilidad automáticamente según:
+  - Clima (servicios outdoor)
+  - Tráfico (tiempos de traslado)
+  - Carga de trabajo actual
 
 ---
 
-### Buffer Time and Travel Time
+## Appendix
 
-**Goal:** Add configurable buffer between appointments and travel time based on distance.
+### Glossary
 
-**Implementation:**
-- Buffer time: configurable minutes between bookings (e.g., 15 min cleanup time)
-- Travel time: calculate based on previous booking location using AWS Location Service Route Calculator
-- Dynamic slot generation: adjust available slots based on buffer + travel time
+- **Slot:** Intervalo de tiempo disponible para reservar
+- **Regla semanal:** Horario recurrente por día de la semana
+- **Excepción:** Sobrescritura de regla semanal para fecha específica
+- **Bloqueo:** Intervalo marcado como no disponible ad-hoc
+- **TZ (Timezone):** Zona horaria IANA (ej: "America/Mexico_City")
+- **DST:** Daylight Saving Time (horario de verano)
+- **IANA:** Internet Assigned Numbers Authority (estándar de TZ)
+
+### References
+
+- **STP:** `/docs/md/STP-ReparaYa.md` sección 4.1.12
+- **Project Context:** `/openspec/project.md`
+- **Schema Prisma:** `/apps/web/prisma/schema.prisma`
+- **Specs relacionados:**
+  - Contractor Profiles: `/openspec/specs/profiles/profiles-contractor.md`
+  - Contractor Location: `/openspec/specs/contractor-location/spec.md`
 
 ---
 
-## Change History
-
-| Date | Author | Change |
-|------|--------|--------|
-| 2025-11-20 | Claude Code | Initial spec created for contractor availability management feature |
+**Versión:** 1.0
+**Fecha:** 2025-11-20
+**Estado:** Draft (pendiente de aprobación)
+**Autor:** Claude Code (asistente de desarrollo)
