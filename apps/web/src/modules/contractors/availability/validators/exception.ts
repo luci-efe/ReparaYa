@@ -1,30 +1,29 @@
 /**
- * Zod validation schemas for availability exceptions
- * @module contractors/availability/validators/exception
+ * Exception Validators (Zod Schemas)
+ *
+ * TODO: Implement full validation
  */
 
-import { z } from "zod";
-import { timeIntervalSchema } from "./schedule";
+import { z } from 'zod';
 
-/**
- * Exception type enum
- */
-export const exceptionTypeEnum = z.enum(["ONE_OFF", "RECURRING"]);
+const timeIntervalSchema = z.object({
+  startTime: z.string().regex(/^\d{2}:\d{2}$/, 'Formato debe ser HH:MM'),
+  endTime: z.string().regex(/^\d{2}:\d{2}$/, 'Formato debe ser HH:MM'),
+}).refine(
+  (data) => data.startTime < data.endTime,
+  { message: 'startTime debe ser anterior a endTime' }
+);
 
-/**
- * Create exception schema
- * TODO: Add custom refinements for date/recurringMonth/recurringDay validation
- */
 export const createExceptionSchema = z.object({
-  type: exceptionTypeEnum,
-  date: z.string().date().optional(),
-  recurringMonth: z.number().int().min(1).max(12).optional(),
-  recurringDay: z.number().int().min(1).max(31).optional(),
-  isFullDayClosure: z.boolean(),
-  customIntervals: z.array(timeIntervalSchema).optional(),
-  reason: z.string().max(200).optional(),
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Formato debe ser YYYY-MM-DD'),
+  intervals: z.array(timeIntervalSchema),
+  type: z.enum(['AVAILABLE', 'BLOCKED']),
+  reason: z.string().optional(),
 });
+// TODO: Add validation for future dates, overlap detection
 
-// Inferred types
-export type CreateExceptionInput = z.infer<typeof createExceptionSchema>;
-export type ExceptionType = z.infer<typeof exceptionTypeEnum>;
+export const updateExceptionSchema = z.object({
+  intervals: z.array(timeIntervalSchema).optional(),
+  type: z.enum(['AVAILABLE', 'BLOCKED']).optional(),
+  reason: z.string().optional(),
+});
