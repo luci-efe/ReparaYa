@@ -1,24 +1,20 @@
 /**
  * Contractor Availability Module
  *
- * This module provides comprehensive availability management for contractors:
- * - Weekly recurring schedules
- * - Exceptions (holidays, closures)
- * - Manual blockouts
- * - Automated slot generation
- *
- * @module contractors/availability
+ * Main barrel export for public APIs
  */
 
-// Export types
-export * from "./types";
+// Services (public API)
+export * from './services';
 
-// Export validators
-export * from "./validators";
+// Types (for external consumption)
+export * from './types';
 
-// Export utilities
-export * from "./utils";
+// Validators (for API routes)
+export * from './validators';
 
-// Services and repositories will be exported here when implemented
-// export * from "./services";
-// export * from "./repositories";
+// Errors (for error handling)
+export * from './errors';
+
+// Utils (for testing/integration)
+export * from './utils';
