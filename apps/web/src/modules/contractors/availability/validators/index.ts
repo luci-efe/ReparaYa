@@ -1,8 +1,7 @@
 /**
- * Public exports for availability validators
- * @module contractors/availability/validators
+ * Validators - Barrel Export
  */
 
-export * from "./schedule";
-export * from "./exception";
-export * from "./blockout";
+export * from './weeklyRule';
+export * from './exception';
+export * from './block';
