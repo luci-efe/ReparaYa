@@ -1,8 +1,6 @@
 /**
- * Public exports for availability utilities
- * @module contractors/availability/utils
+ * Utils - Barrel Export
  */
 
-export * from "./timezoneConversion";
-export * from "./overlapDetection";
-export * from "./slotGenerator";
+export * from './timezone';
+export * from './intervals';
