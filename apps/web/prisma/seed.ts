@@ -9,6 +9,7 @@
 
 import { PrismaClient, UserRole, ServiceStatus } from '@prisma/client';
 import { Decimal } from '@prisma/client/runtime/library';
+import { seedServiceCategories } from './seeds/serviceCategories';
 
 const prisma = new PrismaClient();
 
@@ -140,44 +141,22 @@ async function main() {
   // ========================================
   // 3. Crear categorías
   // ========================================
-  console.log('📁 Creating categories...');
-
-  const categories = await Promise.all([
-    prisma.category.create({
-      data: {
-        name: 'Plomería',
-        slug: 'plomeria',
-        description: 'Reparaciones e instalaciones de tuberías y sistemas de agua',
-      },
-    }),
-    prisma.category.create({
-      data: {
-        name: 'Electricidad',
-        slug: 'electricidad',
-        description: 'Instalaciones y reparaciones eléctricas',
-      },
-    }),
-    prisma.category.create({
-      data: {
-        name: 'Carpintería',
-        slug: 'carpinteria',
-        description: 'Trabajos en madera, muebles y estructuras',
-      },
-    }),
-  ]);
-
-  console.log(`✅ Created ${categories.length} categories`);
+  const categoryStats = await seedServiceCategories(prisma);
 
   // ========================================
   // 4. Crear servicios
   // ========================================
   console.log('🔧 Creating services...');
 
+  // Obtener categorías por slug para crear servicios
+  const plomeriaCategory = await prisma.category.findUnique({ where: { slug: 'plomeria' } });
+  const electricidadCategory = await prisma.category.findUnique({ where: { slug: 'electricidad' } });
+
   const services = await Promise.all([
     prisma.service.create({
       data: {
         contractorId: contractors[0].id,
-        categoryId: categories[0].id, // Plomería
+        categoryId: plomeriaCategory!.id,
         title: 'Reparación de fugas',
         description: 'Detección y reparación de fugas de agua en tuberías',
         basePrice: new Decimal('500.00'),
@@ -192,7 +171,7 @@ async function main() {
     prisma.service.create({
       data: {
         contractorId: contractors[1].id,
-        categoryId: categories[1].id, // Electricidad
+        categoryId: electricidadCategory!.id,
         title: 'Instalación de luminarias',
         description: 'Instalación de lámparas, spots y sistemas de iluminación',
         basePrice: new Decimal('800.00'),
@@ -244,7 +223,9 @@ async function main() {
   console.log('');
   console.log('✨ Seed completed successfully!');
   console.log(`   - Users: ${1 + clients.length + contractors.length}`);
-  console.log(`   - Categories: ${categories.length}`);
+  console.log(`   - Main categories: ${categoryStats.mainCategories}`);
+  console.log(`   - Subcategories: ${categoryStats.subcategories}`);
+  console.log(`   - Total categories: ${categoryStats.total}`);
   console.log(`   - Services: ${services.length}`);
   console.log(`   - Availability slots: ${availabilities.length}`);
   console.log('');
