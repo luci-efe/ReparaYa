@@ -16,7 +16,12 @@
  * 5. Return array of AvailableSlotDTO
  */
 
-import { AvailableSlotDTO, GenerateSlotsQuery } from '../types';
+import { AvailableSlotDTO } from '../types';
+
+interface TimeInterval {
+  start: Date;
+  end: Date;
+}
 
 export const slotGeneratorService = {
   /**
@@ -29,10 +34,10 @@ export const slotGeneratorService = {
    * @returns Array of available slots
    */
   async generateSlots(
-    contractorId: string,
-    startDate: string,
-    endDate: string,
-    serviceId?: string
+    _contractorId: string,
+    _startDate: string,
+    _endDate: string,
+    _serviceId?: string
   ): Promise<AvailableSlotDTO[]> {
     // TODO: Implement full algorithm
     // 1. Validate date range (max 8 weeks)
@@ -51,7 +56,7 @@ export const slotGeneratorService = {
   /**
    * Helper: Convert block to time interval for a specific day
    */
-  _convertBlockToInterval(block: any, day: Date, timezone: string): any {
+  _convertBlockToInterval(_block: unknown, _day: Date, _timezone: string): TimeInterval {
     // TODO: Implement
     throw new Error('Not implemented: _convertBlockToInterval');
   },
@@ -59,7 +64,7 @@ export const slotGeneratorService = {
   /**
    * Helper: Convert booking to time interval for a specific day
    */
-  _convertBookingToInterval(booking: any, day: Date, timezone: string): any {
+  _convertBookingToInterval(_booking: unknown, _day: Date, _timezone: string): TimeInterval {
     // TODO: Implement
     throw new Error('Not implemented: _convertBookingToInterval');
   },

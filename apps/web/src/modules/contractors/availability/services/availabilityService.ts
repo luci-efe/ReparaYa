@@ -15,7 +15,6 @@ import {
   UpdateExceptionDTO,
   ExceptionResponseDTO,
   CreateBlockDTO,
-  UpdateBlockDTO,
   BlockResponseDTO,
 } from '../types';
 
@@ -30,9 +29,9 @@ export const availabilityService = {
    * @param data - Weekly rule data
    */
   async createWeeklyRule(
-    userId: string,
-    contractorProfileId: string,
-    data: CreateWeeklyRuleDTO
+    _userId: string,
+    _contractorProfileId: string,
+    _data: CreateWeeklyRuleDTO
   ): Promise<WeeklyRuleResponseDTO> {
     // TODO: Implement
     // 1. Validate input with createWeeklyRuleSchema
@@ -45,7 +44,7 @@ export const availabilityService = {
   /**
    * List all weekly rules for a contractor
    */
-  async listWeeklyRules(contractorProfileId: string): Promise<WeeklyRuleResponseDTO[]> {
+  async listWeeklyRules(_contractorProfileId: string): Promise<WeeklyRuleResponseDTO[]> {
     // TODO: Implement
     // Call weeklyRuleRepository.findByContractor
     throw new Error('Not implemented: availabilityService.listWeeklyRules');
@@ -55,9 +54,9 @@ export const availabilityService = {
    * Update a weekly rule
    */
   async updateWeeklyRule(
-    userId: string,
-    ruleId: string,
-    data: UpdateWeeklyRuleDTO
+    _userId: string,
+    _ruleId: string,
+    _data: UpdateWeeklyRuleDTO
   ): Promise<WeeklyRuleResponseDTO> {
     // TODO: Implement
     // 1. Validate input
@@ -69,7 +68,7 @@ export const availabilityService = {
   /**
    * Delete a weekly rule
    */
-  async deleteWeeklyRule(userId: string, ruleId: string): Promise<void> {
+  async deleteWeeklyRule(_userId: string, _ruleId: string): Promise<void> {
     // TODO: Implement
     // 1. Verify ownership
     // 2. Call weeklyRuleRepository.delete
@@ -82,9 +81,9 @@ export const availabilityService = {
    * Create a new exception
    */
   async createException(
-    userId: string,
-    contractorProfileId: string,
-    data: CreateExceptionDTO
+    _userId: string,
+    _contractorProfileId: string,
+    _data: CreateExceptionDTO
   ): Promise<ExceptionResponseDTO> {
     // TODO: Implement
     throw new Error('Not implemented: availabilityService.createException');
@@ -94,9 +93,9 @@ export const availabilityService = {
    * List exceptions by date range
    */
   async listExceptions(
-    contractorProfileId: string,
-    startDate?: string,
-    endDate?: string
+    _contractorProfileId: string,
+    _startDate?: string,
+    _endDate?: string
   ): Promise<ExceptionResponseDTO[]> {
     // TODO: Implement
     throw new Error('Not implemented: availabilityService.listExceptions');
@@ -106,9 +105,9 @@ export const availabilityService = {
    * Update an exception
    */
   async updateException(
-    userId: string,
-    exceptionId: string,
-    data: UpdateExceptionDTO
+    _userId: string,
+    _exceptionId: string,
+    _data: UpdateExceptionDTO
   ): Promise<ExceptionResponseDTO> {
     // TODO: Implement
     throw new Error('Not implemented: availabilityService.updateException');
@@ -117,7 +116,7 @@ export const availabilityService = {
   /**
    * Delete an exception
    */
-  async deleteException(userId: string, exceptionId: string): Promise<void> {
+  async deleteException(_userId: string, _exceptionId: string): Promise<void> {
     // TODO: Implement
     throw new Error('Not implemented: availabilityService.deleteException');
   },
@@ -130,9 +129,9 @@ export const availabilityService = {
    * NOTE: Must validate that there are no confirmed bookings in the time range
    */
   async createBlock(
-    userId: string,
-    contractorProfileId: string,
-    data: CreateBlockDTO
+    _userId: string,
+    _contractorProfileId: string,
+    _data: CreateBlockDTO
   ): Promise<BlockResponseDTO> {
     // TODO: Implement
     // 1. Validate input
@@ -147,9 +146,9 @@ export const availabilityService = {
    * List blocks by date range
    */
   async listBlocks(
-    contractorProfileId: string,
-    startDate?: string,
-    endDate?: string
+    _contractorProfileId: string,
+    _startDate?: string,
+    _endDate?: string
   ): Promise<BlockResponseDTO[]> {
     // TODO: Implement
     throw new Error('Not implemented: availabilityService.listBlocks');
@@ -158,7 +157,7 @@ export const availabilityService = {
   /**
    * Delete a block
    */
-  async deleteBlock(userId: string, blockId: string): Promise<void> {
+  async deleteBlock(_userId: string, _blockId: string): Promise<void> {
     // TODO: Implement
     throw new Error('Not implemented: availabilityService.deleteBlock');
   },
@@ -171,10 +170,10 @@ export const availabilityService = {
    * Used by booking module to validate reservations
    */
   async isAvailableOnDateTime(
-    contractorId: string,
-    date: string,
-    startTime: string,
-    endTime: string
+    _contractorId: string,
+    _date: string,
+    _startTime: string,
+    _endTime: string
   ): Promise<boolean> {
     // TODO: Implement
     // Generate slots for the date and check if requested time is available

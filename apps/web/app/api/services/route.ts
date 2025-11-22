@@ -3,7 +3,6 @@ import { requireRole } from '@/modules/auth/utils/requireRole';
 import { UnauthorizedError, ForbiddenError } from '@/modules/auth/errors';
 import {
   serviceService,
-  ServiceNotFoundError,
   ServiceCategoryNotFoundError,
 } from '@/modules/services';
 import { createServiceSchema, serviceSearchFiltersSchema } from '@/modules/services/validators';

@@ -11,7 +11,7 @@ export const exceptionRepository = {
   /**
    * Create a new exception
    */
-  async create(contractorProfileId: string, data: CreateExceptionDTO): Promise<ExceptionResponseDTO> {
+  async create(_contractorProfileId: string, _data: CreateExceptionDTO): Promise<ExceptionResponseDTO> {
     // TODO: Implement using Prisma
     throw new Error('Not implemented: exceptionRepository.create');
   },
@@ -19,7 +19,7 @@ export const exceptionRepository = {
   /**
    * Find exception by ID
    */
-  async findById(id: string): Promise<ExceptionResponseDTO | null> {
+  async findById(_id: string): Promise<ExceptionResponseDTO | null> {
     // TODO: Implement using Prisma
     throw new Error('Not implemented: exceptionRepository.findById');
   },
@@ -28,9 +28,9 @@ export const exceptionRepository = {
    * Find exceptions by contractor and date range
    */
   async findByDateRange(
-    contractorProfileId: string,
-    startDate: string,
-    endDate: string
+    _contractorProfileId: string,
+    _startDate: string,
+    _endDate: string
   ): Promise<ExceptionResponseDTO[]> {
     // TODO: Implement using Prisma
     // Filter WHERE date >= startDate AND date <= endDate
@@ -40,7 +40,7 @@ export const exceptionRepository = {
   /**
    * Update an exception
    */
-  async update(id: string, data: UpdateExceptionDTO): Promise<ExceptionResponseDTO> {
+  async update(_id: string, _data: UpdateExceptionDTO): Promise<ExceptionResponseDTO> {
     // TODO: Implement using Prisma
     throw new Error('Not implemented: exceptionRepository.update');
   },
@@ -48,7 +48,7 @@ export const exceptionRepository = {
   /**
    * Delete an exception
    */
-  async delete(id: string): Promise<void> {
+  async delete(_id: string): Promise<void> {
     // TODO: Implement using Prisma
     throw new Error('Not implemented: exceptionRepository.delete');
   },

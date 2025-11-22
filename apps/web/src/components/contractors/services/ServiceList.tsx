@@ -26,17 +26,12 @@ const STATUS_COLORS: Record<ServiceVisibilityStatus, string> = {
   ARCHIVED: 'bg-red-100 text-red-800',
 };
 
-export function ServiceList({ contractorId, profileVerified }: ServiceListProps) {
+export function ServiceList({ contractorId: _contractorId, profileVerified }: ServiceListProps) {
   const [services, setServices] = useState<ServiceDTO[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<ServiceVisibilityStatus | 'ALL'>('ALL');
-  const [actionLoading, setActionLoading] = useState<string | null>(null);
-
-  // Fetch services
-  useEffect(() => {
-    fetchServices();
-  }, [filter]);
+  const [_actionLoading, setActionLoading] = useState<string | null>(null);
 
   const fetchServices = async () => {
     try {
@@ -71,7 +66,13 @@ export function ServiceList({ contractorId, profileVerified }: ServiceListProps)
     }
   };
 
-  const handlePublish = async (serviceId: string) => {
+  // Fetch services
+  useEffect(() => {
+    fetchServices();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filter]);
+
+  const _handlePublish = async (serviceId: string) => {
     if (!profileVerified) {
       alert('Debes verificar tu perfil antes de publicar servicios');
       return;
@@ -97,7 +98,7 @@ export function ServiceList({ contractorId, profileVerified }: ServiceListProps)
     }
   };
 
-  const handlePause = async (serviceId: string) => {
+  const _handlePause = async (serviceId: string) => {
     try {
       setActionLoading(serviceId);
       const response = await fetch(`/api/services/${serviceId}/pause`, {
@@ -118,7 +119,7 @@ export function ServiceList({ contractorId, profileVerified }: ServiceListProps)
     }
   };
 
-  const handleDelete = async (serviceId: string, title: string) => {
+  const _handleDelete = async (serviceId: string, title: string) => {
     if (!confirm(`¿Estás seguro de eliminar el servicio "${title}"?`)) {
       return;
     }

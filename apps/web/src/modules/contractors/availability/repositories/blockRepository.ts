@@ -11,7 +11,7 @@ export const blockRepository = {
   /**
    * Create a new block
    */
-  async create(contractorProfileId: string, data: CreateBlockDTO): Promise<BlockResponseDTO> {
+  async create(_contractorProfileId: string, _data: CreateBlockDTO): Promise<BlockResponseDTO> {
     // TODO: Implement using Prisma
     throw new Error('Not implemented: blockRepository.create');
   },
@@ -19,7 +19,7 @@ export const blockRepository = {
   /**
    * Find block by ID
    */
-  async findById(id: string): Promise<BlockResponseDTO | null> {
+  async findById(_id: string): Promise<BlockResponseDTO | null> {
     // TODO: Implement using Prisma
     throw new Error('Not implemented: blockRepository.findById');
   },
@@ -28,9 +28,9 @@ export const blockRepository = {
    * Find blocks by contractor and date range (with overlap detection)
    */
   async findByDateRange(
-    contractorProfileId: string,
-    startDateTime: Date,
-    endDateTime: Date
+    _contractorProfileId: string,
+    _startDateTime: Date,
+    _endDateTime: Date
   ): Promise<BlockResponseDTO[]> {
     // TODO: Implement using Prisma
     // Use OR conditions to detect overlaps:
@@ -43,7 +43,7 @@ export const blockRepository = {
   /**
    * Update a block
    */
-  async update(id: string, data: UpdateBlockDTO): Promise<BlockResponseDTO> {
+  async update(_id: string, _data: UpdateBlockDTO): Promise<BlockResponseDTO> {
     // TODO: Implement using Prisma
     throw new Error('Not implemented: blockRepository.update');
   },
@@ -51,7 +51,7 @@ export const blockRepository = {
   /**
    * Delete a block
    */
-  async delete(id: string): Promise<void> {
+  async delete(_id: string): Promise<void> {
     // TODO: Implement using Prisma
     throw new Error('Not implemented: blockRepository.delete');
   },

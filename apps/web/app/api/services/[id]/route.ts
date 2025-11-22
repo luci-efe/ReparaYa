@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { requireRole, requireAnyRole } from '@/modules/auth/utils/requireRole';
+import { requireRole } from '@/modules/auth/utils/requireRole';
 import { requireAuth } from '@/modules/auth/utils/requireAuth';
 import { UnauthorizedError, ForbiddenError } from '@/modules/auth/errors';
 import {
