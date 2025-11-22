@@ -11,7 +11,7 @@ export const weeklyRuleRepository = {
   /**
    * Create a new weekly rule
    */
-  async create(contractorProfileId: string, data: CreateWeeklyRuleDTO): Promise<WeeklyRuleResponseDTO> {
+  async create(_contractorProfileId: string, _data: CreateWeeklyRuleDTO): Promise<WeeklyRuleResponseDTO> {
     // TODO: Implement using Prisma
     // return prisma.contractorWeeklyRule.create({ data: { contractorProfileId, ...data } });
     throw new Error('Not implemented: weeklyRuleRepository.create');
@@ -20,7 +20,7 @@ export const weeklyRuleRepository = {
   /**
    * Find weekly rule by ID
    */
-  async findById(id: string): Promise<WeeklyRuleResponseDTO | null> {
+  async findById(_id: string): Promise<WeeklyRuleResponseDTO | null> {
     // TODO: Implement using Prisma
     throw new Error('Not implemented: weeklyRuleRepository.findById');
   },
@@ -28,7 +28,7 @@ export const weeklyRuleRepository = {
   /**
    * Find all weekly rules for a contractor
    */
-  async findByContractor(contractorProfileId: string): Promise<WeeklyRuleResponseDTO[]> {
+  async findByContractor(_contractorProfileId: string): Promise<WeeklyRuleResponseDTO[]> {
     // TODO: Implement using Prisma
     // Order by dayOfWeek ascending
     throw new Error('Not implemented: weeklyRuleRepository.findByContractor');
@@ -37,7 +37,7 @@ export const weeklyRuleRepository = {
   /**
    * Update a weekly rule
    */
-  async update(id: string, data: UpdateWeeklyRuleDTO): Promise<WeeklyRuleResponseDTO> {
+  async update(_id: string, _data: UpdateWeeklyRuleDTO): Promise<WeeklyRuleResponseDTO> {
     // TODO: Implement using Prisma
     throw new Error('Not implemented: weeklyRuleRepository.update');
   },
@@ -45,7 +45,7 @@ export const weeklyRuleRepository = {
   /**
    * Delete a weekly rule
    */
-  async delete(id: string): Promise<void> {
+  async delete(_id: string): Promise<void> {
     // TODO: Implement using Prisma
     throw new Error('Not implemented: weeklyRuleRepository.delete');
   },

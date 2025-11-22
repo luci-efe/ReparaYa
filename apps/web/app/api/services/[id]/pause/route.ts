@@ -5,7 +5,6 @@ import {
   serviceService,
   ServiceNotFoundError,
   UnauthorizedServiceActionError,
-  InvalidVisibilityStatusError,
   InvalidStateTransitionError,
 } from '@/modules/services';
 
