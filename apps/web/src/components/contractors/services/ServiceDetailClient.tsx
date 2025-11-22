@@ -44,7 +44,7 @@ const STATUS_COLORS: Record<ServiceVisibilityStatus, string> = {
  */
 export function ServiceDetailClient({
   service: initialService,
-  contractorId,
+  contractorId: _contractorId,
   profileVerified,
 }: ServiceDetailClientProps) {
   const router = useRouter();

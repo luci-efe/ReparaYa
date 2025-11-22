@@ -13,7 +13,7 @@
  * @param timezone - IANA timezone (e.g., "America/Mexico_City")
  * @returns Date object in UTC
  */
-export function convertToUTC(dateStr: string, timeStr: string, timezone: string): Date {
+export function convertToUTC(_dateStr: string, _timeStr: string, _timezone: string): Date {
   // TODO: Implement using date-fns-tz zonedTimeToUtc
   throw new Error('Not implemented: convertToUTC');
 }
@@ -25,7 +25,7 @@ export function convertToUTC(dateStr: string, timeStr: string, timezone: string)
  * @param timezone - IANA timezone
  * @returns Object with date and time strings in local timezone
  */
-export function convertFromUTC(utcDate: Date, timezone: string): { date: string; time: string } {
+export function convertFromUTC(_utcDate: Date, _timezone: string): { date: string; time: string } {
   // TODO: Implement using date-fns-tz utcToZonedTime + format
   throw new Error('Not implemented: convertFromUTC');
 }
