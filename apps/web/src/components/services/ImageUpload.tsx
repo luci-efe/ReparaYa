@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, ChangeEvent, DragEvent } from 'react';
+import { useState, useRef, useEffect, ChangeEvent, DragEvent } from 'react';
 import NextImage from 'next/image';
 import { Button } from '@/components/ui/Button';
 import { ConfirmationDialog } from './ConfirmationDialog';
@@ -61,8 +61,32 @@ export function ImageUpload({
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const errorTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const canUploadMore = images.length + uploadingImages.length < maxImages;
+
+  // Clear error timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (errorTimeoutRef.current) {
+        clearTimeout(errorTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  // Helper to show error message with auto-dismiss
+  const showErrorMessage = (message: string) => {
+    // Clear any existing timeout
+    if (errorTimeoutRef.current) {
+      clearTimeout(errorTimeoutRef.current);
+    }
+    
+    setErrorMessage(message);
+    errorTimeoutRef.current = setTimeout(() => {
+      setErrorMessage(null);
+      errorTimeoutRef.current = null;
+    }, 5000);
+  };
 
   // Validate file before upload
   const validateFile = (file: File): string | null => {
@@ -102,8 +126,7 @@ export function ImageUpload({
     // Validate
     const error = validateFile(file);
     if (error) {
-      setErrorMessage(error);
-      setTimeout(() => setErrorMessage(null), 5000); // Auto-dismiss after 5 seconds
+      showErrorMessage(error);
       return;
     }
 
@@ -230,8 +253,7 @@ export function ImageUpload({
     const files = Array.from(e.target.files || []);
 
     if (files.length + images.length + uploadingImages.length > maxImages) {
-      setErrorMessage(`Solo puedes subir un máximo de ${maxImages} imágenes`);
-      setTimeout(() => setErrorMessage(null), 5000);
+      showErrorMessage(`Solo puedes subir un máximo de ${maxImages} imágenes`);
       return;
     }
 
@@ -267,16 +289,14 @@ export function ImageUpload({
     setIsDragging(false);
 
     if (!canUploadMore) {
-      setErrorMessage(`Solo puedes tener un máximo de ${maxImages} imágenes`);
-      setTimeout(() => setErrorMessage(null), 5000);
+      showErrorMessage(`Solo puedes tener un máximo de ${maxImages} imágenes`);
       return;
     }
 
     const files = Array.from(e.dataTransfer.files);
 
     if (files.length + images.length + uploadingImages.length > maxImages) {
-      setErrorMessage(`Solo puedes subir un máximo de ${maxImages} imágenes`);
-      setTimeout(() => setErrorMessage(null), 5000);
+      showErrorMessage(`Solo puedes subir un máximo de ${maxImages} imágenes`);
       return;
     }
 
@@ -305,8 +325,7 @@ export function ImageUpload({
       setDeleteConfirm(null);
     } catch (error) {
       console.error('Error deleting image:', error);
-      setErrorMessage(error instanceof Error ? error.message : 'Error al eliminar imagen');
-      setTimeout(() => setErrorMessage(null), 5000);
+      showErrorMessage(error instanceof Error ? error.message : 'Error al eliminar imagen');
     } finally {
       setDeleteLoading(false);
     }
