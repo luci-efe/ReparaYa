@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, ChangeEvent, DragEvent } from 'react';
+import NextImage from 'next/image';
 import { Button } from '@/components/ui/Button';
 import { ConfirmationDialog } from './ConfirmationDialog';
 import type { ServiceImageDTO } from '@/modules/services/types';
@@ -58,6 +59,7 @@ export function ImageUpload({
   const [isDragging, setIsDragging] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean; imageId: string; imageUrl: string } | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const canUploadMore = images.length + uploadingImages.length < maxImages;
@@ -100,7 +102,8 @@ export function ImageUpload({
     // Validate
     const error = validateFile(file);
     if (error) {
-      alert(error);
+      setErrorMessage(error);
+      setTimeout(() => setErrorMessage(null), 5000); // Auto-dismiss after 5 seconds
       return;
     }
 
@@ -227,7 +230,8 @@ export function ImageUpload({
     const files = Array.from(e.target.files || []);
 
     if (files.length + images.length + uploadingImages.length > maxImages) {
-      alert(`Solo puedes subir un máximo de ${maxImages} imágenes`);
+      setErrorMessage(`Solo puedes subir un máximo de ${maxImages} imágenes`);
+      setTimeout(() => setErrorMessage(null), 5000);
       return;
     }
 
@@ -263,14 +267,16 @@ export function ImageUpload({
     setIsDragging(false);
 
     if (!canUploadMore) {
-      alert(`Solo puedes tener un máximo de ${maxImages} imágenes`);
+      setErrorMessage(`Solo puedes tener un máximo de ${maxImages} imágenes`);
+      setTimeout(() => setErrorMessage(null), 5000);
       return;
     }
 
     const files = Array.from(e.dataTransfer.files);
 
     if (files.length + images.length + uploadingImages.length > maxImages) {
-      alert(`Solo puedes subir un máximo de ${maxImages} imágenes`);
+      setErrorMessage(`Solo puedes subir un máximo de ${maxImages} imágenes`);
+      setTimeout(() => setErrorMessage(null), 5000);
       return;
     }
 
@@ -299,7 +305,8 @@ export function ImageUpload({
       setDeleteConfirm(null);
     } catch (error) {
       console.error('Error deleting image:', error);
-      alert(error instanceof Error ? error.message : 'Error al eliminar imagen');
+      setErrorMessage(error instanceof Error ? error.message : 'Error al eliminar imagen');
+      setTimeout(() => setErrorMessage(null), 5000);
     } finally {
       setDeleteLoading(false);
     }
@@ -316,6 +323,37 @@ export function ImageUpload({
 
   return (
     <div className="space-y-4">
+      {/* Error Message Banner */}
+      {errorMessage && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3">
+          <svg
+            className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
+          </svg>
+          <div className="flex-1">
+            <p className="text-sm text-red-800">{errorMessage}</p>
+          </div>
+          <button
+            onClick={() => setErrorMessage(null)}
+            className="text-red-600 hover:text-red-800 focus:outline-none"
+            aria-label="Cerrar mensaje de error"
+          >
+            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      )}
+
       {/* Upload Zone */}
       {canUploadMore && (
         <div
@@ -397,6 +435,7 @@ export function ImageUpload({
               key={upload.id}
               className="relative aspect-square rounded-lg overflow-hidden border-2 border-gray-200 bg-gray-100"
             >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={upload.preview}
                 alt="Subiendo..."
@@ -492,10 +531,12 @@ export function ImageUpload({
                 key={image.id}
                 className="relative aspect-square rounded-lg overflow-hidden border-2 border-gray-200 bg-gray-100 group"
               >
-                <img
+                <NextImage
                   src={image.s3Url}
                   alt={image.altText || `Imagen ${index + 1}`}
-                  className="w-full h-full object-cover"
+                  fill
+                  sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                  className="object-cover"
                 />
 
                 {/* Order badge */}

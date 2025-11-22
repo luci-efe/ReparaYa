@@ -6,11 +6,19 @@
 
 import { z } from 'zod';
 
+/**
+ * Helper to parse "HH:MM" time string to minutes since midnight
+ */
+function parseTimeToMinutes(time: string): number {
+  const [hours, minutes] = time.split(':').map(Number);
+  return hours * 60 + minutes;
+}
+
 const timeIntervalSchema = z.object({
   startTime: z.string().regex(/^\d{2}:\d{2}$/, 'Formato debe ser HH:MM'),
   endTime: z.string().regex(/^\d{2}:\d{2}$/, 'Formato debe ser HH:MM'),
 }).refine(
-  (data) => data.startTime < data.endTime,
+  (data) => parseTimeToMinutes(data.startTime) < parseTimeToMinutes(data.endTime),
   { message: 'startTime debe ser anterior a endTime' }
 );
 
