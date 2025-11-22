@@ -25,6 +25,7 @@ interface UploadingImage {
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 const ALLOWED_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.webp'];
+const ERROR_AUTO_DISMISS_TIMEOUT = 5000; // 5 seconds
 
 /**
  * Image Upload Component
@@ -85,7 +86,7 @@ export function ImageUpload({
     errorTimeoutRef.current = setTimeout(() => {
       setErrorMessage(null);
       errorTimeoutRef.current = null;
-    }, 5000);
+    }, ERROR_AUTO_DISMISS_TIMEOUT);
   };
 
   // Validate file before upload
