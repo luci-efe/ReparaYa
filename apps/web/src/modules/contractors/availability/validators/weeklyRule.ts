@@ -6,11 +6,30 @@
 
 import { z } from 'zod';
 
+/**
+ * Helper to parse "HH:MM" time string to minutes since midnight
+ */
+function parseTimeToMinutes(time: string): number {
+  const parts = time.split(':');
+  if (parts.length !== 2) {
+    return 0; // Return 0 for invalid format (should not happen due to regex validation)
+  }
+  const hours = Number(parts[0]);
+  const minutes = Number(parts[1]);
+  
+  // Validate that conversion succeeded and values are in valid ranges
+  if (isNaN(hours) || isNaN(minutes) || hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
+    return 0; // Return 0 for invalid values (should not happen due to regex validation)
+  }
+  
+  return hours * 60 + minutes;
+}
+
 const timeIntervalSchema = z.object({
   startTime: z.string().regex(/^\d{2}:\d{2}$/, 'Formato debe ser HH:MM'),
   endTime: z.string().regex(/^\d{2}:\d{2}$/, 'Formato debe ser HH:MM'),
 }).refine(
-  (data) => data.startTime < data.endTime,
+  (data) => parseTimeToMinutes(data.startTime) < parseTimeToMinutes(data.endTime),
   { message: 'startTime debe ser anterior a endTime' }
 );
 
