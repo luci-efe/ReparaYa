@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireRole } from '@/modules/auth/utils/requireRole';
 import { UnauthorizedError, ForbiddenError } from '@/modules/auth/errors';
 import { serviceService } from '@/modules/services/services/serviceService';
-import type { VisibilityStatus } from '@prisma/client';
+import type { ServiceVisibilityStatus } from '@prisma/client';
 
 /**
  * GET /api/admin/services
@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
     const page = parseInt(searchParams.get('page') || '1', 10);
     const limit = parseInt(searchParams.get('limit') || '20', 10);
-    const status = searchParams.get('status') as VisibilityStatus | null;
+    const status = searchParams.get('status') as ServiceVisibilityStatus | null;
     const contractorId = searchParams.get('contractorId');
     const categoryId = searchParams.get('categoryId');
     const search = searchParams.get('search');

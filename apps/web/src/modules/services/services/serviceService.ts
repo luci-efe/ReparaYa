@@ -10,16 +10,14 @@ import {
   ServiceCategoryNotFoundError,
 } from '../errors';
 import { serviceStateMachine } from './serviceStateMachine';
-import { isServiceOwner, canPublishService } from '../utils/authz';
+import { isServiceOwner } from '../utils/authz';
 import type {
   ServiceDTO,
-  ServicePublicDTO,
   CreateServiceDTO,
   UpdateServiceDTO,
   ServiceSearchFilters,
   ServiceListResponseDTO,
 } from '../types';
-import type { ContractorProfileDTO } from '@/modules/contractors/types';
 
 /**
  * Service domain service for business logic
