@@ -10,7 +10,11 @@ import { z } from 'zod';
  * Helper to parse "HH:MM" time string to minutes since midnight
  */
 function parseTimeToMinutes(time: string): number {
-  const [hours, minutes] = time.split(':').map(Number);
+  const parts = time.split(':');
+  if (parts.length !== 2) {
+    return 0; // Return 0 for invalid format (should not happen due to regex validation)
+  }
+  const [hours, minutes] = parts.map(Number);
   return hours * 60 + minutes;
 }
 
