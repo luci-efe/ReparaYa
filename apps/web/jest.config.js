@@ -39,6 +39,9 @@ const customJestConfig = {
     '/src/modules/contractors/repositories/__tests__/locationRepository.test.ts',
     '/src/modules/contractors/services/__tests__/locationService.test.ts',
   ],
+  transformIgnorePatterns: [
+    'node_modules/(?!(uuid)/)',
+  ],
 }
 
 // createJestConfig is exported this way to ensure that next/jest can load the Next.js config which is async

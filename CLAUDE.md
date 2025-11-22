@@ -41,12 +41,13 @@ Los archivos grandes de `/docs/md/` (SRS, SPMP, SDD, modelo_datos_reparaya.md) s
 **Archivos que DEBES leer:**
 
 1. **`openspec/project.md`** ⭐ - Fuente única de verdad (stack, arquitectura, convenciones, dominio)
-2. **`openspec/README.md`** - Flujo de OpenSpec y testing obligatorio
-3. **`openspec/specs/[modulo]/spec.md`** - Especificación del módulo en el que trabajas
+2. **`openspec/README.md`** - Flujo de OpenSpec y testing
+3. **`openspec/database-schema.md`** 🗄️ - Esquema completo de la base de datos Supabase (CRÍTICO para trabajo con DB)
+4. **`openspec/specs/[modulo]/spec.md`** - Especificación del módulo en el que trabajas
 
-**Archivo que DEBES actualizar en cada implementación:**
+**Archivo que DEBES actualizar según impacto:**
 
-4. **`docs/md/STP-ReparaYa.md`** ⚠️ - Plan de pruebas (OBLIGATORIO actualizar con casos TC-*)
+5. **`docs/md/STP-ReparaYa.md`** ⚠️ - Plan de pruebas (actualizar para cambios de alto impacto con casos TC-*)
 
 **❌ NO leas estos archivos (gastan muchos tokens innecesariamente):**
 
@@ -71,11 +72,11 @@ dev → feature/nombre-descriptivo → PR → dev → (cuando esté listo) → m
 
 ---
 
-## 🔴 CRÍTICO: Testing Obligatorio en OpenSpec
+## Testing en OpenSpec
 
-### Regla de Oro
+### Principio
 
-**NINGÚN proposal de OpenSpec es válido sin un plan de testing completo.**
+**Todo proposal necesita un plan de testing proporcional al impacto del cambio.**
 
 ### Cuando uses `/openspec:proposal`
 
@@ -133,86 +134,124 @@ El proposal DEBE incluir una sección "Testing Plan" con:
 - Clerk: Usar ambiente de test
 ```
 
-### Flujo Completo OBLIGATORIO
+### Flujo de Testing
 
 ```
 ┌─────────────────────────────────────────────────────┐
 │ 1. /openspec:proposal                               │
-│    → DEBE incluir "Testing Plan" completo          │
+│    → Incluir "Testing Plan" proporcional           │
+│    → Ver niveles de impacto abajo                  │
 └─────────────────────────────────────────────────────┘
                         ↓
 ┌─────────────────────────────────────────────────────┐
-│ 2. Actualizar /docs/md/STP-ReparaYa.md             │
-│    → Agregar casos TC-* ANTES de codificar         │
-│    → Documentar en sección 4.1.X del STP          │
+│ 2. Actualizar /docs/md/STP-ReparaYa.md (si aplica) │
+│    → Cambios de alto impacto: Agregar casos TC-*  │
+│    → Cambios menores: Documentar solo en proposal │
 └─────────────────────────────────────────────────────┘
                         ↓
 ┌─────────────────────────────────────────────────────┐
-│ 3. Implementación (código + tests en paralelo)     │
+│ 3. Implementación (código + tests necesarios)      │
 │    → Escribir código funcional                     │
-│    → Escribir tests según plan                     │
+│    → Escribir tests que den confianza real         │
 └─────────────────────────────────────────────────────┘
                         ↓
 ┌─────────────────────────────────────────────────────┐
 │ 4. Verificación                                     │
-│    → npm run test -- src/modules/XXX               │
-│    → npm run test:coverage                         │
-│    → Verificar cobertura ≥ 70%                     │
+│    → npm run test (áreas afectadas)               │
+│    → CI/CD debe pasar                              │
+│    → Cobertura 70%+ en módulos core                │
 └─────────────────────────────────────────────────────┘
                         ↓
 ┌─────────────────────────────────────────────────────┐
 │ 5. /openspec:apply                                  │
-│    → Solo cuando tests pasen                       │
+│    → Cuando tests pasen y cambio esté completo     │
 └─────────────────────────────────────────────────────┘
                         ↓
 ┌─────────────────────────────────────────────────────┐
-│ 6. PR y Merge a dev                                 │
+│ 6. PR, Revisión y Merge a dev                       │
 │    → CodeRabbit revisa                             │
 │    → CI/CD debe pasar                              │
 └─────────────────────────────────────────────────────┘
                         ↓
 ┌─────────────────────────────────────────────────────┐
 │ 7. /openspec:archive                                │
-│    SOLO SI:                                         │
-│    ✅ Todos los tests pasan                        │
-│    ✅ Cobertura ≥ 70%                              │
-│    ✅ STP actualizado con resultados               │
-│    ✅ CI/CD en verde                               │
-│    ✅ PR mergeado                                  │
+│    → Tests pasen, CI verde, PR mergeado           │
 └─────────────────────────────────────────────────────┘
 ```
 
-### ❌ NO Permitido
+### Niveles de Testing por Impacto del Cambio
 
-**NUNCA hagas esto:**
+**Ajusta el nivel de testing al riesgo y complejidad:**
 
-- ❌ Crear proposal sin sección "Testing Plan"
-- ❌ Implementar código sin tests
-- ❌ Archivar cambio sin que tests pasen
-- ❌ Ignorar actualización del STP
-- ❌ Aceptar cobertura < 70% en módulos core
-- ❌ Pensar que "cambios simples" no necesitan tests
+#### 🔴 Alto Impacto (Testing Exhaustivo)
+- **Features core** (auth, pagos, reservas)
+- **Cambios de schema** que afectan múltiples tablas
+- **Cambios críticos de seguridad** (autenticación, autorización, procesamiento de pagos)
+- **Breaking changes en APIs**
 
-### 🔴 TODO Requiere Tests
+**Tests Requeridos:**
+- Tests unitarios de lógica de negocio
+- Tests de integración de APIs
+- Tests E2E de flujos críticos
+- Tests de migración (up/down) para schema
+- Cobertura objetivo: 70%+ en módulos afectados
+- **DEBE actualizar STP con casos de prueba formales**
 
-**Sin excepciones. Esto incluye:**
+#### 🟡 Impacto Medio (Testing Focalizado)
+- **Features no críticos**
+- **Adiciones de tabla única** en DB
+- **Nuevos endpoints API** (no breaking)
+- **Refactorización significativa**
 
-| Tipo de Cambio | Tests Requeridos |
-|----------------|------------------|
-| Nueva feature | Unit + Integration + E2E |
-| Cambio de schema DB | Tests de migración + integridad de datos |
-| API endpoint | Integration tests + auth tests |
-| **Infraestructura (Terraform)** | `terraform validate` + `terraform plan` + smoke tests |
-| **Cambio DevOps (CI/CD)** | Validación del pipeline en PR |
-| Cambio de seguridad | Security tests + penetration tests |
-| Optimización performance | k6 load tests + benchmarks (P95/P99) |
-| Bug fix | Regression test que reproduzca el bug |
-| Configuración | Tests de que la config funciona |
+**Tests Requeridos:**
+- Tests unitarios de lógica nueva
+- Tests de integración de endpoints nuevos
+- Tests de regresión para asegurar que nada se rompió
+- Cobertura objetivo: 60%+ en áreas afectadas
+- **Documentar tests en proposal** (STP opcional)
 
-**Ejemplos concretos:**
-- **Terraform**: Nuevo bucket S3 → `terraform validate` + `terraform plan` en CI + smoke test de subir archivo
-- **CI/CD**: Nuevo step de linting → PR debe ejecutar el nuevo step exitosamente
-- **DB Migration**: Nueva tabla → tests de migración up/down + constraints + datos de prueba
+#### 🟢 Bajo Impacto (Testing Básico)
+- **Cambios de configuración** (variables de entorno, constantes)
+- **Actualizaciones de documentación**
+- **Ajustes de UI** (estilos, textos)
+- **Bug fixes menores** (alcance de una función)
+- **Validación de infraestructura** (Terraform plan, linting)
+
+**Tests Requeridos:**
+- Smoke tests de que el cambio funciona
+- Tests existentes deben pasar (sin regresiones)
+- Para infra: comandos de validación (terraform validate, terraform plan)
+- No requiere actualización formal del STP
+
+### Guía de Testing por Tipo de Cambio
+
+| Tipo de Cambio | Enfoque de Testing |
+|----------------|-------------------|
+| **Feature core** (auth, payments) | 🔴 Exhaustivo: Unit + Integration + E2E |
+| **Feature regular** | 🟡 Focalizado: Unit + Integration |
+| **Schema DB** | 🔴 Exhaustivo: Tests de migración + integridad |
+| **API endpoint** | 🟡 Focalizado: Integration + auth tests |
+| **Infraestructura** (Terraform) | 🟢 Básico: `terraform validate` + `terraform plan` |
+| **Cambio de seguridad** | 🔴 Exhaustivo: Security tests + auth tests |
+| **Optimización performance** | 🟡 Focalizado: Benchmarks antes/después (k6 si es significativo) |
+| **Bug fix** | 🟢-🟡 Básico a Focalizado: Test de regresión del bug |
+| **Configuración/docs** | 🟢 Básico: Smoke test, tests existentes pasan |
+
+### ✅ Buenas Prácticas
+
+- **Escribe tests que den confianza real**, no solo números de cobertura
+- **Testea happy paths y caminos de error críticos**, omite edge cases exhaustivos salvo que sean críticos
+- **Usa patrones de test existentes** del codebase
+- **Mockea servicios externos** (Stripe, AWS, Clerk) apropiadamente
+- **Mantén tests rápidos** - test suites lentos no se ejecutan
+
+### ❌ NO Hagas Esto
+
+- ❌ Saltar testing en "quick fixes" de módulos core (auth, payments, bookings)
+- ❌ Escribir docenas de tests redundantes solo para alcanzar cobertura
+- ❌ Archivar cambios con tests fallando
+- ❌ Saltar validación de CI/CD
+- ❌ Ignorar actualizaciones del STP para cambios de alto impacto
 
 ### ✅ Ejemplo de Proposal Correcto
 
