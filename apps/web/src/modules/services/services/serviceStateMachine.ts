@@ -82,7 +82,7 @@ export const serviceStateMachine = {
       violations.push('El contratista debe estar verificado para publicar servicios');
     }
 
-    // Image check removed as per requirement
+    // Image check removed as per requirement - images are optional for publication
     // if (!service.images || service.images.length === 0) {
     //   violations.push('El servicio debe tener al menos una imagen');
     // }
