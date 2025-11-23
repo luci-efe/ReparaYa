@@ -113,7 +113,8 @@ describe('serviceStateMachine', () => {
       expect(violations.length).toBeGreaterThan(0);
     });
 
-    it('TC-SERVICE-007-03: debe detectar falta de imágenes', () => {
+    // Skipped: Images are optional for publication as per business requirement
+    it.skip('TC-SERVICE-007-03: debe detectar falta de imágenes', () => {
       const violations = serviceStateMachine.validatePublicationRequirements(
         mockServiceDraftNoImages,
         mockVerifiedContractor
@@ -208,9 +209,10 @@ describe('serviceStateMachine', () => {
         mockUnverifiedContractor
       );
 
-      expect(violations.length).toBeGreaterThanOrEqual(6);
+      expect(violations.length).toBeGreaterThanOrEqual(5);
       expect(violations).toContain('El contratista debe estar verificado para publicar servicios');
-      expect(violations).toContain('El servicio debe tener al menos una imagen');
+      // Image validation removed - images are optional for publication
+      // expect(violations).toContain('El servicio debe tener al menos una imagen');
       expect(violations).toContain('El título del servicio es requerido');
       expect(violations).toContain('La descripción del servicio es requerida');
       expect(violations).toContain('El precio base debe ser mayor a 0');
@@ -267,7 +269,8 @@ describe('serviceStateMachine', () => {
       }).toThrow(InvalidStateTransitionError);
     });
 
-    it('TC-SERVICE-008-07: debe lanzar PublicationRequirementsNotMetError si no hay imágenes', () => {
+    // Skipped: Images are optional for publication as per business requirement
+    it.skip('TC-SERVICE-008-07: debe lanzar PublicationRequirementsNotMetError si no hay imágenes', () => {
       expect(() => {
         serviceStateMachine.transitionTo(mockServiceDraftNoImages, 'ACTIVE', mockVerifiedContractor);
       }).toThrow(PublicationRequirementsNotMetError);
@@ -325,7 +328,8 @@ describe('serviceStateMachine', () => {
         if (error instanceof PublicationRequirementsNotMetError) {
           expect(error.violations.length).toBeGreaterThan(0);
           expect(error.violations).toContain('El contratista debe estar verificado para publicar servicios');
-          expect(error.violations).toContain('El servicio debe tener al menos una imagen');
+          // Image validation removed - images are optional for publication
+          // expect(error.violations).toContain('El servicio debe tener al menos una imagen');
           expect(error.violations).toContain('El título del servicio es requerido');
         } else {
           fail('Debería lanzar PublicationRequirementsNotMetError');
