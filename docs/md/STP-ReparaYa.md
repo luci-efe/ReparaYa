@@ -2674,7 +2674,70 @@ npm run test:coverage
 
 ---
 
-#### 4.1.6 Búsqueda de servicios (Catalog)
+#### 4.1.6 Dashboard de Cliente (Client Dashboard)
+
+**Referencia de spec:** `/openspec/changes/2025-11-24-create-client-dashboard/design.md`
+
+**Criterios de aceptación generales:**
+- Cobertura de código ≥ 70% en componentes de dashboard
+- Tests de integración de redirección pasando
+- Tests unitarios de componentes pasando
+
+**Casos de prueba:**
+
+| ID | Descripción | Tipo | Prioridad | Estado |
+|----|-------------|------|-----------|--------|
+| TC-CLDASH-001 | Redirección de usuario CLIENT a /clients/dashboard | Integración | Alta | PASS |
+| TC-CLDASH-002 | Redirección de usuario CONTRACTOR a /contractors/dashboard | Integración | Alta | PASS |
+| TC-CLDASH-003 | Manejo de error en verificación de rol | Integración | Media | PASS |
+| TC-CLDASH-004 | Estado de carga durante verificación de perfil | Integración | Media | PASS |
+| TC-CLDASH-005 | Renderizado de Shell de Cliente (Sidebar, Topbar) | Unitaria | Alta | PASS |
+| TC-CLDASH-006 | Renderizado de Widgets (Welcome, QuickAccess, Metrics) | Unitaria | Alta | PASS |
+| TC-CLDASH-007 | Navegación en Sidebar de Cliente (Links activos) | Unitaria | Alta | PASS |
+| TC-CLDASH-008 | Responsive Sidebar (Mobile/Desktop) | Unitaria | Media | PASS |
+
+**Procedimientos de prueba detallados:**
+
+##### TC-CLDASH-001: Redirección de usuario CLIENT
+
+**Objetivo:** Validar que `DashboardContent` redirige correctamente a usuarios con rol CLIENT.
+
+**Procedimiento:**
+1. Mockear `useUserRole` para retornar 'CLIENT'.
+2. Renderizar `<DashboardContent />`.
+3. Verificar llamada a `router.push('/clients/dashboard')`.
+
+**Estado:** PASS (tests/integration/clients/dashboard.test.tsx)
+
+---
+
+##### TC-CLDASH-002: Redirección de usuario CONTRACTOR
+
+**Objetivo:** Validar que `DashboardContent` redirige correctamente a usuarios con rol CONTRACTOR.
+
+**Procedimiento:**
+1. Mockear `useUserRole` para retornar 'CONTRACTOR'.
+2. Renderizar `<DashboardContent />`.
+3. Verificar llamada a `router.push('/contractors/dashboard')`.
+
+**Estado:** PASS (tests/integration/clients/dashboard.test.tsx)
+
+---
+
+##### TC-CLDASH-005: Renderizado de Shell de Cliente
+
+**Objetivo:** Validar estructura base del dashboard de cliente.
+
+**Procedimiento:**
+1. Renderizar `<ClientDashboardShell>`.
+2. Verificar presencia de Sidebar y Topbar.
+3. Verificar que `children` se renderizan correctamente.
+
+**Estado:** PASS (src/components/clients/__tests__/ClientDashboardShell.test.tsx)
+
+---
+
+#### 4.1.7 Búsqueda de servicios (Catalog)
 
 | ID | Descripción | Requisito | Prioridad | Estado |
 |----|-------------|-----------|-----------|--------|
