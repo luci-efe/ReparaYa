@@ -1,12 +1,9 @@
 /**
  * Availability Service (Business Logic)
- *
- * TODO: Implement full CRUD operations with:
- * - Input validation (Zod)
- * - Ownership verification
- * - Authorization (CONTRACTOR role)
+ * Handles CRUD operations with validation, ownership verification, and authorization
  */
 
+import { contractorProfileRepository } from '@/modules/contractors/repositories/contractorProfileRepository';
 import {
   CreateWeeklyRuleDTO,
   UpdateWeeklyRuleDTO,
@@ -17,62 +14,111 @@ import {
   CreateBlockDTO,
   BlockResponseDTO,
 } from '../types';
+import { weeklyRuleRepository } from '../repositories/weeklyRuleRepository';
+import { exceptionRepository } from '../repositories/exceptionRepository';
+import { blockRepository } from '../repositories/blockRepository';
+import { createWeeklyRuleSchema, updateWeeklyRuleSchema } from '../validators/weeklyRule';
+import { createExceptionSchema, updateExceptionSchema } from '../validators/exception';
+import { createBlockSchema } from '../validators/block';
+
+/**
+ * Custom errors
+ */
+export class UnauthorizedError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'UnauthorizedError';
+  }
+}
+
+export class NotFoundError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'NotFoundError';
+  }
+}
+
+export class BookingConflictError extends Error {
+  constructor(message: string, public bookingIds?: string[]) {
+    super(message);
+    this.name = 'BookingConflictError';
+  }
+}
 
 export const availabilityService = {
   // ========== Weekly Rules ==========
 
   /**
-   * Create a new weekly rule
-   *
-   * @param userId - User ID from auth (for ownership verification)
-   * @param contractorProfileId - Contractor profile ID
-   * @param data - Weekly rule data
+   * Create a new weekend rule
    */
   async createWeeklyRule(
-    _userId: string,
-    _contractorProfileId: string,
-    _data: CreateWeeklyRuleDTO
+    clerkUserId: string,
+    contractorProfileId: string,
+    data: CreateWeeklyRuleDTO
   ): Promise<WeeklyRuleResponseDTO> {
-    // TODO: Implement
-    // 1. Validate input with createWeeklyRuleSchema
-    // 2. Verify ownership (contractorProfile.userId === userId)
-    // 3. Verify role is CONTRACTOR
-    // 4. Call weeklyRuleRepository.create
-    throw new Error('Not implemented: availabilityService.createWeeklyRule');
+    // 1. Validate input
+    const validated = createWeeklyRuleSchema.parse(data);
+
+    // 2. Verify ownership using Clerk ID
+    const profile = await contractorProfileRepository.findByClerkId(clerkUserId);
+    if (!profile || profile.id !== contractorProfileId) {
+      throw new UnauthorizedError('No estás autorizado para modificar esta disponibilidad');
+    }
+
+    // 3. Create rule
+    return weeklyRuleRepository.create(contractorProfileId, validated);
   },
 
   /**
    * List all weekly rules for a contractor
    */
-  async listWeeklyRules(_contractorProfileId: string): Promise<WeeklyRuleResponseDTO[]> {
-    // TODO: Implement
-    // Call weeklyRuleRepository.findByContractor
-    throw new Error('Not implemented: availabilityService.listWeeklyRules');
+  async listWeeklyRules(contractorProfileId: string): Promise<WeeklyRuleResponseDTO[]> {
+    return weeklyRuleRepository.findByContractor(contractorProfileId);
   },
 
   /**
    * Update a weekly rule
    */
   async updateWeeklyRule(
-    _userId: string,
-    _ruleId: string,
-    _data: UpdateWeeklyRuleDTO
+    clerkUserId: string,
+    ruleId: string,
+    data: UpdateWeeklyRuleDTO
   ): Promise<WeeklyRuleResponseDTO> {
-    // TODO: Implement
     // 1. Validate input
-    // 2. Verify ownership
-    // 3. Call weeklyRuleRepository.update
-    throw new Error('Not implemented: availabilityService.updateWeeklyRule');
+    const validated = updateWeeklyRuleSchema.parse(data);
+
+    // 2. Get rule and verify ownership
+    const rule = await weeklyRuleRepository.findById(ruleId);
+    if (!rule) {
+      throw new NotFoundError('Regla no encontrada');
+    }
+
+    const profile = await contractorProfileRepository.findByClerkId(clerkUserId);
+    if (!profile || profile.id !== rule.contractorProfileId) {
+      throw new UnauthorizedError('No estás autorizado para modificar esta regla');
+    }
+
+    // 3. Update rule
+    return weeklyRuleRepository.update(ruleId, validated);
   },
 
   /**
    * Delete a weekly rule
    */
-  async deleteWeeklyRule(_userId: string, _ruleId: string): Promise<void> {
-    // TODO: Implement
-    // 1. Verify ownership
-    // 2. Call weeklyRuleRepository.delete
-    throw new Error('Not implemented: availabilityService.deleteWeeklyRule');
+  async deleteWeeklyRule(clerkUserId: string, ruleId: string): Promise<void> {
+    // 1. Get rule and verify ownership
+    const rule = await weeklyRuleRepository.findById(ruleId);
+    if (!rule) {
+      throw new NotFoundError('Regla no encontrada');
+    }
+
+    const profile = await contractorProfileRepository.findByClerkId(clerkUserId);
+    if (!profile || profile.id !== rule.contractorProfileId) {
+      throw new UnauthorizedError('No estás autorizado para eliminar esta regla');
+    }
+
+    // 2. Delete rule
+    await weeklyRuleRepository.delete(ruleId);
   },
 
   // ========== Exceptions ==========
@@ -81,92 +127,179 @@ export const availabilityService = {
    * Create a new exception
    */
   async createException(
-    _userId: string,
-    _contractorProfileId: string,
-    _data: CreateExceptionDTO
+    clerkUserId: string,
+    contractorProfileId: string,
+    data: CreateExceptionDTO
   ): Promise<ExceptionResponseDTO> {
-    // TODO: Implement
-    throw new Error('Not implemented: availabilityService.createException');
+    // 1. Validate input
+    const validated = createExceptionSchema.parse(data);
+
+    // 2. Verify ownership using Clerk ID
+    const profile = await contractorProfileRepository.findByClerkId(clerkUserId);
+
+    if (!profile || profile.id !== contractorProfileId) {
+      throw new UnauthorizedError('No estás autorizado para modificar esta disponibilidad');
+    }
+
+    // 3. Create exception
+    return exceptionRepository.create(contractorProfileId, validated);
   },
 
   /**
    * List exceptions by date range
    */
   async listExceptions(
-    _contractorProfileId: string,
-    _startDate?: string,
-    _endDate?: string
+    contractorProfileId: string,
+    startDate?: string,
+    endDate?: string
   ): Promise<ExceptionResponseDTO[]> {
-    // TODO: Implement
-    throw new Error('Not implemented: availabilityService.listExceptions');
+    if (startDate && endDate) {
+      return exceptionRepository.findByDateRange(contractorProfileId, startDate, endDate);
+    }
+
+    // If no date range, get all (could be expensive - consider adding default range)
+    const oneYearAgo = new Date();
+    oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+    const oneYearAhead = new Date();
+    oneYearAhead.setFullYear(oneYearAhead.getFullYear() + 1);
+
+    return exceptionRepository.findByDateRange(
+      contractorProfileId,
+      oneYearAgo.toISOString().split('T')[0],
+      oneYearAhead.toISOString().split('T')[0]
+    );
   },
 
   /**
    * Update an exception
    */
   async updateException(
-    _userId: string,
-    _exceptionId: string,
-    _data: UpdateExceptionDTO
+    clerkUserId: string,
+    exceptionId: string,
+    data: UpdateExceptionDTO
   ): Promise<ExceptionResponseDTO> {
-    // TODO: Implement
-    throw new Error('Not implemented: availabilityService.updateException');
+    // 1. Validate input
+    const validated = updateExceptionSchema.parse(data);
+
+    // 2. Get exception and verify ownership
+    const exception = await exceptionRepository.findById(exceptionId);
+    if (!exception) {
+      throw new NotFoundError('Excepción no encontrada');
+    }
+
+    const profile = await contractorProfileRepository.findByClerkId(clerkUserId);
+    if (!profile || profile.id !== exception.contractorProfileId) {
+      throw new UnauthorizedError('No estás autorizado para modificar esta excepción');
+    }
+
+    // 3. Update exception
+    return exceptionRepository.update(exceptionId, validated);
   },
 
   /**
    * Delete an exception
    */
-  async deleteException(_userId: string, _exceptionId: string): Promise<void> {
-    // TODO: Implement
-    throw new Error('Not implemented: availabilityService.deleteException');
+  async deleteException(clerkUserId: string, exceptionId: string): Promise<void> {
+    // 1. Get exception and verify ownership
+    const exception = await exceptionRepository.findById(exceptionId);
+    if (!exception) {
+      throw new NotFoundError('Excepción no encontrada');
+    }
+
+    const profile = await contractorProfileRepository.findByClerkId(clerkUserId);
+    if (!profile || profile.id !== exception.contractorProfileId) {
+      throw new UnauthorizedError('No estás autorizado para eliminar esta excepción');
+    }
+
+    // 2. Delete exception
+    await exceptionRepository.delete(exceptionId);
   },
 
   // ========== Blocks ==========
 
   /**
    * Create a new block
-   *
    * NOTE: Must validate that there are no confirmed bookings in the time range
    */
   async createBlock(
-    _userId: string,
-    _contractorProfileId: string,
-    _data: CreateBlockDTO
+    clerkUserId: string,
+    contractorProfileId: string,
+    data: CreateBlockDTO
   ): Promise<BlockResponseDTO> {
-    // TODO: Implement
     // 1. Validate input
-    // 2. Verify ownership
-    // 3. Check for confirmed bookings in range (call bookingService)
-    // 4. If bookings found, throw BookingConflictError
-    // 5. Call blockRepository.create
-    throw new Error('Not implemented: availabilityService.createBlock');
+    const validated = createBlockSchema.parse(data);
+
+    // 2. Verify ownership using Clerk ID
+    const profile = await contractorProfileRepository.findByClerkId(clerkUserId);
+    if (!profile || profile.id !== contractorProfileId) {
+      throw new UnauthorizedError('No estás autorizado para crear bloqueos');
+    }
+
+    // 3. Check for confirmed bookings in range
+    // TODO: Integrate with booking module when available
+    // const confirmedBookings = await bookingService.getConfirmedBookingsByContractor(
+    //   contractorProfileId,
+    //   new Date(validated.startDateTime),
+    //   new Date(validated.endDateTime)
+    // );
+    // if (confirmedBookings.length > 0) {
+    //   throw new BookingConflictError(
+    //     `No se puede crear bloqueo. Hay ${confirmedBookings.length} reserva(s) confirmada(s) en ese rango.`,
+    //     confirmedBookings.map(b => b.id)
+    //   );
+    // }
+
+    // 4. Create block
+    return blockRepository.create(contractorProfileId, validated);
   },
 
   /**
    * List blocks by date range
    */
   async listBlocks(
-    _contractorProfileId: string,
-    _startDate?: string,
-    _endDate?: string
+    contractorProfileId: string,
+    startDate?: string,
+    endDate?: string
   ): Promise<BlockResponseDTO[]> {
-    // TODO: Implement
-    throw new Error('Not implemented: availabilityService.listBlocks');
+    if (startDate && endDate) {
+      return blockRepository.findByDateRange(
+        contractorProfileId,
+        new Date(startDate),
+        new Date(endDate)
+      );
+    }
+
+    // If no date range, get blocks from now to 1 year ahead
+    const now = new Date();
+    const oneYearAhead = new Date();
+    oneYearAhead.setFullYear(oneYearAhead.getFullYear() + 1);
+
+    return blockRepository.findByDateRange(contractorProfileId, now, oneYearAhead);
   },
 
   /**
    * Delete a block
    */
-  async deleteBlock(_userId: string, _blockId: string): Promise<void> {
-    // TODO: Implement
-    throw new Error('Not implemented: availabilityService.deleteBlock');
+  async deleteBlock(clerkUserId: string, blockId: string): Promise<void> {
+    // 1. Get block and verify ownership
+    const block = await blockRepository.findById(blockId);
+    if (!block) {
+      throw new NotFoundError('Bloqueo no encontrado');
+    }
+
+    const profile = await contractorProfileRepository.findByClerkId(clerkUserId);
+    if (!profile || profile.id !== block.contractorProfileId) {
+      throw new UnauthorizedError('No estás autorizado para eliminar este bloqueo');
+    }
+
+    // 2. Delete block
+    await blockRepository.delete(blockId);
   },
 
   // ========== Helpers ==========
 
   /**
    * Check if a contractor is available at a specific date/time
-   *
    * Used by booking module to validate reservations
    */
   async isAvailableOnDateTime(
@@ -175,8 +308,8 @@ export const availabilityService = {
     _startTime: string,
     _endTime: string
   ): Promise<boolean> {
-    // TODO: Implement
-    // Generate slots for the date and check if requested time is available
+    // TODO: Implement using slot generator
+    // This would generate slots for the specific date and check if the requested time fits
     throw new Error('Not implemented: availabilityService.isAvailableOnDateTime');
   },
 };

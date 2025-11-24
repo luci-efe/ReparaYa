@@ -1,55 +1,107 @@
 /**
  * Exception Repository (Prisma)
- *
- * TODO: Implement full CRUD operations
- * NOTE: Requires Prisma migration to be applied first
+ *  CRUD operations for contractor availability exceptions
  */
 
-import { CreateExceptionDTO, UpdateExceptionDTO, ExceptionResponseDTO } from '../types';
+import { prisma } from '@/lib/db';
+import { format } from 'date-fns';
+import type { Prisma } from '@prisma/client';
+import { CreateExceptionDTO, UpdateExceptionDTO, ExceptionResponseDTO, ExceptionType, TimeInterval } from '../types';
+
+/**
+ * Maps Prisma exception record to ExceptionResponseDTO
+ */
+function mapToExceptionResponse(record: {
+  id: string;
+  contractorProfileId: string;
+  date: Date;
+  intervals: Prisma.JsonValue;
+  type: string;
+  reason: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+}): ExceptionResponseDTO {
+  return {
+    id: record.id,
+    contractorProfileId: record.contractorProfileId,
+    date: format(record.date, 'yyyy-MM-dd'),
+    intervals: record.intervals as unknown as TimeInterval[],
+    type: record.type as ExceptionType,
+    reason: record.reason ?? undefined,
+    createdAt: record.createdAt,
+    updatedAt: record.updatedAt,
+  };
+}
 
 export const exceptionRepository = {
   /**
    * Create a new exception
    */
-  async create(_contractorProfileId: string, _data: CreateExceptionDTO): Promise<ExceptionResponseDTO> {
-    // TODO: Implement using Prisma
-    throw new Error('Not implemented: exceptionRepository.create');
+  async create(contractorProfileId: string, data: CreateExceptionDTO): Promise<ExceptionResponseDTO> {
+    const record = await prisma.contractorAvailabilityException.create({
+      data: {
+        contractorProfileId,
+        date: new Date(data.date),
+        intervals: data.intervals as unknown as Prisma.InputJsonValue,
+        type: data.type,
+        reason: data.reason,
+      },
+    });
+    return mapToExceptionResponse(record);
   },
 
   /**
    * Find exception by ID
    */
-  async findById(_id: string): Promise<ExceptionResponseDTO | null> {
-    // TODO: Implement using Prisma
-    throw new Error('Not implemented: exceptionRepository.findById');
+  async findById(id: string): Promise<ExceptionResponseDTO | null> {
+    const record = await prisma.contractorAvailabilityException.findUnique({
+      where: { id },
+    });
+    return record ? mapToExceptionResponse(record) : null;
   },
 
   /**
    * Find exceptions by contractor and date range
    */
   async findByDateRange(
-    _contractorProfileId: string,
-    _startDate: string,
-    _endDate: string
+    contractorProfileId: string,
+    startDate: string,
+    endDate: string
   ): Promise<ExceptionResponseDTO[]> {
-    // TODO: Implement using Prisma
-    // Filter WHERE date >= startDate AND date <= endDate
-    throw new Error('Not implemented: exceptionRepository.findByDateRange');
+    const records = await prisma.contractorAvailabilityException.findMany({
+      where: {
+        contractorProfileId,
+        date: {
+          gte: new Date(startDate),
+          lte: new Date(endDate),
+        },
+      },
+      orderBy: { date: 'asc' },
+    });
+    return records.map(mapToExceptionResponse);
   },
 
   /**
    * Update an exception
    */
-  async update(_id: string, _data: UpdateExceptionDTO): Promise<ExceptionResponseDTO> {
-    // TODO: Implement using Prisma
-    throw new Error('Not implemented: exceptionRepository.update');
+  async update(id: string, data: UpdateExceptionDTO): Promise<ExceptionResponseDTO> {
+    const record = await prisma.contractorAvailabilityException.update({
+      where: { id },
+      data: {
+        ...(data.intervals !== undefined && { intervals: data.intervals as unknown as Prisma.InputJsonValue }),
+        ...(data.type !== undefined && { type: data.type }),
+        ...(data.reason !== undefined && { reason: data.reason }),
+      },
+    });
+    return mapToExceptionResponse(record);
   },
 
   /**
    * Delete an exception
    */
-  async delete(_id: string): Promise<void> {
-    // TODO: Implement using Prisma
-    throw new Error('Not implemented: exceptionRepository.delete');
+  async delete(id: string): Promise<void> {
+    await prisma.contractorAvailabilityException.delete({
+      where: { id },
+    });
   },
 };
