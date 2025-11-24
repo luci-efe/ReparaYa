@@ -67,6 +67,176 @@ Este proposal implementa un **sistema completo de gestión de disponibilidad** c
 
 ---
 
+## Scaffolding Approach
+
+### Philosophy: Contracts First, Implementation Later
+
+This proposal follows a **scaffolding-first** approach where we define complete API contracts, types, and function signatures **without implementing business logic**. This enables:
+
+1. **Parallel development**: Frontend can mock responses; backend can implement in separate sprint
+2. **Clear contracts**: Team sees full API surface upfront
+3. **Reduced scope creep**: Scaffolding phase = design; implementation = execution
+
+### What Will Be Scaffolded
+
+#### 1. TypeScript Types (Complete)
+
+```typescript
+// apps/web/src/modules/contractors/availability/types/index.ts
+export interface CreateWeeklyRuleDTO {
+  dayOfWeek: number;
+  intervals: TimeInterval[];
+}
+
+export interface TimeInterval {
+  startTime: string; // "HH:MM"
+  endTime: string;
+}
+
+export interface AvailableSlotDTO {
+  date: string;
+  startTime: string;
+  endTime: string;
+  durationMinutes: number;
+  timezone: string;
+}
+
+// ... all DTOs fully defined
+```
+
+#### 2. API Route Handlers (Stubs with TODOs)
+
+```typescript
+// apps/web/app/api/contractors/me/availability/weekly/route.ts
+export async function POST(req: Request) {
+  // TODO: Parse and validate request body with Zod (createWeeklyRuleSchema)
+  // TODO: Get current user from auth (requireRole('CONTRACTOR'))
+  // TODO: Verify contractor profile ownership
+  // TODO: Call availabilityService.createWeeklyRule(...)
+  // TODO: Return 201 with created rule
+  
+  return NextResponse.json(
+    { error: "Not implemented" },
+    { status: 501 }
+  );
+}
+
+export async function GET(req: Request) {
+  // TODO: Get current user
+  // TODO: Fetch contractor profile
+  // TODO: Call weeklyRuleRepository.findByContractor(...)
+  // TODO: Return 200 with rules array
+  
+  return NextResponse.json(
+    { error: "Not implemented" },
+    { status: 501 }
+  );
+}
+```
+
+#### 3. Service Layer (Function Signatures Only)
+
+```typescript
+// apps/web/src/modules/contractors/availability/services/availabilityService.ts
+export const availabilityService = {
+  /**
+   * Create a weekly recurrence rule for a contractor.
+   * 
+   * @throws UnauthorizedError if user doesn't own contractor profile
+   * @throws ValidationError if intervals overlap or are invalid
+   */
+  async createWeeklyRule(
+    userId: string,
+    contractorProfileId: string,
+    data: CreateWeeklyRuleDTO
+  ): Promise<WeeklyRuleResponseDTO> {
+    // TODO: Validate data with createWeeklyRuleSchema
+    // TODO: Verify ownership (contractorProfile.userId === userId)
+    // TODO: Call weeklyRuleRepository.create
+    throw new Error("Not implemented");
+  },
+
+  // ... more methods with TODOs
+};
+```
+
+#### 4. Utility Functions (Stubs)
+
+```typescript
+// apps/web/src/modules/contractors/availability/utils/timezone.ts
+
+/**
+ * Convert local date/time in contractor's timezone to UTC.
+ * Uses date-fns-tz for DST handling.
+ */
+export function convertToUTC(
+  dateStr: string,
+  timeStr: string,
+  timezone: string
+): Date {
+  // TODO: Implement using zonedTimeToUtc from date-fns-tz
+  throw new Error("Not implemented");
+}
+
+/**
+ * Convert UTC datetime to contractor's local timezone.
+ */
+export function convertFromUTC(
+  utcDate: Date,
+  timezone: string
+): { date: string; time: string } {
+  // TODO: Implement using utcToZonedTime from date-fns-tz
+  throw new Error("Not implemented");
+}
+```
+
+#### 5. Repository Layer (Prisma Signatures)
+
+```typescript
+// apps/web/src/modules/contractors/availability/repositories/weeklyRuleRepository.ts
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
+
+export const weeklyRuleRepository = {
+  async create(contractorProfileId: string, data: CreateWeeklyRuleDTO): Promise<WeeklyRuleResponseDTO> {
+    // TODO: Implement Prisma create
+    throw new Error("Not implemented");
+  },
+
+  async findByContractor(contractorProfileId: string): Promise<WeeklyRuleResponseDTO[]> {
+    // TODO: Implement Prisma findMany with orderBy dayOfWeek
+    throw new Error("Not implemented");
+  },
+
+  // ... more CRUD methods
+};
+```
+
+### What Will NOT Be Scaffolded
+
+The following are left for implementation phase:
+
+- ❌ Business logic (validation, authorization checks)
+- ❌ Database interactions (actual Prisma queries)
+- ❌ Timezone conversion logic
+- ❌ Slot generation algorithm
+- ❌ UI components (only placeholder pages with "Coming soon")
+- ❌ Tests (test files created but empty with TODOs)
+
+### Scaffolding Acceptance Criteria
+
+- ✅ All TypeScript types compile without errors
+- ✅ All API routes return 501 Not Implemented
+- ✅ All service/repository methods throw "Not implemented"
+- ✅ `npm run build` succeeds
+- ✅ `npm run type-check` passes
+- ✅ Zero linting errors (`npm run lint`)
+- ✅ design.md documents all architectural decisions
+- ✅ Spec deltas define all requirements with scenarios
+
+---
+
 ## Testing Plan
 
 ### Casos de Prueba a Agregar al STP
@@ -461,7 +631,288 @@ export function convertFromUTC(date: Date, timezone: string): Date {
 
 ## Handoff Notes
 
-### Integración con Módulo `services`
+### Integration with `services` Module
+
+**Purpose**: Ensure generated slots are compatible with service durations.
+
+**Current State**:  
+- `Service` table has `durationMinutes` field (e.g., 60, 90, 120, 180)
+- Field is populated when contractor creates/edits service
+
+**Integration Points**:
+
+1. **Slot Filtering by Service Duration**
+
+```typescript
+// In slotGeneratorService.generateSlots(...)
+
+if (serviceId) {
+  // Fetch service from services module
+  const service = await serviceRepository.findById(serviceId);
+  
+  if (!service) {
+    throw new NotFoundError(`Service ${serviceId} not found`);
+  }
+  
+  // Filter slots
+  intervals = intervals.filter(interval => {
+    const slotDuration = calculateDurationMinutes(interval);
+    return slotDuration >= service.durationMinutes;
+  });
+}
+```
+
+2. **Validation Warning in Weekly Rules**
+
+When contractor creates weekly rule with very short intervals:
+
+```typescript
+// In availabilityService.createWeeklyRule(...)
+
+const minInterval = Math.min(...data.intervals.map(calculateDurationMinutes));
+
+if (minInterval < 30) {
+  // Log warning (not error - allow creation but inform)
+  logger.warn({
+    contractorProfileId,
+    minInterval,
+    message: "Weekly rule has interval < 30 min, may not fit most services"
+  });
+  
+  // Optionally return warning in response
+  response.warnings = ["Algunos intervalos son muy cortos (<30 min)"];
+}
+```
+
+**Contract**:
+
+```typescript
+// Existing in services module (no changes needed)
+interface Service {
+  id: string;
+  contractorId: string;
+  title: string;
+  description: string;
+  durationMinutes: number; // REQUIRED field
+  basePrice: number;
+  // ...
+}
+
+// New method to expose (already exists)
+export const serviceRepository = {
+  async findById(serviceId: string): Promise<Service | null> { ... }
+};
+```
+
+**Dependencies**:  
+- `services` module must be implemented first (already done ✅)
+- No database schema changes needed
+
+---
+
+### Integration with `booking` / Reservations Module
+
+**Purpose**: (1) Validate slot availability before booking, (2) Prevent blocks conflicting with confirmed bookings.
+
+**Current State**:  
+- `Booking` table exists with statuses: `PENDING_PAYMENT`, `CONFIRMED`, `IN_PROGRESS`, `COMPLETED`, `PAID`, `CANCELLED`, `DISPUTED`
+- Bookings have `scheduledDate` (timestamp) and link to `availabilityId`
+
+**Integration Points**:
+
+#### 1. Pre-Booking Validation Hook
+
+```typescript
+// In booking module (modify bookingService.createBooking)
+
+import { availabilityService } from '@/modules/contractors/availability/services';
+
+export async function createBooking(data: CreateBookingDTO) {
+  // BEFORE creating booking, validate slot is still available
+  const isAvailable = await availabilityService.isSlotAvailable(
+    data.contractorId,
+    data.scheduledDate, // "2025-12-01"
+    data.startTime,     // "09:00"
+    data.endTime        // "11:00"
+  );
+  
+  if (!isAvailable) {
+    throw new ConflictError(
+      "El horario seleccionado ya no está disponible. Por favor elige otro slot."
+    );
+  }
+  
+  // Proceed with booking creation
+  const booking = await bookingRepository.create(data);
+  return booking;
+}
+```
+
+**New method to implement in availabilityService**:
+
+```typescript
+export const availabilityService = {
+  /**
+   * Check if a specific slot is available for booking.
+   * Re-runs slot generation algorithm for single day.
+   * 
+   * @returns true if slot is available, false if blocked/booked
+   */
+  async isSlotAvailable(
+    contractorId: string,
+    date: string,       // "YYYY-MM-DD"
+    startTime: string,  // "HH:MM"
+    endTime: string     // "HH:MM"
+  ): Promise<boolean> {
+    // TODO: Generate slots for `date` to `date` (single day)
+    // TODO: Check if requested [startTime, endTime] fully fits within any slot
+    // TODO: Return true if found, false otherwise
+    throw new Error("Not implemented");
+  },
+};
+```
+
+#### 2. Block Creation Conflict Check
+
+```typescript
+// In availabilityService.createBlock(...)
+
+export async function createBlock(
+  contractorProfileId: string,
+  data: CreateBlockDTO
+): Promise<BlockResponseDTO> {
+  // Check for confirmed bookings in block's time range
+  const confirmedBookings = await bookingService.getConfirmedBookingsByContractor(
+    contractorProfileId,
+    data.startDateTime,
+    data.endDateTime
+  );
+  
+  if (confirmedBookings.length > 0) {
+    throw new ConflictError(
+      `No se puede crear bloqueo porque hay ${confirmedBookings.length} reserva(s) confirmada(s) en ese rango.`,
+      { bookingIds: confirmedBookings.map(b => b.id) }
+    );
+  }
+  
+  // Proceed with block creation
+  return blockRepository.create(contractorProfileId, data);
+}
+```
+
+**New method needed in booking module**:
+
+```typescript
+// In bookingService
+export const bookingService = {
+  /**
+   * Get all CONFIRMED bookings for a contractor in datetime range.
+   * Used by availability module to detect conflicts.
+   */
+  async getConfirmedBookingsByContractor(
+    contractorProfileId: string,
+    startDateTime: Date,  // UTC
+    endDateTime: Date     // UTC
+  ): Promise<Booking[]> {
+    return prisma.booking.findMany({
+      where: {
+        contractorId: contractorProfileId, // assumes Booking has contractorId
+        status: 'CONFIRMED',
+        scheduledDate: {
+          gte: startDateTime,
+          lte: endDateTime,
+        },
+      },
+    });
+  },
+};
+```
+
+**Dependencies**:  
+- Booking module must expose `getConfirmedBookingsByContractor` method
+- Availability module depends on booking module (repository-level import)
+
+**Database Schema**:  
+- No changes needed (existing `Booking` table has all required fields)
+
+---
+
+### Integration with `messaging` / Lifecycle Events (Future v2)
+
+**Purpose**: Notify clients when contractor's availability changes affect their future bookings.
+
+**Status**: **Out of scope for v1**. Design architecture to allow future integration.
+
+**Future Flow**:
+
+```typescript
+// In availabilityService (future hook)
+
+async function updateWeeklyRule(
+  ruleId: string,
+  data: UpdateWeeklyRuleDTO
+): Promise<WeeklyRuleResponseDTO> {
+  const updatedRule = await weeklyRuleRepository.update(ruleId, data);
+  
+  // V2: Emit event for messaging module
+  await eventBus.emit('availability.updated', {
+    contractorProfileId: updatedRule.contractorProfileId,
+    changeType: 'weekly_rule',
+    affectedDayOfWeek: updatedRule.dayOfWeek,
+  });
+  
+  return updatedRule;
+}
+
+// In messaging module (future listener)
+eventBus.on('availability.updated', async (event) => {
+  // Find bookings affected by this change
+  const affectedBookings = await findBookingsAffectedByAvailabilityChange(
+    event.contractorProfileId,
+    event.affectedDayOfWeek
+  );
+  
+  // Send messages to clients
+  for (const booking of affectedBookings) {
+    await messagingService.sendSystemMessage(
+      booking.conversationId,
+      `El contratista ha actualizado su disponibilidad. Tu reserva sigue confirmada.`
+    );
+  }
+});
+```
+
+**Preparation for v2**:
+- Design availability service methods to be **atomic** (update + event emit in transaction)
+- Document event schema in `design.md`
+- No implementation in v1
+
+---
+
+### Summary of Module Dependencies
+
+```mermaid
+graph LR
+  availability[Availability] -->|reads| services[Services]
+  availability -->|reads| booking[Booking]
+  booking -->|validates with| availability
+  messaging[Messaging v2] -.future.->|listens to| availability
+```
+
+**Key Contracts**:
+
+| From Module | To Module | Method | Purpose |
+|-------------|-----------|--------|--------|
+| Availability | Services | `serviceRepository.findById(serviceId)` | Filter slots by service duration |
+| Availability | Booking | `bookingService.getConfirmedBookingsByContractor(...)` | Prevent block conflicts |
+| Booking | Availability | `availabilityService.isSlotAvailable(...)` | Validate slot before booking |
+| Messaging v2 | Availability | Event listener (future) | Notify clients of changes |
+
+**Migration Path**:
+1. **Sprint 1 (Scaffolding)**: Define all contracts, create stubs
+2. **Sprint 2 (Implementation)**: Implement availability module fully
+3. **Sprint 3 (Integration)**: Add booking validation hooks
+4. **Sprint 4 (v2)**: Messaging integration
 
 **Flujo:**
 1. Al crear servicio → `Service.durationMinutes` debe estar configurado
@@ -555,6 +1006,17 @@ async getConfirmedBookingsByContractor(
 ---
 
 ### Prerequisitos
+
+**✅ Completado (2025-11-23):**
+
+1. **Database schema created in Supabase**:
+   - ✅ `contractor_weekly_rules` table
+   - ✅ `contractor_availability_exceptions` table
+   - ✅ `contractor_availability_blocks` table
+   - ✅ All indexes and constraints applied
+   - See migration: `/migrations/2025-11-23-add-contractor-availability-tables.sql`
+
+**Pendiente para implementación**:
 
 1. **ContractorServiceLocation.timezone debe estar configurado:**
    - Si no está → error 400 al intentar crear disponibilidad

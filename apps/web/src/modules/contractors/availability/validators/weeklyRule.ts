@@ -16,12 +16,12 @@ function parseTimeToMinutes(time: string): number {
   }
   const hours = Number(parts[0]);
   const minutes = Number(parts[1]);
-  
+
   // Validate that conversion succeeded and values are in valid ranges
   if (isNaN(hours) || isNaN(minutes) || hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
     return 0; // Return 0 for invalid values (should not happen due to regex validation)
   }
-  
+
   return hours * 60 + minutes;
 }
 
@@ -36,11 +36,36 @@ const timeIntervalSchema = z.object({
 export const createWeeklyRuleSchema = z.object({
   dayOfWeek: z.number().int().min(0).max(6, 'dayOfWeek debe estar entre 0-6'),
   intervals: z.array(timeIntervalSchema).min(1, 'Debe haber al menos un intervalo'),
-});
-// TODO: Add .refine() to detect overlapping intervals
+}).refine(
+  (data) => {
+    // Validar que no haya traslapes entre intervalos
+    const sorted = [...data.intervals].sort((a, b) => a.startTime.localeCompare(b.startTime));
+    for (let i = 0; i < sorted.length - 1; i++) {
+      if (parseTimeToMinutes(sorted[i].endTime) > parseTimeToMinutes(sorted[i + 1].startTime)) {
+        return false;
+      }
+    }
+    return true;
+  },
+  { message: 'Los intervalos no deben traslaparse' }
+);
 
 export const updateWeeklyRuleSchema = z.object({
   intervals: z.array(timeIntervalSchema).optional(),
   enabled: z.boolean().optional(),
-});
-// TODO: Add .refine() to detect overlapping intervals if intervals provided
+}).refine(
+  (data) => {
+    // Validar traslapes solo si intervals está presente
+    if (data.intervals) {
+      const sorted = [...data.intervals].sort((a, b) => a.startTime.localeCompare(b.startTime));
+      for (let i = 0; i < sorted.length - 1; i++) {
+        if (parseTimeToMinutes(sorted[i].endTime) > parseTimeToMinutes(sorted[i + 1].startTime)) {
+          return false;
+        }
+      }
+    }
+    return true;
+  },
+  { message: 'Los intervalos no deben traslaparse' }
+);
+

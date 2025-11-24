@@ -19,7 +19,17 @@ export const createExceptionSchema = z.object({
   intervals: z.array(timeIntervalSchema),
   type: z.enum(['AVAILABLE', 'BLOCKED']),
   reason: z.string().optional(),
-});
+}).refine(
+  (data) => {
+    // BLOCKED type can have empty intervals (full day blocked)
+    // AVAILABLE type must have at least one interval
+    if (data.type === 'AVAILABLE' && data.intervals.length === 0) {
+      return false;
+    }
+    return true;
+  },
+  { message: 'Excepciones de tipo AVAILABLE deben tener al menos un intervalo' }
+);
 // TODO: Add validation for future dates, overlap detection
 
 export const updateExceptionSchema = z.object({

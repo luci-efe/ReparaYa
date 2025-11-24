@@ -21,428 +21,269 @@ This document is the **single source of truth** for the ReparaYa database schema
 
 ---
 
-## Tables (Alphabetical)
-
-### Address
-User addresses for service delivery.
-
-**Columns**:
-- `id` (text, PK)
-- `userId` (text, FK → User.id, NOT NULL)
-- `addressLine1` (text, NOT NULL)
-- `addressLine2` (text, nullable)
-- `city` (text, NOT NULL)
-- `state` (text, NOT NULL)
-- `postalCode` (text, NOT NULL)
-- `country` (text, NOT NULL, DEFAULT 'MX')
-- `lat` (numeric, nullable) - Latitude
-- `lng` (numeric, nullable) - Longitude
-- `isDefault` (boolean, NOT NULL, DEFAULT false)
-- `createdAt` (timestamp, NOT NULL, DEFAULT CURRENT_TIMESTAMP)
-- `updatedAt` (timestamp, NOT NULL)
-
-**Purpose**: Store multiple addresses per user for service locations.
-
----
-
-### AdminAuditLog
-Audit trail for administrative actions.
-
-**Columns**:
-- `id` (text, PK)
-- `adminId` (text, FK → User.id, NOT NULL)
-- `action` (text, NOT NULL) - Action performed
-- `targetType` (text, NOT NULL) - Entity type affected
-- `targetId` (text, NOT NULL) - Entity ID affected
-- `metadata` (jsonb, nullable) - Additional context
-- `createdAt` (timestamp, NOT NULL, DEFAULT CURRENT_TIMESTAMP)
-
-**Purpose**: Track all admin actions for compliance and debugging.
-
----
-
-### Availability
-Time slots for service booking availability.
-
-**Columns**:
-- `id` (text, PK)
-- `serviceId` (text, FK → Service.id, NOT NULL)
-- `date` (date, NOT NULL)
-- `startTime` (timestamp, NOT NULL)
-- `endTime` (timestamp, NOT NULL)
-- `status` (AvailabilityStatus, NOT NULL, DEFAULT 'AVAILABLE')
-- `bookingId` (text, FK → Booking.id, nullable)
-- `createdAt` (timestamp, NOT NULL, DEFAULT CURRENT_TIMESTAMP)
-- `updatedAt` (timestamp, NOT NULL)
-
-**Enum: AvailabilityStatus**
-- `AVAILABLE` - Slot open for booking
-- `BOOKED` - Slot has been booked
-- `BLOCKED` - Contractor blocked this slot
-
-**Purpose**: Manage contractor availability windows for bookings.
-
----
-
-### Booking
-Service reservations/bookings.
-
-**Columns**:
-- `id` (text, PK)
-- `serviceId` (text, FK → Service.id, NOT NULL)
-- `clientId` (text, FK → User.id, NOT NULL)
-- `contractorId` (text, FK → User.id, NOT NULL)
-- `availabilityId` (text, NOT NULL) - References Availability slot
-- `status` (BookingStatus, NOT NULL, DEFAULT 'PENDING_PAYMENT')
-- `scheduledDate` (timestamp, NOT NULL)
-- `address` (text, NOT NULL) - Service address
-- `notes` (text, nullable) - Client notes
-- `basePrice` (numeric, NOT NULL)
-- `finalPrice` (numeric, NOT NULL)
-- `anticipoAmount` (numeric, NOT NULL) - Advance payment
-- `liquidacionAmount` (numeric, NOT NULL) - Final payment
-- `comisionAmount` (numeric, NOT NULL) - Platform commission
-- `contractorPayoutAmount` (numeric, NOT NULL) - Amount paid to contractor
-- `createdAt` (timestamp, NOT NULL, DEFAULT CURRENT_TIMESTAMP)
-- `updatedAt` (timestamp, NOT NULL)
-
-**Enum: BookingStatus**
-- `PENDING_PAYMENT` - Awaiting anticipo
-- `CONFIRMED` - Anticipo paid
-- `IN_PROGRESS` - Service in progress
-- `COMPLETED` - Service completed
-- `PAID` - Fully paid
-- `CANCELLED` - Cancelled
-- `DISPUTED` - Under dispute
-
-**Purpose**: Core booking entity with payment breakdown.
-
----
-
-### BookingStateHistory
-Audit log for booking status transitions.
-
-**Columns**:
-- `id` (text, PK)
-- `bookingId` (text, FK → Booking.id, NOT NULL)
-- `fromState` (BookingStatus, NOT NULL)
-- `toState` (BookingStatus, NOT NULL)
-- `changedBy` (text, FK → User.id, NOT NULL)
-- `notes` (text, nullable)
-- `createdAt` (timestamp, NOT NULL, DEFAULT CURRENT_TIMESTAMP)
-
-**Purpose**: Track all booking status changes for auditing.
-
----
-
-### ContractorProfile
-Professional contractor profiles.
-
-**Columns**:
-- `id` (text, PK)
-- `userId` (text, FK → User.id, NOT NULL, UNIQUE)
-- `businessName` (text, NOT NULL)
-- `description` (text, NOT NULL) - Business description
-- `specialties` (text[], nullable) - Service specialties array
-- `verified` (boolean, NOT NULL, DEFAULT false) - KYC verification status
-- `verificationDocuments` (jsonb, nullable) - Document metadata
-- `stripeConnectAccountId` (text, nullable) - Stripe Connect ID
-- `createdAt` (timestamp, NOT NULL, DEFAULT CURRENT_TIMESTAMP)
-- `updatedAt` (timestamp, NOT NULL)
-
-**Purpose**: One-to-one extension of User for contractors.
-
----
-
-### ContractorServiceLocation
-Contractor base location and coverage area.
-
-**Columns**:
-- `id` (text, PK)
-- `contractorProfileId` (text, FK → ContractorProfile.id, NOT NULL)
-- `street` (varchar, NOT NULL)
-- `exteriorNumber` (varchar, NOT NULL)
-- `interiorNumber` (varchar, nullable)
-- `neighborhood` (varchar, nullable)
-- `city` (varchar, NOT NULL)
-- `state` (varchar, NOT NULL)
-- `postalCode` (varchar, NOT NULL)
-- `country` (varchar, NOT NULL)
-- `baseLatitude` (numeric, nullable) - Geocoded coordinates
-- `baseLongitude` (numeric, nullable)
-- `normalizedAddress` (text, nullable) - AWS Location Service normalized
-- `timezone` (varchar, nullable) - Timezone (from geo-tz)
-- `geocodingStatus` (GeocodingStatus, NOT NULL, DEFAULT 'PENDING')
-- `zoneType` (ZoneType, NOT NULL) - RADIUS or POLYGON
-- `radiusKm` (integer, nullable) - Coverage radius (if RADIUS type)
-- `polygonCoordinates` (jsonb, nullable) - Polygon GeoJSON (if POLYGON type)
-- `createdAt` (timestamp, NOT NULL, DEFAULT CURRENT_TIMESTAMP)
-- `updatedAt` (timestamp, NOT NULL)
-
-**Enum: GeocodingStatus**
-- `PENDING` - Not geocoded yet
-- `SUCCESS` - Successfully geocoded
-- `FAILED` - Geocoding failed
-
-**Enum: ZoneType**
-- `RADIUS` - Circular coverage area
-- `POLYGON` - Custom polygon coverage
-
-**Purpose**: Store contractor's base location and service coverage area.
-
----
-
-### Dispute
-Booking dispute resolution.
-
-**Columns**:
-- `id` (text, PK)
-- `bookingId` (text, FK → Booking.id, NOT NULL)
-- `openedBy` (text, FK → User.id, NOT NULL)
-- `reason` (text, NOT NULL)
-- `evidence` (jsonb, nullable) - Evidence data
-- `status` (DisputeStatus, NOT NULL, DEFAULT 'OPEN')
-- `resolution` (text, nullable) - Resolution summary
-- `resolutionNotes` (text, nullable) - Detailed resolution notes
-- `resolvedBy` (text, FK → User.id, nullable) - Admin who resolved
-- `createdAt` (timestamp, NOT NULL, DEFAULT CURRENT_TIMESTAMP)
-- `resolvedAt` (timestamp, nullable)
-
-**Enum: DisputeStatus**
-- `OPEN` - Newly opened
-- `INVESTIGATING` - Under review
-- `RESOLVED` - Resolved
-- `CLOSED` - Closed
-
-**Purpose**: Handle booking disputes between clients and contractors.
-
----
-
-### Message
-In-booking messaging between client and contractor.
-
-**Columns**:
-- `id` (text, PK)
-- `bookingId` (text, FK → Booking.id, NOT NULL)
-- `senderId` (text, FK → User.id, NOT NULL)
-- `text` (varchar, NOT NULL) - Message content
-- `createdAt` (timestamp, NOT NULL, DEFAULT CURRENT_TIMESTAMP)
-
-**Purpose**: Chat messages scoped to a specific booking.
-
----
-
-### Payment
-Payment transactions (anticipo, liquidación, refunds).
-
-**Columns**:
-- `id` (text, PK)
-- `bookingId` (text, FK → Booking.id, NOT NULL)
-- `type` (PaymentType, NOT NULL)
-- `amount` (numeric, NOT NULL)
-- `currency` (text, NOT NULL, DEFAULT 'mxn')
-- `stripePaymentIntentId` (text, nullable)
-- `stripeCheckoutSessionId` (text, nullable)
-- `stripeTransferId` (text, nullable) - For payouts
-- `status` (PaymentStatus, NOT NULL, DEFAULT 'PENDING')
-- `metadata` (jsonb, nullable) - Additional payment data
-- `createdAt` (timestamp, NOT NULL, DEFAULT CURRENT_TIMESTAMP)
-- `updatedAt` (timestamp, NOT NULL)
-
-**Enum: PaymentType**
-- `ANTICIPO` - Advance payment
-- `LIQUIDACION` - Final payment
-- `REFUND` - Refund transaction
-
-**Enum: PaymentStatus**
-- `PENDING` - Initiated
-- `PROCESSING` - Processing
-- `SUCCEEDED` - Successful
-- `FAILED` - Failed
-- `CANCELLED` - Cancelled
-- `REFUNDED` - Refunded
-
-**Purpose**: Track all payment transactions with Stripe integration.
-
----
-
-### ProcessedWebhookEvent
-Webhook idempotency tracking.
-
-**Columns**:
-- `id` (text, PK)
-- `stripeEventId` (text, NOT NULL, UNIQUE) - Stripe event ID
-- `eventType` (text, NOT NULL)
-- `processedAt` (timestamp, NOT NULL, DEFAULT CURRENT_TIMESTAMP)
-
-**Purpose**: Prevent duplicate processing of Stripe webhooks.
-
----
-
-### Rating
-Service ratings and reviews.
-
-**Columns**:
-- `id` (text, PK)
-- `bookingId` (text, FK → Booking.id, NOT NULL)
-- `serviceId` (text, FK → Service.id, NOT NULL)
-- `clientId` (text, FK → User.id, NOT NULL)
-- `stars` (integer, NOT NULL) - Rating 1-5
-- `comment` (varchar, nullable) - Review text
-- `moderationStatus` (ModerationStatus, NOT NULL, DEFAULT 'PENDING')
-- `moderationNotes` (text, nullable) - Internal moderation notes
-- `createdAt` (timestamp, NOT NULL, DEFAULT CURRENT_TIMESTAMP)
-- `updatedAt` (timestamp, NOT NULL)
-
-**Enum: ModerationStatus**
-- `PENDING` - Awaiting moderation
-- `APPROVED` - Approved for display
-- `REJECTED` - Rejected
-
-**Purpose**: Client reviews of services with moderation.
-
----
-
-### Service
-Services offered by contractors.
-
-**Columns**:
-- `id` (text, PK)
-- `contractorId` (text, FK → User.id, NOT NULL)
-- `categoryId_old` (text, NOT NULL) - Legacy category field
-- `categoryId` (text, FK → ServiceCategory.id, nullable) - New category field
-- `category` (text, nullable) - Category name (denormalized)
-- `title` (varchar, NOT NULL)
-- `description` (varchar, NOT NULL)
-- `basePrice` (numeric, NOT NULL)
-- `currency` (varchar, NOT NULL, DEFAULT 'MXN')
-- `durationMinutes` (integer, NOT NULL)
-- `locationLat` (numeric, nullable)
-- `locationLng` (numeric, nullable)
-- `locationAddress` (text, nullable)
-- `coverageRadiusKm` (integer, nullable)
-- `status` (ServiceStatus, NOT NULL, DEFAULT 'ACTIVE')
-- `visibilityStatus` (VisibilityStatus, NOT NULL, DEFAULT 'DRAFT')
-- `lastPublishedAt` (timestamp, nullable)
-- `createdAt` (timestamp, NOT NULL, DEFAULT CURRENT_TIMESTAMP)
-- `updatedAt` (timestamp, NOT NULL)
-
-**Enum: ServiceStatus**
-- `ACTIVE` - Service is active
-- `INACTIVE` - Temporarily inactive
-- `DELETED` - Soft deleted
-
-**Enum: VisibilityStatus**
-- `DRAFT` - Not published
-- `PUBLISHED` - Publicly visible
-- `ARCHIVED` - No longer visible
-
-**Purpose**: Service listings created by contractors.
-
-**Note**: Use `categoryId` for new features. `categoryId_old` is for backward compatibility.
-
----
-
-### ServiceCategory
-Hierarchical service categories.
-
-**Columns**:
-- `id` (text, PK)
-- `name` (text, NOT NULL)
-- `description` (text, NOT NULL)
-- `slug` (text, NOT NULL, UNIQUE)
-- `icon` (text, nullable) - Icon identifier
-- `parentId` (text, FK → ServiceCategory.id, nullable) - For hierarchy
-- `sortOrder` (smallint, NOT NULL, DEFAULT 0)
-- `isActive` (boolean, NOT NULL, DEFAULT true)
-- `createdAt` (timestamp, NOT NULL, DEFAULT CURRENT_TIMESTAMP)
-- `updatedAt` (timestamp, NOT NULL)
-
-**Purpose**: Organize services into hierarchical categories (e.g., Home > Plumbing > Leak Repair).
-
----
-
-### ServiceImage
-Images for services (stored in S3).
-
-**Columns**:
-- `id` (text, PK)
-- `serviceId` (text, FK → Service.id, NOT NULL)
-- `s3Url` (text, NOT NULL) - Public S3 URL
-- `s3Key` (text, NOT NULL) - S3 object key
-- `order` (integer, NOT NULL) - Display order
-- `width` (integer, nullable)
-- `height` (integer, nullable)
-- `altText` (varchar, nullable) - Accessibility text
-- `uploadedAt` (timestamp, NOT NULL, DEFAULT CURRENT_TIMESTAMP)
-
-**Purpose**: Store service photos with ordering.
-
----
-
-### ServiceRatingStats
-Aggregated rating statistics (materialized view/cache).
-
-**Columns**:
-- `serviceId` (text, PK, FK → Service.id)
-- `average` (numeric, NOT NULL) - Average rating
-- `totalRatings` (integer, NOT NULL, DEFAULT 0) - Total count
-- `updatedAt` (timestamp, NOT NULL)
-
-**Purpose**: Pre-computed rating stats for fast queries.
-
----
-
-### User
-User accounts (integrated with Clerk).
-
-**Columns**:
-- `id` (text, PK)
-- `clerkUserId` (text, NOT NULL, UNIQUE) - Clerk external ID
-- `email` (text, NOT NULL)
-- `firstName` (text, NOT NULL)
-- `lastName` (text, NOT NULL)
-- `phone` (text, nullable)
-- `avatarUrl` (text, nullable)
-- `role` (UserRole, NOT NULL, DEFAULT 'CLIENT')
-- `status` (UserStatus, NOT NULL, DEFAULT 'ACTIVE')
-- `createdAt` (timestamp, NOT NULL, DEFAULT CURRENT_TIMESTAMP)
-- `updatedAt` (timestamp, NOT NULL)
-
-**Enum: UserRole**
-- `CLIENT` - Regular customer
-- `CONTRACTOR` - Service provider
-- `ADMIN` - Platform admin
-
-**Enum: UserStatus**
-- `ACTIVE` - Active account
-- `SUSPENDED` - Suspended
-- `DELETED` - Soft deleted
-
-**Purpose**: Core user entity synced with Clerk for authentication.
-
----
-
-## Entity Relationships
-
-### One-to-One
-- `User` ←→ `ContractorProfile` (contractors only)
-
-### One-to-Many
-- `User` → `Address` (user addresses)
-- `User` → `Service` (as contractor)
-- `User` → `Booking` (as client or contractor)
-- `ContractorProfile` → `ContractorServiceLocation`
-- `Service` → `ServiceImage`
-- `Service` → `Availability`
-- `Service` → `Rating`
-- `Booking` → `Payment`
-- `Booking` → `Message`
-- `Booking` → `BookingStateHistory`
-- `ServiceCategory` → `ServiceCategory` (self-referencing hierarchy)
-
-### Many-to-One
-- All entities with foreign keys reference parent tables
+-- WARNING: This schema is for context only and is not meant to be run.
+-- Table order and constraints may not be valid for execution.
+
+CREATE TABLE public.Address (
+  id text NOT NULL,
+  userId text NOT NULL,
+  addressLine1 text NOT NULL,
+  addressLine2 text,
+  city text NOT NULL,
+  state text NOT NULL,
+  postalCode text NOT NULL,
+  country text NOT NULL DEFAULT 'MX'::text,
+  lat numeric,
+  lng numeric,
+  isDefault boolean NOT NULL DEFAULT false,
+  createdAt timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updatedAt timestamp without time zone NOT NULL,
+  CONSTRAINT Address_pkey PRIMARY KEY (id),
+  CONSTRAINT Address_userId_fkey FOREIGN KEY (userId) REFERENCES public.User(id)
+);
+
+CREATE TABLE public.AdminAuditLog (
+  id text NOT NULL,
+  adminId text NOT NULL,
+  action text NOT NULL,
+  targetType text NOT NULL,
+  targetId text NOT NULL,
+  metadata jsonb,
+  createdAt timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT AdminAuditLog_pkey PRIMARY KEY (id),
+  CONSTRAINT AdminAuditLog_adminId_fkey FOREIGN KEY (adminId) REFERENCES public.User(id)
+);
+
+CREATE TABLE public.Availability (
+  id text NOT NULL,
+  serviceId text NOT NULL,
+  date date NOT NULL,
+  startTime timestamp without time zone NOT NULL,
+  endTime timestamp without time zone NOT NULL,
+  status USER-DEFINED NOT NULL DEFAULT 'AVAILABLE'::"AvailabilityStatus",
+  bookingId text,
+  createdAt timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updatedAt timestamp without time zone NOT NULL,
+  CONSTRAINT Availability_pkey PRIMARY KEY (id),
+  CONSTRAINT Availability_serviceId_fkey FOREIGN KEY (serviceId) REFERENCES public.Service(id),
+  CONSTRAINT Availability_bookingId_fkey FOREIGN KEY (bookingId) REFERENCES public.Booking(id)
+);
+
+CREATE TABLE public.Booking (
+  id text NOT NULL,
+  serviceId text NOT NULL,
+  clientId text NOT NULL,
+  contractorId text NOT NULL,
+  availabilityId text NOT NULL,
+  status USER-DEFINED NOT NULL DEFAULT 'PENDING_PAYMENT'::"BookingStatus",
+  scheduledDate timestamp without time zone NOT NULL,
+  address text NOT NULL,
+  notes text,
+  basePrice numeric NOT NULL,
+  finalPrice numeric NOT NULL,
+  anticipoAmount numeric NOT NULL,
+  liquidacionAmount numeric NOT NULL,
+  comisionAmount numeric NOT NULL,
+  contractorPayoutAmount numeric NOT NULL,
+  createdAt timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updatedAt timestamp without time zone NOT NULL,
+  CONSTRAINT Booking_pkey PRIMARY KEY (id),
+  CONSTRAINT Booking_serviceId_fkey FOREIGN KEY (serviceId) REFERENCES public.Service(id),
+  CONSTRAINT Booking_clientId_fkey FOREIGN KEY (clientId) REFERENCES public.User(id),
+  CONSTRAINT Booking_contractorId_fkey FOREIGN KEY (contractorId) REFERENCES public.User(id)
+);
+
+CREATE TABLE public.BookingStateHistory (
+  id text NOT NULL,
+  bookingId text NOT NULL,
+  fromState USER-DEFINED NOT NULL,
+  toState USER-DEFINED NOT NULL,
+  changedBy text NOT NULL,
+  notes text,
+  createdAt timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT BookingStateHistory_pkey PRIMARY KEY (id),
+  CONSTRAINT BookingStateHistory_bookingId_fkey FOREIGN KEY (bookingId) REFERENCES public.Booking(id),
+  CONSTRAINT BookingStateHistory_changedBy_fkey FOREIGN KEY (changedBy) REFERENCES public.User(id)
+);
+
+CREATE TABLE public.Category (
+  id text NOT NULL,
+  name text NOT NULL,
+  description text NOT NULL,
+  slug text NOT NULL,
+  iconUrl text,
+  parentId text,
+  createdAt timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updatedAt timestamp without time zone NOT NULL,
+  CONSTRAINT Category_pkey PRIMARY KEY (id)
+);
+
+CREATE TABLE public.ContractorProfile (
+  id text NOT NULL,
+  userId text NOT NULL,
+  businessName text NOT NULL,
+  description text NOT NULL,
+  specialties ARRAY,
+  verified boolean NOT NULL DEFAULT false,
+  verificationDocuments jsonb,
+  stripeConnectAccountId text,
+  createdAt timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updatedAt timestamp without time zone NOT NULL,
+  CONSTRAINT ContractorProfile_pkey PRIMARY KEY (id),
+  CONSTRAINT ContractorProfile_userId_fkey FOREIGN KEY (userId) REFERENCES public.User(id)
+);
+
+CREATE TABLE public.Dispute (
+  id text NOT NULL,
+  bookingId text NOT NULL,
+  openedBy text NOT NULL,
+  reason text NOT NULL,
+  evidence jsonb,
+  status USER-DEFINED NOT NULL DEFAULT 'OPEN'::"DisputeStatus",
+  resolution text,
+  resolutionNotes text,
+  resolvedBy text,
+  createdAt timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  resolvedAt timestamp without time zone,
+  CONSTRAINT Dispute_pkey PRIMARY KEY (id),
+  CONSTRAINT Dispute_bookingId_fkey FOREIGN KEY (bookingId) REFERENCES public.Booking(id),
+  CONSTRAINT Dispute_openedBy_fkey FOREIGN KEY (openedBy) REFERENCES public.User(id),
+  CONSTRAINT Dispute_resolvedBy_fkey FOREIGN KEY (resolvedBy) REFERENCES public.User(id)
+);
+
+CREATE TABLE public.Message (
+  id text NOT NULL,
+  bookingId text NOT NULL,
+  senderId text NOT NULL,
+  text character varying NOT NULL,
+  createdAt timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT Message_pkey PRIMARY KEY (id),
+  CONSTRAINT Message_bookingId_fkey FOREIGN KEY (bookingId) REFERENCES public.Booking(id),
+  CONSTRAINT Message_senderId_fkey FOREIGN KEY (senderId) REFERENCES public.User(id)
+);
+
+CREATE TABLE public.Payment (
+  id text NOT NULL,
+  bookingId text NOT NULL,
+  type USER-DEFINED NOT NULL,
+  amount numeric NOT NULL,
+  currency text NOT NULL DEFAULT 'mxn'::text,
+  stripePaymentIntentId text,
+  stripeCheckoutSessionId text,
+  stripeTransferId text,
+  status USER-DEFINED NOT NULL DEFAULT 'PENDING'::"PaymentStatus",
+  metadata jsonb,
+  createdAt timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updatedAt timestamp without time zone NOT NULL,
+  CONSTRAINT Payment_pkey PRIMARY KEY (id),
+  CONSTRAINT Payment_bookingId_fkey FOREIGN KEY (bookingId) REFERENCES public.Booking(id)
+);
+
+CREATE TABLE public.ProcessedWebhookEvent (
+  id text NOT NULL,
+  stripeEventId text NOT NULL,
+  eventType text NOT NULL,
+  processedAt timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT ProcessedWebhookEvent_pkey PRIMARY KEY (id)
+);
+
+CREATE TABLE public.Rating (
+  id text NOT NULL,
+  bookingId text NOT NULL,
+  serviceId text NOT NULL,
+  clientId text NOT NULL,
+  stars integer NOT NULL,
+  comment character varying,
+  moderationStatus USER-DEFINED NOT NULL DEFAULT 'PENDING'::"ModerationStatus",
+  moderationNotes text,
+  createdAt timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updatedAt timestamp without time zone NOT NULL,
+  CONSTRAINT Rating_pkey PRIMARY KEY (id),
+  CONSTRAINT Rating_bookingId_fkey FOREIGN KEY (bookingId) REFERENCES public.Booking(id),
+  CONSTRAINT Rating_serviceId_fkey FOREIGN KEY (serviceId) REFERENCES public.Service(id),
+  CONSTRAINT Rating_clientId_fkey FOREIGN KEY (clientId) REFERENCES public.User(id)
+);
+
+CREATE TABLE public.Service (
+  id text NOT NULL,
+  contractorId text NOT NULL,
+  title character varying NOT NULL,
+  description character varying NOT NULL,
+  basePrice numeric NOT NULL,
+  locationLat numeric,
+  locationLng numeric,
+  locationAddress text,
+  coverageRadiusKm integer,
+  status USER-DEFINED NOT NULL DEFAULT 'ACTIVE'::"ServiceStatus",
+  createdAt timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updatedAt timestamp without time zone NOT NULL,
+  categoryId text NOT NULL,
+  images ARRAY DEFAULT ARRAY[]::text[],
+  CONSTRAINT Service_pkey PRIMARY KEY (id),
+  CONSTRAINT Service_contractorId_fkey FOREIGN KEY (contractorId) REFERENCES public.User(id),
+  CONSTRAINT Service_categoryId_fkey FOREIGN KEY (categoryId) REFERENCES public.Category(id)
+);
+
+CREATE TABLE public.ServiceRatingStats (
+  serviceId text NOT NULL,
+  average numeric NOT NULL,
+  totalRatings integer NOT NULL DEFAULT 0,
+  updatedAt timestamp without time zone NOT NULL,
+  CONSTRAINT ServiceRatingStats_pkey PRIMARY KEY (serviceId),
+  CONSTRAINT ServiceRatingStats_serviceId_fkey FOREIGN KEY (serviceId) REFERENCES public.Service(id)
+);
+
+CREATE TABLE public.User (
+  id text NOT NULL,
+  clerkUserId text NOT NULL,
+  email text NOT NULL,
+  firstName text NOT NULL,
+  lastName text NOT NULL,
+  phone text,
+  avatarUrl text,
+  role USER-DEFINED NOT NULL DEFAULT 'CLIENT'::"UserRole",
+  status USER-DEFINED NOT NULL DEFAULT 'ACTIVE'::"UserStatus",
+  createdAt timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updatedAt timestamp without time zone NOT NULL,
+  CONSTRAINT User_pkey PRIMARY KEY (id)
+);
+
+CREATE TABLE public.contractor_availability_blocks (
+  id text NOT NULL,
+  contractor_profile_id text NOT NULL,
+  start_date_time timestamp with time zone NOT NULL,
+  end_date_time timestamp with time zone NOT NULL,
+  reason text,
+  created_at timestamp with time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at timestamp with time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT contractor_availability_blocks_pkey PRIMARY KEY (id),
+  CONSTRAINT fk_contractor_profile_block FOREIGN KEY (contractor_profile_id) REFERENCES public.ContractorProfile(id)
+);
+
+CREATE TABLE public.contractor_availability_exceptions (
+  id text NOT NULL,
+  contractor_profile_id text NOT NULL,
+  date date NOT NULL,
+  intervals jsonb NOT NULL DEFAULT '[]'::jsonb,
+  type text NOT NULL CHECK (type = ANY (ARRAY['AVAILABLE'::text, 'BLOCKED'::text])),
+  reason text,
+  created_at timestamp with time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at timestamp with time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT contractor_availability_exceptions_pkey PRIMARY KEY (id),
+  CONSTRAINT fk_contractor_profile_exception FOREIGN KEY (contractor_profile_id) REFERENCES public.ContractorProfile(id)
+);
+
+CREATE TABLE public.contractor_weekly_rules (
+  id text NOT NULL,
+  contractor_profile_id text NOT NULL,
+  day_of_week smallint NOT NULL CHECK (day_of_week >= 0 AND day_of_week <= 6),
+  intervals jsonb NOT NULL DEFAULT '[]'::jsonb,
+  enabled boolean NOT NULL DEFAULT true,
+  created_at timestamp with time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at timestamp with time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT contractor_weekly_rules_pkey PRIMARY KEY (id),
+  CONSTRAINT fk_contractor_profile FOREIGN KEY (contractor_profile_id) REFERENCES public.ContractorProfile(id)
+);
 
 ---
 
