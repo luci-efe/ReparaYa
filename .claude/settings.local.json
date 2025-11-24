@@ -8,7 +8,10 @@
       "mcp__sequential-thinking__sequentialthinking",
       "mcp__context7__resolve-library-id",
       "mcp__context7__get-library-docs",
-      "Bash(npm install:*)"
+      "Bash(npm install:*)",
+      "Bash(CI=true npm test)",
+      "Bash(set \"CI=true\")",
+      "Bash(node -e:*)"
     ],
     "deny": [],
     "ask": []

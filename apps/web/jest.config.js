@@ -26,6 +26,7 @@ const baseIgnorePatterns = [
 // These are skipped in CI and should be run locally with proper credentials
 const integrationTestPatterns = [
   '\\.integration\\.test\\.ts$',  // All *.integration.test.ts files
+  'stripeService\\.test\\.ts$',   // Stripe service tests need real env vars
 ]
 
 // In CI, skip integration tests that require real API credentials
