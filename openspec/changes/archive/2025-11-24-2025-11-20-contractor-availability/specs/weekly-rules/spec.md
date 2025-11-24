@@ -4,7 +4,7 @@
 
 ### Requirement: Weekly Recurrence Patterns
 
-The system SHALL SHALL allow contractors to define recurring availability rules for each day of the week (Sunday-Saturday).
+The system SHALL allow contractors to define recurring availability rules for each day of the week (Sunday-Saturday).
 
 #### Scenario: Create weekly rule with multiple intervals
 
@@ -85,7 +85,7 @@ Only the contractor who owns the profile can create/update/delete their weekly r
 
 ### Requirement: Granularity Configuration
 
-The system SHALL supports configurable time slot granularity.
+The system SHALL support configurable time slot granularity.
 
 #### Scenario: Document supported granularities
 

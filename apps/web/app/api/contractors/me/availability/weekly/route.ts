@@ -59,11 +59,9 @@ export async function POST(req: NextRequest) {
         }
 
         // Get contractor profile
-        console.log('API Weekly - UserId:', userId);
         const contractor = await prisma.contractorProfile.findFirst({
             where: { user: { clerkUserId: userId } },
         });
-        console.log('API Weekly - Contractor:', contractor?.id);
 
         if (!contractor) {
             return NextResponse.json(

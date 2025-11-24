@@ -102,8 +102,14 @@ function WeeklyRuleForm({ dayOfWeek, existingRule, onClose, onSuccess }: WeeklyR
     const onSubmit = async (data: CreateWeeklyRuleDTO) => {
         setError(null);
         try {
-            const res = await fetch('/api/contractors/me/availability/weekly', {
-                method: 'POST',
+            const isUpdate = !!existingRule;
+            const url = isUpdate
+                ? `/api/contractors/me/availability/weekly/${existingRule.id}`
+                : '/api/contractors/me/availability/weekly';
+            const method = isUpdate ? 'PATCH' : 'POST';
+
+            const res = await fetch(url, {
+                method,
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data),
             });

@@ -6,28 +6,53 @@
 import { prisma } from '@/lib/db';
 import { CreateBlockDTO, UpdateBlockDTO, BlockResponseDTO } from '../types';
 
+/**
+ * Maps Prisma block record to BlockResponseDTO
+ */
+function mapToBlockResponse(record: {
+  id: string;
+  contractorProfileId: string;
+  startDateTime: Date;
+  endDateTime: Date;
+  reason: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+}): BlockResponseDTO {
+  return {
+    id: record.id,
+    contractorProfileId: record.contractorProfileId,
+    startDateTime: record.startDateTime.toISOString(),
+    endDateTime: record.endDateTime.toISOString(),
+    reason: record.reason ?? undefined,
+    createdAt: record.createdAt,
+    updatedAt: record.updatedAt,
+  };
+}
+
 export const blockRepository = {
   /**
    * Create a new block
    */
   async create(contractorProfileId: string, data: CreateBlockDTO): Promise<BlockResponseDTO> {
-    return prisma.contractorAvailabilityBlock.create({
+    const record = await prisma.contractorAvailabilityBlock.create({
       data: {
         contractorProfileId,
         startDateTime: new Date(data.startDateTime),
         endDateTime: new Date(data.endDateTime),
         reason: data.reason,
       },
-    }) as unknown as BlockResponseDTO;
+    });
+    return mapToBlockResponse(record);
   },
 
   /**
    * Find block by ID
    */
   async findById(id: string): Promise<BlockResponseDTO | null> {
-    return prisma.contractorAvailabilityBlock.findUnique({
+    const record = await prisma.contractorAvailabilityBlock.findUnique({
       where: { id },
-    }) as unknown as BlockResponseDTO | null;
+    });
+    return record ? mapToBlockResponse(record) : null;
   },
 
   /**
@@ -38,7 +63,7 @@ export const blockRepository = {
     startDateTime: Date,
     endDateTime: Date
   ): Promise<BlockResponseDTO[]> {
-    return prisma.contractorAvailabilityBlock.findMany({
+    const records = await prisma.contractorAvailabilityBlock.findMany({
       where: {
         contractorProfileId,
         OR: [
@@ -56,21 +81,23 @@ export const blockRepository = {
         ],
       },
       orderBy: { startDateTime: 'asc' },
-    }) as unknown as BlockResponseDTO[];
+    });
+    return records.map(mapToBlockResponse);
   },
 
   /**
    * Update a block
    */
   async update(id: string, data: UpdateBlockDTO): Promise<BlockResponseDTO> {
-    return prisma.contractorAvailabilityBlock.update({
+    const record = await prisma.contractorAvailabilityBlock.update({
       where: { id },
       data: {
-        ...(data.startDateTime && { startDateTime: new Date(data.startDateTime) }),
-        ...(data.endDateTime && { endDateTime: new Date(data.endDateTime) }),
+        ...(data.startDateTime !== undefined && { startDateTime: new Date(data.startDateTime) }),
+        ...(data.endDateTime !== undefined && { endDateTime: new Date(data.endDateTime) }),
         ...(data.reason !== undefined && { reason: data.reason }),
       },
-    }) as unknown as BlockResponseDTO;
+    });
+    return mapToBlockResponse(record);
   },
 
   /**

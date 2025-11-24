@@ -45,7 +45,7 @@ export function AvailabilityBlocks({ blocks, onUpdate }: AvailabilityBlocksProps
                 </div>
             ) : (
                 <ul className="space-y-3">
-                    {blocks
+                    {[...blocks]
                         .sort((a, b) => new Date(a.startDateTime).getTime() - new Date(b.startDateTime).getTime())
                         .map((block) => (
                             <li key={block.id} className="flex items-center justify-between p-4 bg-gray-50 rounded border">
