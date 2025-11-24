@@ -1,7 +1,7 @@
 # slot-generation Specification
 
 ## Purpose
-TBD - created by archiving change 2025-11-20-contractor-availability. Update Purpose after archive.
+Defines the algorithm and API for generating available time slots by combining weekly rules, exceptions, and blocks into final bookable intervals for clients.
 ## Requirements
 ### Requirement: Combine Layers into Available Slots
 
@@ -84,12 +84,12 @@ FOR each block intersecting current day:
 **And** service X requires `durationMinutes: 90`  
 **When** client requests slots with `serviceId=X`  
 **Then** 60-min slot is excluded (too short)  
-**And** only slots \u003e= 90 min are returned
+**And** only slots >= 90 min are returned
 
 **Acceptance Criteria**:
 - `serviceId` query param is optional
 - If provided, fetches `service.durationMinutes`
-- Filters slots where `slot.durationMinutes \u003c service.durationMinutes`
+- Filters slots where `slot.durationMinutes < service.durationMinutes`
 - If omitted, returns all slots
 
 ---
@@ -105,7 +105,7 @@ Slot generation must be fast and prevent abuse.
 **And** error message: "Rango máximo permitido: 8 semanas (56 días)"
 
 **Acceptance Criteria**:
-- Validation: `(endDate - startDate).days \u003c= 56`
+- Validation: `(endDate - startDate).days <= 56`
 - Runs before any DB queries (fast fail)
 
 ---
@@ -119,7 +119,7 @@ Slot generation must be fast and prevent abuse.
   - Each contractor has: 7 weekly rules, 10 exceptions, 5 blocks, 20 bookings  
 **Then** P95 response time ≤ 800ms  
 **And** P99 response time ≤ 1200ms  
-**And** error rate \u003c 1%
+**And** error rate < 1%
 
 **Optimization Strategies**:
 - Batch DB queries: fetch all rules/exceptions/blocks in 3 queries (not N)
@@ -154,7 +154,7 @@ Clients need to view contractor availability without authentication.
 #### Scenario: Client views contractor's available slots
 
 **Given** unauthenticated client (or CLIENT role user)  
-**When** client requests `GET /api/contractors/:contractorId/availability/slots?startDate=2025-12-01\u0026endDate=2025-12-31`  
+**When** client requests `GET /api/contractors/:contractorId/availability/slots?startDate=2025-12-01&endDate=2025-12-31`  
 **Then** request succeeds (no auth required)  
 **And** slots are returned
 
