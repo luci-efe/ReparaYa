@@ -4,6 +4,7 @@ import { WelcomeWidget } from '@/components/clients/WelcomeWidget';
 import { ClientQuickAccessTiles } from '@/components/clients/ClientQuickAccessTiles';
 import { ClientMetricsOverview } from '@/components/clients/ClientMetricsOverview';
 import { UpcomingBookings } from '@/components/clients/UpcomingBookings';
+import { getUserDisplayName } from '@/lib/userUtils';
 
 // Force dynamic rendering since this page uses authentication
 export const dynamic = 'force-dynamic';
@@ -15,9 +16,7 @@ export default async function ClientDashboardPage() {
     // TODO: Fetch user addresses count
     const addressCount = 0;
 
-    const userName = user.firstName
-        ? `${user.firstName}${user.lastName ? ' ' + user.lastName : ''}`
-        : user.email;
+    const userName = getUserDisplayName(user);
 
     return (
         <ClientDashboardShell

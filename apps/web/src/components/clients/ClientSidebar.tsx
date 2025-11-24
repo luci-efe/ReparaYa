@@ -2,13 +2,20 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { ReactNode } from 'react';
 
 interface ClientSidebarProps {
     isOpen: boolean;
     onClose: () => void;
 }
 
-const navigation = [
+interface NavItem {
+    name: string;
+    href: string;
+    icon: ReactNode;
+}
+
+const navigation: NavItem[] = [
     {
         name: 'Dashboard',
         href: '/clients/dashboard',
@@ -67,6 +74,49 @@ const navigation = [
     },
 ];
 
+interface NavLinkProps {
+    item: NavItem;
+    isActive: boolean;
+    onClick?: () => void;
+}
+
+function NavLink({ item, isActive, onClick }: NavLinkProps) {
+    return (
+        <Link
+            href={item.href}
+            onClick={onClick}
+            className={`flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${isActive
+                ? 'bg-blue-50 text-blue-700'
+                : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
+                }`}
+            aria-current={isActive ? 'page' : undefined}
+        >
+            {item.icon}
+            <span>{item.name}</span>
+        </Link>
+    );
+}
+
+interface NavigationListProps {
+    pathname: string;
+    onLinkClick?: () => void;
+}
+
+function NavigationList({ pathname, onLinkClick }: NavigationListProps) {
+    return (
+        <nav className="flex-1 px-4 py-6 space-y-1" aria-label="Navegación del dashboard">
+            {navigation.map((item) => (
+                <NavLink
+                    key={item.name}
+                    item={item}
+                    isActive={pathname === item.href}
+                    onClick={onLinkClick}
+                />
+            ))}
+        </nav>
+    );
+}
+
 export function ClientSidebar({ isOpen, onClose }: ClientSidebarProps) {
     const pathname = usePathname();
 
@@ -78,25 +128,7 @@ export function ClientSidebar({ isOpen, onClose }: ClientSidebarProps) {
                 aria-label="Navegación principal"
             >
                 <div className="flex-1 flex flex-col min-h-0 bg-white border-r border-gray-200">
-                    <nav className="flex-1 px-4 py-6 space-y-1" aria-label="Navegación del dashboard">
-                        {navigation.map((item) => {
-                            const isActive = pathname === item.href;
-                            return (
-                                <Link
-                                    key={item.name}
-                                    href={item.href}
-                                    className={`flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${isActive
-                                            ? 'bg-blue-50 text-blue-700'
-                                            : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
-                                        }`}
-                                    aria-current={isActive ? 'page' : undefined}
-                                >
-                                    {item.icon}
-                                    <span>{item.name}</span>
-                                </Link>
-                            );
-                        })}
-                    </nav>
+                    <NavigationList pathname={pathname} />
                 </div>
             </aside>
 
@@ -107,26 +139,7 @@ export function ClientSidebar({ isOpen, onClose }: ClientSidebarProps) {
                 aria-label="Navegación principal"
             >
                 <div className="flex-1 flex flex-col min-h-0">
-                    <nav className="flex-1 px-4 py-6 space-y-1" aria-label="Navegación del dashboard">
-                        {navigation.map((item) => {
-                            const isActive = pathname === item.href;
-                            return (
-                                <Link
-                                    key={item.name}
-                                    href={item.href}
-                                    onClick={onClose}
-                                    className={`flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${isActive
-                                            ? 'bg-blue-50 text-blue-700'
-                                            : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
-                                        }`}
-                                    aria-current={isActive ? 'page' : undefined}
-                                >
-                                    {item.icon}
-                                    <span>{item.name}</span>
-                                </Link>
-                            );
-                        })}
-                    </nav>
+                    <NavigationList pathname={pathname} onLinkClick={onClose} />
                 </div>
             </aside>
         </>
