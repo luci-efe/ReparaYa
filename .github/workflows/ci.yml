@@ -70,8 +70,18 @@ jobs:
         env:
           # Test environment variables
           NODE_ENV: test
+          CI: true
           DATABASE_URL: "postgresql://test:test@localhost:5432/test_db"
           DIRECT_URL: "postgresql://test:test@localhost:5432/test_db"
+          # Stripe test placeholders (format-valid but not real keys)
+          # Integration tests are skipped in CI - these just allow unit tests to pass
+          STRIPE_SECRET_KEY: "sk_test_ci_placeholder_key_not_real_1234567890"
+          STRIPE_WEBHOOK_SECRET: "whsec_ci_placeholder_webhook_secret_1234567890"
+          NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: "pk_test_ci_placeholder_key"
+          # Platform config for commission calculations
+          PLATFORM_MARKUP_PERCENTAGE: "10"
+          PLATFORM_COMMISSION_PERCENTAGE: "15"
+          BOOKING_ADVANCE_PERCENTAGE: "30"
 
       - name: Upload coverage
         if: success()

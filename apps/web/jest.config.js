@@ -5,6 +5,35 @@ const createJestConfig = nextJest({
   dir: './',
 })
 
+// Base test patterns to always ignore
+const baseIgnorePatterns = [
+  '/node_modules/',
+  '/.next/',
+  '/__tests__/helpers/',
+  '/__tests__/fixtures/',
+  '/tests/database/',
+  '/tests/e2e/',
+  '/tests/a11y/',
+  '/tests/integration/api/contractors/location.test.ts',
+  '/tests/integration/api/services-images.test.ts',
+  '/tests/integration/api/admin-services.test.ts',
+  '/src/modules/contractors/repositories/__tests__/locationRepository.test.ts',
+  '/src/modules/contractors/services/__tests__/locationService.test.ts',
+  '/src/modules/services/__tests__/serviceService.test.ts',
+]
+
+// Integration tests that need real external services (Stripe, etc.)
+// These are skipped in CI and should be run locally with proper credentials
+const integrationTestPatterns = [
+  '\\.integration\\.test\\.ts$',  // All *.integration.test.ts files
+]
+
+// In CI, skip integration tests that require real API credentials
+const isCI = process.env.CI === 'true'
+const testPathIgnorePatterns = isCI
+  ? [...baseIgnorePatterns, ...integrationTestPatterns]
+  : baseIgnorePatterns
+
 // Add any custom config to be passed to Jest
 const customJestConfig = {
   setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
@@ -14,21 +43,7 @@ const customJestConfig = {
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
   },
-  testPathIgnorePatterns: [
-    '/node_modules/',
-    '/.next/',
-    '/__tests__/helpers/',
-    '/__tests__/fixtures/',
-    '/tests/database/',
-    '/tests/e2e/',
-    '/tests/a11y/',
-    '/tests/integration/api/contractors/location.test.ts',
-    '/tests/integration/api/services-images.test.ts',
-    '/tests/integration/api/admin-services.test.ts',
-    '/src/modules/contractors/repositories/__tests__/locationRepository.test.ts',
-    '/src/modules/contractors/services/__tests__/locationService.test.ts',
-    '/src/modules/services/__tests__/serviceService.test.ts',
-  ],
+  testPathIgnorePatterns,
   collectCoverageFrom: [
     'src/**/*.{js,jsx,ts,tsx}',
     '!src/**/*.d.ts',
