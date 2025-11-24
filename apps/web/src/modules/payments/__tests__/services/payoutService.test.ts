@@ -6,7 +6,7 @@
 import { PrismaClient } from '@prisma/client';
 import { Decimal } from '@prisma/client/runtime/library';
 import { PayoutService } from '../../services/payoutService';
-import { BookingNotFoundError, MissingConnectAccountError } from '../../types';
+import { BookingNotFoundError, MissingConnectAccountError, PaymentError } from '../../types';
 import { createMockBooking } from '@/modules/booking/__mocks__/bookingStub';
 
 // Mock Stripe
@@ -163,7 +163,7 @@ describe('PayoutService', () => {
 
       await expect(
         payoutService.createPayout(mockBooking.id)
-      ).rejects.toThrow(MissingConnectAccountError);
+      ).rejects.toThrow(PaymentError);
     });
   });
 

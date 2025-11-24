@@ -5,7 +5,7 @@
 
 import { PrismaClient } from '@prisma/client';
 import { stripe } from './stripeService';
-import { getPaymentRepository } from '../repositories/paymentRepository';
+import { PaymentRepository, getPaymentRepository } from '../repositories/paymentRepository';
 import {
   BookingNotFoundError,
   PaymentNotFoundError,
@@ -17,7 +17,7 @@ import {
  * Refund service for processing payment refunds
  */
 export class RefundService {
-  private paymentRepository;
+  private paymentRepository: PaymentRepository;
 
   constructor(private prisma: PrismaClient) {
     this.paymentRepository = getPaymentRepository(prisma);

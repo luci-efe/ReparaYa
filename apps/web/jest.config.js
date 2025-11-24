@@ -38,7 +38,11 @@ const customJestConfig = {
   ],
   coverageThreshold: {
     global: {
-      branches: 60, // Adjusted for MVP - many branches are error paths
+      // Current coverage is ~81% branches. Threshold set at 65% to allow for:
+      // 1. New features with error handling branches that may initially lack coverage
+      // 2. MVP pace while maintaining quality baseline
+      // TODO: Raise to 70% once core features stabilize (owner: team, target: post-MVP)
+      branches: 65,
       functions: 70,
       lines: 70,
       statements: 70,

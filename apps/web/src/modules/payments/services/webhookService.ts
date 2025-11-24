@@ -6,16 +6,16 @@
 import { PrismaClient } from '@prisma/client';
 import { Decimal } from '@prisma/client/runtime/library';
 import Stripe from 'stripe';
-import { getPaymentRepository } from '../repositories/paymentRepository';
-import { getWebhookEventRepository } from '../repositories/webhookEventRepository';
+import { PaymentRepository, getPaymentRepository } from '../repositories/paymentRepository';
+import { WebhookEventRepository, getWebhookEventRepository } from '../repositories/webhookEventRepository';
 import { WebhookProcessingResult } from '../types';
 
 /**
  * Webhook service for processing Stripe events
  */
 export class WebhookService {
-  private paymentRepository;
-  private webhookEventRepository;
+  private paymentRepository: PaymentRepository;
+  private webhookEventRepository: WebhookEventRepository;
 
   constructor(private prisma: PrismaClient) {
     this.paymentRepository = getPaymentRepository(prisma);

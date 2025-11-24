@@ -7,17 +7,18 @@ import { PrismaClient } from '@prisma/client';
 import Stripe from 'stripe';
 import { stripe } from './stripeService';
 import { calculateBookingAmounts } from './commissionService';
-import { getPaymentRepository } from '../repositories/paymentRepository';
+import { PaymentRepository, getPaymentRepository } from '../repositories/paymentRepository';
 import {
   BookingNotFoundError,
   CheckoutSessionResult,
+  PaymentError,
 } from '../types';
 
 /**
  * Checkout service for creating payment sessions
  */
 export class CheckoutService {
-  private paymentRepository;
+  private paymentRepository: PaymentRepository;
 
   constructor(private prisma: PrismaClient) {
     this.paymentRepository = getPaymentRepository(prisma);
@@ -101,9 +102,36 @@ export class CheckoutService {
       },
     };
 
-    const session = await stripe.checkout.sessions.create(sessionParams);
+    // 3. Create Stripe Checkout Session with error handling
+    let session: Stripe.Checkout.Session;
+    try {
+      session = await stripe.checkout.sessions.create(sessionParams);
+    } catch (error) {
+      console.error('[CheckoutService] Failed to create checkout session:', {
+        bookingId: booking.id,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw new PaymentError(
+        `Failed to create checkout session for booking ${booking.id}`,
+        'CHECKOUT_SESSION_CREATION_FAILED',
+        500
+      );
+    }
 
-    // 4. Create Payment record
+    // 4. Validate session URL exists
+    if (!session.url) {
+      console.error('[CheckoutService] Stripe session created without URL:', {
+        bookingId: booking.id,
+        sessionId: session.id,
+      });
+      throw new PaymentError(
+        `Stripe checkout session ${session.id} has no URL`,
+        'CHECKOUT_SESSION_NO_URL',
+        500
+      );
+    }
+
+    // 5. Create Payment record
     const payment = await this.paymentRepository.createPayment({
       bookingId: booking.id,
       type: 'ANTICIPO',
@@ -124,10 +152,10 @@ export class CheckoutService {
       paymentId: payment.id,
     });
 
-    // 5. Return result
+    // 6. Return result
     return {
       sessionId: session.id,
-      checkoutUrl: session.url!,
+      checkoutUrl: session.url,
       payment,
     };
   }

@@ -5,10 +5,11 @@
 
 import { PrismaClient } from '@prisma/client';
 import { stripe } from './stripeService';
-import { getPaymentRepository } from '../repositories/paymentRepository';
+import { PaymentRepository, getPaymentRepository } from '../repositories/paymentRepository';
 import {
   BookingNotFoundError,
   MissingConnectAccountError,
+  PaymentError,
   PayoutResult,
 } from '../types';
 
@@ -16,7 +17,7 @@ import {
  * Payout service for transferring funds to contractors
  */
 export class PayoutService {
-  private paymentRepository;
+  private paymentRepository: PaymentRepository;
 
   constructor(private prisma: PrismaClient) {
     this.paymentRepository = getPaymentRepository(prisma);
@@ -66,17 +67,43 @@ export class PayoutService {
       throw new BookingNotFoundError(bookingId);
     }
 
-    // 3. Verify contractor has Connect account
-    const contractorProfile = booking.contractor.contractorProfile;
+    // 3. Verify contractor exists
+    if (!booking.contractor) {
+      throw new PaymentError(
+        `No contractor found for booking ${bookingId}`,
+        'CONTRACTOR_NOT_FOUND',
+        400
+      );
+    }
 
-    if (!contractorProfile?.stripeConnectAccountId) {
+    // 4. Verify contractor has profile configured
+    const contractorProfile = booking.contractor.contractorProfile;
+    if (!contractorProfile) {
+      throw new PaymentError(
+        `Contractor profile not configured for booking ${bookingId}`,
+        'CONTRACTOR_PROFILE_NOT_CONFIGURED',
+        400
+      );
+    }
+
+    // 5. Verify contractor has Connect account
+    if (!contractorProfile.stripeConnectAccountId) {
       throw new MissingConnectAccountError(booking.contractorId);
     }
 
-    // 4. Get contractor payout amount (85% of final price)
+    // 6. Verify payout amount exists
+    if (!booking.contractorPayoutAmount) {
+      throw new PaymentError(
+        `Missing payout amount for booking ${bookingId}`,
+        'MISSING_PAYOUT_AMOUNT',
+        400
+      );
+    }
+
+    // 7. Get contractor payout amount (85% of final price)
     const payoutAmount = booking.contractorPayoutAmount;
 
-    // 5. Create Stripe Transfer to Connect account
+    // 8. Create Stripe Transfer to Connect account
     const transfer = await stripe.transfers.create({
       amount: Math.round(payoutAmount.toNumber() * 100), // Convert to cents
       currency: 'mxn',
