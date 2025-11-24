@@ -1,12 +1,11 @@
 import { requireRole } from '@/modules/auth/utils/requireRole';
 import { ClientDashboardShell } from '@/components/clients/ClientDashboardShell';
+import { getUserDisplayName } from '@/lib/userUtils';
 
 export default async function ClientBookingsPage() {
     const user = await requireRole('CLIENT');
 
-    const userName = user.firstName
-        ? `${user.firstName}${user.lastName ? ' ' + user.lastName : ''}`
-        : user.email;
+    const userName = getUserDisplayName(user);
 
     return (
         <ClientDashboardShell

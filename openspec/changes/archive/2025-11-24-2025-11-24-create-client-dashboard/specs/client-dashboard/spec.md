@@ -136,7 +136,7 @@ The system SHALL display an upcoming bookings section on the dashboard.
 
 - **WHEN** a client with no upcoming bookings views the dashboard
 - **THEN** the system SHALL display an "Upcoming Bookings" section
-- **AND** display empty state message: "No tienes reservas proximas"
+- **AND** display empty state message: "No tienes reservas próximas"
 - **AND** display help text explaining how to create a booking
 
 ### Requirement: Loading and Error States (RF-CDASH-08)
