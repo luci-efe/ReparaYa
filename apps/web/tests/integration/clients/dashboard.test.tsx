@@ -34,10 +34,6 @@ describe('DashboardContent Integration', () => {
 
         render(<DashboardContent userId="user_123" />);
 
-        // Initial render shows dashboard content because isChecking is false
-        // Then effect runs and redirects
-
-
         await waitFor(() => {
             expect(mockPush).toHaveBeenCalledWith('/clients/dashboard');
         });
