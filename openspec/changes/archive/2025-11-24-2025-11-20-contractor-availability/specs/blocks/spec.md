@@ -4,7 +4,7 @@
 
 ### Requirement: Ad-Hoc Time Blocks
 
-The system SHALL SHALL allow contractors to create manual blocks for specific datetime ranges (vacations, maintenance, emergencies).
+The system SHALL allow contractors to create manual blocks for specific datetime ranges (vacations, maintenance, emergencies).
 
 #### Scenario: Create block for vacation period
 
@@ -107,7 +107,7 @@ Blocks use UTC internally but accept/return contractor's local timezone for UI.
 **Given** contractor creates block spanning DST transition (e.g., April 2-8)  
 **When** block stored in UTC  
 **Then** UTC values are consistent across DST boundary  
-**And**slot generation correctly interprets each day's local time using `date-fns-tz`
+**And** slot generation correctly interprets each day's local time using `date-fns-tz`
 
 ---
 
