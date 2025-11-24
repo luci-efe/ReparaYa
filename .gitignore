@@ -246,3 +246,6 @@ temp/
 # package-lock.json
 # yarn.lock
 # pnpm-lock.yaml
+
+# Debug files
+debug_api.txt

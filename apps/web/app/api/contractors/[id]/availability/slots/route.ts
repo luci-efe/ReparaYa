@@ -1,5 +1,5 @@
 /**
- * API Route: GET /api/contractors/[contractorId]/availability/slots
+ * API Route: GET /api/contractors/[id]/availability/slots
  * Generate available time slots for a contractor
  * This is a PUBLIC endpoint - clients can view slots
  */
@@ -9,7 +9,7 @@ import { slotGeneratorService } from '@/modules/contractors/availability/service
 
 export async function GET(
     req: NextRequest,
-    { params }: { params: { contractorId: string } }
+    { params }: { params: { id: string } }
 ) {
     try {
         const { searchParams } = new URL(req.url);
@@ -35,7 +35,7 @@ export async function GET(
 
         // Generate slots
         const slots = await slotGeneratorService.generateSlots(
-            params.contractorId,
+            params.id,
             startDate,
             endDate,
             serviceId

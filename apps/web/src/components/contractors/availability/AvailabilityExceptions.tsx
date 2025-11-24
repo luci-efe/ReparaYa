@@ -182,8 +182,14 @@ function ExceptionModal({ date, existingException, onClose, onSuccess }: Excepti
                 intervals: data.type === 'BLOCKED' ? [] : data.intervals,
             };
 
-            const res = await fetch('/api/contractors/me/availability/exceptions', {
-                method: 'POST',
+            const isUpdate = !!existingException;
+            const url = isUpdate 
+                ? `/api/contractors/me/availability/exceptions/${existingException.id}`
+                : '/api/contractors/me/availability/exceptions';
+            const method = isUpdate ? 'PATCH' : 'POST';
+
+            const res = await fetch(url, {
+                method,
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload),
             });
