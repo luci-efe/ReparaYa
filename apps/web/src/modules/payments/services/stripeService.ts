@@ -1,14 +1,21 @@
 /**
  * Stripe Service
- * Initializes and exports Stripe client
+ * Lazy-initialized Stripe client - only validates/creates when actually used
  */
 
 import Stripe from 'stripe';
 
+// Lazy-initialized singleton
+let stripeClient: Stripe | null = null;
+let isValidated = false;
+
 /**
  * Validate required Stripe environment variables
+ * Only called when Stripe client is actually needed
  */
 function validateStripeEnv(): void {
+  if (isValidated) return;
+
   const requiredVars = [
     'STRIPE_SECRET_KEY',
     'STRIPE_WEBHOOK_SECRET',
@@ -48,21 +55,42 @@ function validateStripeEnv(): void {
       '[StripeService] WARNING: Using LIVE Stripe keys. Ensure this is intentional.'
     );
   }
+
+  isValidated = true;
 }
 
-// Validate environment on module load
-validateStripeEnv();
+/**
+ * Get Stripe client (lazy initialization)
+ * Only validates and creates client when first accessed
+ */
+function getStripeClient(): Stripe {
+  if (!stripeClient) {
+    validateStripeEnv();
+    stripeClient = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+      apiVersion: '2025-11-17.clover',
+      appInfo: {
+        name: 'ReparaYa',
+        version: '1.0.0',
+        url: 'https://reparaya.com',
+      },
+    });
+    console.log('[StripeService] Stripe client ready');
+  }
+  return stripeClient;
+}
 
 /**
- * Stripe client singleton
- * Configured with secret key and latest API version
+ * Stripe client - lazy initialized on first access
+ * Use this for all Stripe API calls
  */
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2025-11-17.clover',
-  appInfo: {
-    name: 'ReparaYa',
-    version: '1.0.0',
-    url: 'https://reparaya.com',
+export const stripe: Stripe = new Proxy({} as Stripe, {
+  get(_target, prop) {
+    const client = getStripeClient();
+    const value = client[prop as keyof Stripe];
+    if (typeof value === 'function') {
+      return value.bind(client);
+    }
+    return value;
   },
 });
 
@@ -70,6 +98,7 @@ export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
  * Get Stripe webhook secret
  */
 export function getWebhookSecret(): string {
+  validateStripeEnv();
   return process.env.STRIPE_WEBHOOK_SECRET!;
 }
 
@@ -77,14 +106,13 @@ export function getWebhookSecret(): string {
  * Get Stripe publishable key (for client-side)
  */
 export function getPublishableKey(): string {
-  return process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!;
+  return process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '';
 }
 
 /**
  * Check if we're in test mode
  */
 export function isTestMode(): boolean {
-  return process.env.STRIPE_SECRET_KEY!.includes('test');
+  const key = process.env.STRIPE_SECRET_KEY;
+  return key ? key.includes('test') : true;
 }
-
-console.log('[StripeService] Stripe client ready');
