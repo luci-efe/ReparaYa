@@ -1,10 +1,9 @@
 /**
  * Exception Validators (Zod Schemas)
- *
- * TODO: Implement full validation
  */
 
 import { z } from 'zod';
+import { intervalsOverlap } from '../utils/intervals';
 
 const timeIntervalSchema = z.object({
   startTime: z.string().regex(/^\d{2}:\d{2}$/, 'Formato debe ser HH:MM'),
@@ -13,6 +12,20 @@ const timeIntervalSchema = z.object({
   (data) => data.startTime < data.endTime,
   { message: 'startTime debe ser anterior a endTime' }
 );
+
+/**
+ * Checks if any intervals in the array overlap with each other
+ */
+function hasOverlappingIntervals(intervals: { startTime: string; endTime: string }[]): boolean {
+  for (let i = 0; i < intervals.length; i++) {
+    for (let j = i + 1; j < intervals.length; j++) {
+      if (intervalsOverlap(intervals[i], intervals[j])) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
 
 export const createExceptionSchema = z.object({
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Formato debe ser YYYY-MM-DD'),
@@ -32,11 +45,27 @@ export const createExceptionSchema = z.object({
     message: 'Excepciones de tipo AVAILABLE deben tener al menos un intervalo',
     path: ['intervals'],
   }
+).refine(
+  (data) => !hasOverlappingIntervals(data.intervals),
+  {
+    message: 'Los intervalos no deben traslaparse',
+    path: ['intervals'],
+  }
 );
-// TODO: Add validation for future dates, overlap detection
 
 export const updateExceptionSchema = z.object({
   intervals: z.array(timeIntervalSchema).optional(),
   type: z.enum(['AVAILABLE', 'BLOCKED']).optional(),
   reason: z.string().optional(),
-});
+}).refine(
+  (data) => {
+    if (data.intervals && data.intervals.length > 0) {
+      return !hasOverlappingIntervals(data.intervals);
+    }
+    return true;
+  },
+  {
+    message: 'Los intervalos no deben traslaparse',
+    path: ['intervals'],
+  }
+);

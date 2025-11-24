@@ -1,7 +1,7 @@
 # exceptions Specification
 
 ## Purpose
-TBD - created by archiving change 2025-11-20-contractor-availability. Update Purpose after archive.
+Defines date-specific exception rules that allow contractors to override their weekly availability patterns for holidays, special events, or one-time schedule changes.
 ## Requirements
 ### Requirement: Date-Specific Exceptions
 
@@ -19,7 +19,7 @@ The system SHALL allow contractors to override weekly rules for specific dates (
 **Acceptance Criteria**:
 - Date format: YYYY-MM-DD
 - Exception type: `AVAILABLE` (overrides rule with new intervals)
-- Intervals follow same validation as weekly rules (no overlaps, startTime \u003c endTime)
+- Intervals follow same validation as weekly rules (no overlaps, startTime < endTime)
 - Optional `reason` field for documentation (e.g., "Holiday hours")
 
 ---
@@ -61,7 +61,7 @@ API supports filtering exceptions by date range for efficient queries.
 #### Scenario: List exceptions for date range
 
 **Given** contractor has 10 exceptions spread across 2025  
-**When** client requests `GET /api/contractors/me/availability/exceptions?startDate=2025-12-01\u0026endDate=2026-01-31`  
+**When** client requests `GET /api/contractors/me/availability/exceptions?startDate=2025-12-01&endDate=2026-01-31`  
 **Then** only exceptions within [Dec 1 - Jan 31] are returned  
 **And** response is ordered by date ASC  
 

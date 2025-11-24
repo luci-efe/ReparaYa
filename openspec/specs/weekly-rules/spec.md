@@ -1,7 +1,7 @@
 # weekly-rules Specification
 
 ## Purpose
-TBD - created by archiving change 2025-11-20-contractor-availability. Update Purpose after archive.
+Defines recurring weekly availability patterns that allow contractors to set their standard working hours for each day of the week.
 ## Requirements
 ### Requirement: Weekly Recurrence Patterns
 
@@ -17,10 +17,10 @@ The system SHALL allow contractors to define recurring availability rules for ea
 
 **Acceptance Criteria**:
 - dayOfWeek must be 0-6 (0=Sunday, 6=Saturday)
-- Each interval must have startTime \u003c endTime
+- Each interval must have startTime < endTime
 - Intervals within same day must not overlap
 - Time format: HH:MM (24-hour)
-- Minimum interval duration: No hard minimum, but UI warns if \u003c 30 min
+- Minimum interval duration: No hard minimum, but UI warns if < 30 min
 
 ---
 
@@ -102,7 +102,7 @@ The system SHALL support configurable time slot granularity.
 
 ### Requirement: Timezone Normalization for Weekly Rules
 
-Weekly rules are stored in contractor's local timezone but internally normalized to UTC for consistency.
+Weekly rules SHALL be stored in contractor's local timezone but internally normalized to UTC for consistency.
 
 #### Scenario: Create rule in contractor timezone
 

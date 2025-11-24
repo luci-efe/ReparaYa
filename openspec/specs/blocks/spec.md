@@ -1,7 +1,7 @@
 # blocks Specification
 
 ## Purpose
-TBD - created by archiving change 2025-11-20-contractor-availability. Update Purpose after archive.
+Defines manual time blocks that allow contractors to mark specific datetime ranges as unavailable for vacations, maintenance, emergencies, or other ad-hoc unavailability periods.
 ## Requirements
 ### Requirement: Ad-Hoc Time Blocks
 
@@ -17,7 +17,7 @@ The system SHALL allow contractors to create manual blocks for specific datetime
 
 **Acceptance Criteria**:
 - DateTime format: ISO8601 with timezone (e.g., `2025-12-20T00:00:00-06:00`)
-- `startDateTime` must be \u003c `endDateTime`
+- `startDateTime` must be < `endDateTime`
 - Reason is optional freetext (max 500 chars recommended)
 - Blocks are stored in UTC internally
 - Blocks can span multiple days
@@ -80,7 +80,7 @@ WHERE contractorProfileId = :id
   AND (
     (startDateTime BETWEEN :start AND :end)
     OR (endDateTime BETWEEN :start AND :end)
-    OR (startDateTime \u003c= :start AND endDateTime \u003e= :end)  -- block fully contains range
+    OR (startDateTime <= :start AND endDateTime >= :end)  -- block fully contains range
   )
 ```
 
