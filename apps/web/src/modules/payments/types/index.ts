@@ -5,7 +5,6 @@
 
 import { Decimal } from '@prisma/client/runtime/library';
 import { Payment, PaymentStatus, PaymentType } from '@prisma/client';
-import Stripe from 'stripe';
 
 // ============================================
 // BOOKING AMOUNTS (Business Rule Calculations)
@@ -282,5 +281,4 @@ export class InvalidWebhookSignatureError extends PaymentError {
 // RE-EXPORTS FROM PRISMA
 // ============================================
 
-export { Payment, PaymentStatus, PaymentType };
-export type { ProcessedWebhookEvent } from '@prisma/client';
+export type { Payment, PaymentStatus, PaymentType, ProcessedWebhookEvent } from '@prisma/client';

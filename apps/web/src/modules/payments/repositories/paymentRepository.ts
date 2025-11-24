@@ -3,7 +3,7 @@
  * Data access layer for Payment entities
  */
 
-import { PrismaClient, Payment, PaymentStatus } from '@prisma/client';
+import { PrismaClient, Payment, PaymentStatus, Prisma } from '@prisma/client';
 import { CreatePaymentInput, PaymentNotFoundError } from '../types';
 
 /**
@@ -26,7 +26,7 @@ export class PaymentRepository {
         stripeCheckoutSessionId: data.stripeCheckoutSessionId,
         stripeTransferId: data.stripeTransferId,
         status: data.status || 'PENDING',
-        metadata: data.metadata || {},
+        metadata: (data.metadata || {}) as Prisma.InputJsonValue,
       },
     });
   }

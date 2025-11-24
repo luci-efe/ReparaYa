@@ -4,13 +4,13 @@
  */
 
 import { PrismaClient } from '@prisma/client';
+import Stripe from 'stripe';
 import { stripe } from './stripeService';
 import { calculateBookingAmounts } from './commissionService';
 import { getPaymentRepository } from '../repositories/paymentRepository';
 import {
   BookingNotFoundError,
   CheckoutSessionResult,
-  CheckoutMetadata,
 } from '../types';
 
 /**
@@ -43,7 +43,14 @@ export class CheckoutService {
     const booking = await this.prisma.booking.findUnique({
       where: { id: bookingId },
       include: {
-        service: true,
+        service: {
+          include: {
+            images: {
+              orderBy: { order: 'asc' },
+              take: 1,
+            },
+          },
+        },
         client: true,
       },
     });
@@ -60,13 +67,13 @@ export class CheckoutService {
     const appUrl =
       process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 
-    const metadata: CheckoutMetadata = {
+    const metadata: Record<string, string> = {
       booking_id: booking.id,
       service_id: booking.serviceId,
       client_id: booking.clientId,
     };
 
-    const session = await stripe.checkout.sessions.create({
+    const sessionParams: Stripe.Checkout.SessionCreateParams = {
       mode: 'payment',
       payment_method_types: ['card'],
       line_items: [
@@ -78,21 +85,23 @@ export class CheckoutService {
               name: booking.service.title,
               description: `Anticipo 30% - Servicio programado para ${booking.scheduledDate.toLocaleDateString('es-MX')}`,
               images: booking.service.images.length > 0
-                ? [booking.service.images[0]]
+                ? [booking.service.images[0].s3Url]
                 : undefined,
             },
           },
           quantity: 1,
         },
       ],
-      customer_email: booking.client.email,
+      customer_email: booking.client.email ?? undefined,
       success_url: `${appUrl}/bookings/${booking.id}/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${appUrl}/bookings/${booking.id}/cancelled`,
       metadata,
       payment_intent_data: {
         metadata,
       },
-    });
+    };
+
+    const session = await stripe.checkout.sessions.create(sessionParams);
 
     // 4. Create Payment record
     const payment = await this.paymentRepository.createPayment({

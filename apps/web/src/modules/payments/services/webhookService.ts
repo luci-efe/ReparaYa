@@ -4,6 +4,7 @@
  */
 
 import { PrismaClient } from '@prisma/client';
+import { Decimal } from '@prisma/client/runtime/library';
 import Stripe from 'stripe';
 import { getPaymentRepository } from '../repositories/paymentRepository';
 import { getWebhookEventRepository } from '../repositories/webhookEventRepository';
@@ -222,7 +223,7 @@ export class WebhookService {
     await this.paymentRepository.createPayment({
       bookingId: originalPayment.bookingId,
       type: 'REEMBOLSO',
-      amount: new (require('@prisma/client/runtime/library').Decimal)(refundAmount),
+      amount: new Decimal(refundAmount),
       currency: originalPayment.currency,
       status: 'SUCCEEDED',
       metadata: {
