@@ -217,8 +217,8 @@ export const slotGeneratorService = {
       // Ends on this day
       effectiveEndTime = localEnd.time;
     } else {
-      // Ends after this day, so entire day until 23:59
-      effectiveEndTime = '23:59';
+      // Ends after this day, so entire day until 24:00
+      effectiveEndTime = '24:00';
     }
 
     return {

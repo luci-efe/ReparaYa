@@ -4,7 +4,7 @@
 
 ### Requirement: Date-Specific Exceptions
 
-The system SHALL SHALL allow contractors to override weekly rules for specific dates (holidays, special events, one-time closures).
+The system SHALL allow contractors to override weekly rules for specific dates (holidays, special events, one-time closures).
 
 #### Scenario: Create available exception (override weekly rule)
 

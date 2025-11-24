@@ -89,9 +89,7 @@ FOR each block intersecting current day:
 - `serviceId` query param is optional
 - If provided, fetches `service.durationMinutes`
 - Filters slots where `slot.durationMinutes \u003c service.durationMinutes`
-- If omitted, returns all slo
-
-ts
+- If omitted, returns all slots
 
 ---
 

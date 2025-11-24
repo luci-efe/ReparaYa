@@ -28,7 +28,10 @@ export const createExceptionSchema = z.object({
     }
     return true;
   },
-  { message: 'Excepciones de tipo AVAILABLE deben tener al menos un intervalo' }
+  { 
+    message: 'Excepciones de tipo AVAILABLE deben tener al menos un intervalo',
+    path: ['intervals'],
+  }
 );
 // TODO: Add validation for future dates, overlap detection
 
