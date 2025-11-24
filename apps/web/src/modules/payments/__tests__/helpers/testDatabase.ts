@@ -21,10 +21,11 @@ console.log('[testDatabase] Prisma keys:', Object.keys(prisma).filter(k => !k.st
  * Create a real test user in database
  */
 export async function createTestUser(overrides?: Partial<any>) {
+  const uniqueId = `${Date.now()}_${Math.random().toString(36).substring(7)}`;
   const user = await prisma.user.create({
     data: {
-      clerkUserId: `test_clerk_${Date.now()}_${Math.random()}`,
-      email: `test${Date.now()}@example.com`,
+      clerkUserId: `test_clerk_${uniqueId}`,
+      email: `test_${uniqueId}@example.com`,
       firstName: 'Test',
       lastName: 'User',
       role: 'CLIENT',
@@ -64,12 +65,12 @@ export async function createTestService(contractorId: string, categoryId: string
       title: 'Test Plumbing Service',
       description: 'Test service description',
       basePrice: new Decimal(100),
+      durationMinutes: 60, // Required field
       locationLat: new Decimal(19.4326), // Mexico City coords
       locationLng: new Decimal(-99.1332),
       locationAddress: 'Test Address, CDMX',
       coverageRadiusKm: 10,
       status: 'ACTIVE',
-      images: [],
     },
   });
   return service;
@@ -80,18 +81,18 @@ export async function createTestService(contractorId: string, categoryId: string
  */
 export async function createTestCategory() {
   // Check if category exists first
-  const existing = await prisma.category.findFirst({
+  const existing = await prisma.serviceCategory.findFirst({
     where: { name: 'Test Category' },
   });
 
   if (existing) return existing;
 
-  const category = await prisma.category.create({
+  const category = await prisma.serviceCategory.create({
     data: {
       name: 'Test Category',
-      slug: 'test-category',
+      slug: `test-category-${Date.now()}`,
       description: 'Test category for integration tests',
-      iconUrl: 'test-icon',
+      icon: 'test-icon',
     },
   });
   return category;
