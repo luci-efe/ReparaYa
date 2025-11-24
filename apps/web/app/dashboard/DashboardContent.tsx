@@ -26,6 +26,14 @@ export function DashboardContent({ userId }: { userId: string }) {
         if (profile.role === 'CONTRACTOR') {
           setIsRedirecting(true);
           router.push('/contractors/dashboard');
+          return;
+        }
+
+        // Si es cliente, redirigir a dashboard de clientes
+        if (profile.role === 'CLIENT') {
+          setIsRedirecting(true);
+          router.push('/clients/dashboard');
+          return;
         }
       } catch (error) {
         console.error('Error checking user role:', error);
