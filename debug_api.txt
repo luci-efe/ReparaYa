@@ -1,0 +1,437 @@
+Blocks API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Exceptions API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Blocks API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+Blocks API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Exceptions API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+Contractor: {"id":"76faf061-6405-4b9e-a41c-67ecff0dd47d","userId":"55698448-5a2b-4c17-9ada-a7d3de5972e9","businessName":"Roberto Padilla","description":"Hago trabajos de fontaneria y tengo mas de 10 años de experiencia reparando electrodomesticos.","specialties":["plomeria","electricidad","carpinteria","herreria"],"verified":true,"verificationDocuments":null,"stripeConnectAccountId":null,"createdAt":"2025-11-18T03:50:08.114Z","updatedAt":"2025-11-20T18:17:13.997Z"}
+Blocks API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+Exceptions API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Exceptions API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+Contractor: {"id":"76faf061-6405-4b9e-a41c-67ecff0dd47d","userId":"55698448-5a2b-4c17-9ada-a7d3de5972e9","businessName":"Roberto Padilla","description":"Hago trabajos de fontaneria y tengo mas de 10 años de experiencia reparando electrodomesticos.","specialties":["plomeria","electricidad","carpinteria","herreria"],"verified":true,"verificationDocuments":null,"stripeConnectAccountId":null,"createdAt":"2025-11-18T03:50:08.114Z","updatedAt":"2025-11-20T18:17:13.997Z"}
+UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Exceptions API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Blocks API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Contractor: {"id":"76faf061-6405-4b9e-a41c-67ecff0dd47d","userId":"55698448-5a2b-4c17-9ada-a7d3de5972e9","businessName":"Roberto Padilla","description":"Hago trabajos de fontaneria y tengo mas de 10 años de experiencia reparando electrodomesticos.","specialties":["plomeria","electricidad","carpinteria","herreria"],"verified":true,"verificationDocuments":null,"stripeConnectAccountId":null,"createdAt":"2025-11-18T03:50:08.114Z","updatedAt":"2025-11-20T18:17:13.997Z"}
+Exceptions API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+Blocks API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Exceptions API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Blocks API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Contractor: {"id":"76faf061-6405-4b9e-a41c-67ecff0dd47d","userId":"55698448-5a2b-4c17-9ada-a7d3de5972e9","businessName":"Roberto Padilla","description":"Hago trabajos de fontaneria y tengo mas de 10 años de experiencia reparando electrodomesticos.","specialties":["plomeria","electricidad","carpinteria","herreria"],"verified":true,"verificationDocuments":null,"stripeConnectAccountId":null,"createdAt":"2025-11-18T03:50:08.114Z","updatedAt":"2025-11-20T18:17:13.997Z"}
+Exceptions API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+Blocks API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+Blocks API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Exceptions API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Blocks API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+Exceptions API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+Contractor: {"id":"76faf061-6405-4b9e-a41c-67ecff0dd47d","userId":"55698448-5a2b-4c17-9ada-a7d3de5972e9","businessName":"Roberto Padilla","description":"Hago trabajos de fontaneria y tengo mas de 10 años de experiencia reparando electrodomesticos.","specialties":["plomeria","electricidad","carpinteria","herreria"],"verified":true,"verificationDocuments":null,"stripeConnectAccountId":null,"createdAt":"2025-11-18T03:50:08.114Z","updatedAt":"2025-11-20T18:17:13.997Z"}
+Blocks API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Exceptions API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Blocks API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+Contractor: {"id":"76faf061-6405-4b9e-a41c-67ecff0dd47d","userId":"55698448-5a2b-4c17-9ada-a7d3de5972e9","businessName":"Roberto Padilla","description":"Hago trabajos de fontaneria y tengo mas de 10 años de experiencia reparando electrodomesticos.","specialties":["plomeria","electricidad","carpinteria","herreria"],"verified":true,"verificationDocuments":null,"stripeConnectAccountId":null,"createdAt":"2025-11-18T03:50:08.114Z","updatedAt":"2025-11-20T18:17:13.997Z"}
+Exceptions API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Exceptions API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Blocks API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Contractor: {"id":"76faf061-6405-4b9e-a41c-67ecff0dd47d","userId":"55698448-5a2b-4c17-9ada-a7d3de5972e9","businessName":"Roberto Padilla","description":"Hago trabajos de fontaneria y tengo mas de 10 años de experiencia reparando electrodomesticos.","specialties":["plomeria","electricidad","carpinteria","herreria"],"verified":true,"verificationDocuments":null,"stripeConnectAccountId":null,"createdAt":"2025-11-18T03:50:08.114Z","updatedAt":"2025-11-20T18:17:13.997Z"}
+Exceptions API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+Blocks API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Blocks API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Exceptions API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Contractor: {"id":"76faf061-6405-4b9e-a41c-67ecff0dd47d","userId":"55698448-5a2b-4c17-9ada-a7d3de5972e9","businessName":"Roberto Padilla","description":"Hago trabajos de fontaneria y tengo mas de 10 años de experiencia reparando electrodomesticos.","specialties":["plomeria","electricidad","carpinteria","herreria"],"verified":true,"verificationDocuments":null,"stripeConnectAccountId":null,"createdAt":"2025-11-18T03:50:08.114Z","updatedAt":"2025-11-20T18:17:13.997Z"}
+Exceptions API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+Blocks API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+Exception POST - Body: {"date":"2025-11-28","intervals":[],"type":"BLOCKED","reason":"Día libre"}
+Exception POST Error: No estás autorizado para modificar esta disponibilidad
+Stack: UnauthorizedError: No estás autorizado para modificar esta disponibilidad
+    at Object.createException (webpack-internal:///(rsc)/./src/modules/contractors/availability/services/availabilityService.ts:107:19)
+    at async POST (webpack-internal:///(rsc)/./app/api/contractors/me/availability/exceptions/route.ts:98:27)
+    at async /home/fr/School/7mo-sem/sistemas-escalables/reparaya/ReparaYa/apps/web/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:57228
+    at async eT.execute (/home/fr/School/7mo-sem/sistemas-escalables/reparaya/ReparaYa/apps/web/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:46851)
+    at async eT.handle (/home/fr/School/7mo-sem/sistemas-escalables/reparaya/ReparaYa/apps/web/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:58760)
+    at async doRender (/home/fr/School/7mo-sem/sistemas-escalables/reparaya/ReparaYa/apps/web/node_modules/next/dist/server/base-server.js:1366:42)
+    at async cacheEntry.responseCache.get.routeKind (/home/fr/School/7mo-sem/sistemas-escalables/reparaya/ReparaYa/apps/web/node_modules/next/dist/server/base-server.js:1588:28)
+    at async DevServer.renderToResponseWithComponentsImpl (/home/fr/School/7mo-sem/sistemas-escalables/reparaya/ReparaYa/apps/web/node_modules/next/dist/server/base-server.js:1496:28)
+    at async DevServer.renderPageComponent (/home/fr/School/7mo-sem/sistemas-escalables/reparaya/ReparaYa/apps/web/node_modules/next/dist/server/base-server.js:1924:24)
+    at async DevServer.renderToResponseImpl (/home/fr/School/7mo-sem/sistemas-escalables/reparaya/ReparaYa/apps/web/node_modules/next/dist/server/base-server.js:1962:32)
+    at async DevServer.pipeImpl (/home/fr/School/7mo-sem/sistemas-escalables/reparaya/ReparaYa/apps/web/node_modules/next/dist/server/base-server.js:922:25)
+    at async NextNodeServer.handleCatchallRenderRequest (/home/fr/School/7mo-sem/sistemas-escalables/reparaya/ReparaYa/apps/web/node_modules/next/dist/server/next-server.js:272:17)
+    at async DevServer.handleRequestImpl (/home/fr/School/7mo-sem/sistemas-escalables/reparaya/ReparaYa/apps/web/node_modules/next/dist/server/base-server.js:818:17)
+    at async /home/fr/School/7mo-sem/sistemas-escalables/reparaya/ReparaYa/apps/web/node_modules/next/dist/server/dev/next-dev-server.js:339:20
+    at async Span.traceAsyncFn (/home/fr/School/7mo-sem/sistemas-escalables/reparaya/ReparaYa/apps/web/node_modules/next/dist/trace/trace.js:154:20)
+    at async DevServer.handleRequest (/home/fr/School/7mo-sem/sistemas-escalables/reparaya/ReparaYa/apps/web/node_modules/next/dist/server/dev/next-dev-server.js:336:24)
+    at async invokeRender (/home/fr/School/7mo-sem/sistemas-escalables/reparaya/ReparaYa/apps/web/node_modules/next/dist/server/lib/router-server.js:179:21)
+    at async handleRequest (/home/fr/School/7mo-sem/sistemas-escalables/reparaya/ReparaYa/apps/web/node_modules/next/dist/server/lib/router-server.js:359:24)
+    at async requestHandlerImpl (/home/fr/School/7mo-sem/sistemas-escalables/reparaya/ReparaYa/apps/web/node_modules/next/dist/server/lib/router-server.js:383:13)
+    at async Server.requestListener (/home/fr/School/7mo-sem/sistemas-escalables/reparaya/ReparaYa/apps/web/node_modules/next/dist/server/lib/start-server.js:141:13)
+Exceptions API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Blocks API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Exceptions API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+Contractor: {"id":"76faf061-6405-4b9e-a41c-67ecff0dd47d","userId":"55698448-5a2b-4c17-9ada-a7d3de5972e9","businessName":"Roberto Padilla","description":"Hago trabajos de fontaneria y tengo mas de 10 años de experiencia reparando electrodomesticos.","specialties":["plomeria","electricidad","carpinteria","herreria"],"verified":true,"verificationDocuments":null,"stripeConnectAccountId":null,"createdAt":"2025-11-18T03:50:08.114Z","updatedAt":"2025-11-20T18:17:13.997Z"}
+Blocks API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+Exceptions API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Blocks API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Contractor: {"id":"76faf061-6405-4b9e-a41c-67ecff0dd47d","userId":"55698448-5a2b-4c17-9ada-a7d3de5972e9","businessName":"Roberto Padilla","description":"Hago trabajos de fontaneria y tengo mas de 10 años de experiencia reparando electrodomesticos.","specialties":["plomeria","electricidad","carpinteria","herreria"],"verified":true,"verificationDocuments":null,"stripeConnectAccountId":null,"createdAt":"2025-11-18T03:50:08.114Z","updatedAt":"2025-11-20T18:17:13.997Z"}
+Exceptions API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+Blocks API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+Exception POST - Body: {"date":"2025-11-28","intervals":[],"type":"BLOCKED","reason":"Día libre"}
+UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Blocks API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Exceptions API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Contractor: {"id":"76faf061-6405-4b9e-a41c-67ecff0dd47d","userId":"55698448-5a2b-4c17-9ada-a7d3de5972e9","businessName":"Roberto Padilla","description":"Hago trabajos de fontaneria y tengo mas de 10 años de experiencia reparando electrodomesticos.","specialties":["plomeria","electricidad","carpinteria","herreria"],"verified":true,"verificationDocuments":null,"stripeConnectAccountId":null,"createdAt":"2025-11-18T03:50:08.114Z","updatedAt":"2025-11-20T18:17:13.997Z"}
+Exceptions API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+Blocks API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+Exceptions API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Blocks API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Exceptions API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+Blocks API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+Exceptions API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Contractor: {"id":"76faf061-6405-4b9e-a41c-67ecff0dd47d","userId":"55698448-5a2b-4c17-9ada-a7d3de5972e9","businessName":"Roberto Padilla","description":"Hago trabajos de fontaneria y tengo mas de 10 años de experiencia reparando electrodomesticos.","specialties":["plomeria","electricidad","carpinteria","herreria"],"verified":true,"verificationDocuments":null,"stripeConnectAccountId":null,"createdAt":"2025-11-18T03:50:08.114Z","updatedAt":"2025-11-20T18:17:13.997Z"}
+Blocks API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Exceptions API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+Blocks API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Contractor: {"id":"76faf061-6405-4b9e-a41c-67ecff0dd47d","userId":"55698448-5a2b-4c17-9ada-a7d3de5972e9","businessName":"Roberto Padilla","description":"Hago trabajos de fontaneria y tengo mas de 10 años de experiencia reparando electrodomesticos.","specialties":["plomeria","electricidad","carpinteria","herreria"],"verified":true,"verificationDocuments":null,"stripeConnectAccountId":null,"createdAt":"2025-11-18T03:50:08.114Z","updatedAt":"2025-11-20T18:17:13.997Z"}
+Exception POST - Body: {"date":"2025-11-29","intervals":[],"type":"BLOCKED","reason":"Prueba"}
+createException - clerkUserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo, contractorProfileId: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+createException - profile found: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+Blocks API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Exceptions API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Blocks API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+Exceptions API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+Contractor: {"id":"76faf061-6405-4b9e-a41c-67ecff0dd47d","userId":"55698448-5a2b-4c17-9ada-a7d3de5972e9","businessName":"Roberto Padilla","description":"Hago trabajos de fontaneria y tengo mas de 10 años de experiencia reparando electrodomesticos.","specialties":["plomeria","electricidad","carpinteria","herreria"],"verified":true,"verificationDocuments":null,"stripeConnectAccountId":null,"createdAt":"2025-11-18T03:50:08.114Z","updatedAt":"2025-11-20T18:17:13.997Z"}
+UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Blocks API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Exceptions API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Contractor: {"id":"76faf061-6405-4b9e-a41c-67ecff0dd47d","userId":"55698448-5a2b-4c17-9ada-a7d3de5972e9","businessName":"Roberto Padilla","description":"Hago trabajos de fontaneria y tengo mas de 10 años de experiencia reparando electrodomesticos.","specialties":["plomeria","electricidad","carpinteria","herreria"],"verified":true,"verificationDocuments":null,"stripeConnectAccountId":null,"createdAt":"2025-11-18T03:50:08.114Z","updatedAt":"2025-11-20T18:17:13.997Z"}
+Blocks API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+Exceptions API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+Blocks API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Exceptions API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Blocks API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+Exceptions API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Contractor: {"id":"76faf061-6405-4b9e-a41c-67ecff0dd47d","userId":"55698448-5a2b-4c17-9ada-a7d3de5972e9","businessName":"Roberto Padilla","description":"Hago trabajos de fontaneria y tengo mas de 10 años de experiencia reparando electrodomesticos.","specialties":["plomeria","electricidad","carpinteria","herreria"],"verified":true,"verificationDocuments":null,"stripeConnectAccountId":null,"createdAt":"2025-11-18T03:50:08.114Z","updatedAt":"2025-11-20T18:17:13.997Z"}
+Exception POST - Body: {"date":"2025-11-30","intervals":[],"type":"BLOCKED","reason":"Test"}
+createException - clerkUserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo, contractorProfileId: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+createException - profile found: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Blocks API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Exceptions API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Contractor: {"id":"76faf061-6405-4b9e-a41c-67ecff0dd47d","userId":"55698448-5a2b-4c17-9ada-a7d3de5972e9","businessName":"Roberto Padilla","description":"Hago trabajos de fontaneria y tengo mas de 10 años de experiencia reparando electrodomesticos.","specialties":["plomeria","electricidad","carpinteria","herreria"],"verified":true,"verificationDocuments":null,"stripeConnectAccountId":null,"createdAt":"2025-11-18T03:50:08.114Z","updatedAt":"2025-11-20T18:17:13.997Z"}
+Exceptions API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+Blocks API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Exceptions API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Blocks API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Contractor: {"id":"76faf061-6405-4b9e-a41c-67ecff0dd47d","userId":"55698448-5a2b-4c17-9ada-a7d3de5972e9","businessName":"Roberto Padilla","description":"Hago trabajos de fontaneria y tengo mas de 10 años de experiencia reparando electrodomesticos.","specialties":["plomeria","electricidad","carpinteria","herreria"],"verified":true,"verificationDocuments":null,"stripeConnectAccountId":null,"createdAt":"2025-11-18T03:50:08.114Z","updatedAt":"2025-11-20T18:17:13.997Z"}
+Exceptions API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+Blocks API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Exceptions API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Blocks API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Contractor: {"id":"76faf061-6405-4b9e-a41c-67ecff0dd47d","userId":"55698448-5a2b-4c17-9ada-a7d3de5972e9","businessName":"Roberto Padilla","description":"Hago trabajos de fontaneria y tengo mas de 10 años de experiencia reparando electrodomesticos.","specialties":["plomeria","electricidad","carpinteria","herreria"],"verified":true,"verificationDocuments":null,"stripeConnectAccountId":null,"createdAt":"2025-11-18T03:50:08.114Z","updatedAt":"2025-11-20T18:17:13.997Z"}
+Blocks API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+Exceptions API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Blocks API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Exceptions API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Contractor: {"id":"76faf061-6405-4b9e-a41c-67ecff0dd47d","userId":"55698448-5a2b-4c17-9ada-a7d3de5972e9","businessName":"Roberto Padilla","description":"Hago trabajos de fontaneria y tengo mas de 10 años de experiencia reparando electrodomesticos.","specialties":["plomeria","electricidad","carpinteria","herreria"],"verified":true,"verificationDocuments":null,"stripeConnectAccountId":null,"createdAt":"2025-11-18T03:50:08.114Z","updatedAt":"2025-11-20T18:17:13.997Z"}
+UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Blocks API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+Exceptions API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+Contractor: {"id":"76faf061-6405-4b9e-a41c-67ecff0dd47d","userId":"55698448-5a2b-4c17-9ada-a7d3de5972e9","businessName":"Roberto Padilla","description":"Hago trabajos de fontaneria y tengo mas de 10 años de experiencia reparando electrodomesticos.","specialties":["plomeria","electricidad","carpinteria","herreria"],"verified":true,"verificationDocuments":null,"stripeConnectAccountId":null,"createdAt":"2025-11-18T03:50:08.114Z","updatedAt":"2025-11-20T18:17:13.997Z"}
+Blocks API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Exceptions API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Blocks API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+Exceptions API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+Block POST - Body: {"startDateTime":"2025-12-01T16:00:00.000Z","endDateTime":"2025-12-01T18:00:00.000Z","reason":"Cita médica"}
+Exceptions API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Blocks API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Exceptions API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+Contractor: {"id":"76faf061-6405-4b9e-a41c-67ecff0dd47d","userId":"55698448-5a2b-4c17-9ada-a7d3de5972e9","businessName":"Roberto Padilla","description":"Hago trabajos de fontaneria y tengo mas de 10 años de experiencia reparando electrodomesticos.","specialties":["plomeria","electricidad","carpinteria","herreria"],"verified":true,"verificationDocuments":null,"stripeConnectAccountId":null,"createdAt":"2025-11-18T03:50:08.114Z","updatedAt":"2025-11-20T18:17:13.997Z"}
+Blocks API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+Exceptions API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Blocks API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Exceptions API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+Exceptions API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Contractor: {"id":"76faf061-6405-4b9e-a41c-67ecff0dd47d","userId":"55698448-5a2b-4c17-9ada-a7d3de5972e9","businessName":"Roberto Padilla","description":"Hago trabajos de fontaneria y tengo mas de 10 años de experiencia reparando electrodomesticos.","specialties":["plomeria","electricidad","carpinteria","herreria"],"verified":true,"verificationDocuments":null,"stripeConnectAccountId":null,"createdAt":"2025-11-18T03:50:08.114Z","updatedAt":"2025-11-20T18:17:13.997Z"}
+Blocks API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+Exceptions API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Blocks API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Contractor: {"id":"76faf061-6405-4b9e-a41c-67ecff0dd47d","userId":"55698448-5a2b-4c17-9ada-a7d3de5972e9","businessName":"Roberto Padilla","description":"Hago trabajos de fontaneria y tengo mas de 10 años de experiencia reparando electrodomesticos.","specialties":["plomeria","electricidad","carpinteria","herreria"],"verified":true,"verificationDocuments":null,"stripeConnectAccountId":null,"createdAt":"2025-11-18T03:50:08.114Z","updatedAt":"2025-11-20T18:17:13.997Z"}
+Blocks API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Blocks API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Exceptions API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Blocks API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+Contractor: {"id":"76faf061-6405-4b9e-a41c-67ecff0dd47d","userId":"55698448-5a2b-4c17-9ada-a7d3de5972e9","businessName":"Roberto Padilla","description":"Hago trabajos de fontaneria y tengo mas de 10 años de experiencia reparando electrodomesticos.","specialties":["plomeria","electricidad","carpinteria","herreria"],"verified":true,"verificationDocuments":null,"stripeConnectAccountId":null,"createdAt":"2025-11-18T03:50:08.114Z","updatedAt":"2025-11-20T18:17:13.997Z"}
+Exceptions API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+Blocks API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Exceptions API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Contractor: {"id":"76faf061-6405-4b9e-a41c-67ecff0dd47d","userId":"55698448-5a2b-4c17-9ada-a7d3de5972e9","businessName":"Roberto Padilla","description":"Hago trabajos de fontaneria y tengo mas de 10 años de experiencia reparando electrodomesticos.","specialties":["plomeria","electricidad","carpinteria","herreria"],"verified":true,"verificationDocuments":null,"stripeConnectAccountId":null,"createdAt":"2025-11-18T03:50:08.114Z","updatedAt":"2025-11-20T18:17:13.997Z"}
+Exceptions API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+Blocks API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Blocks API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Exceptions API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Contractor: {"id":"76faf061-6405-4b9e-a41c-67ecff0dd47d","userId":"55698448-5a2b-4c17-9ada-a7d3de5972e9","businessName":"Roberto Padilla","description":"Hago trabajos de fontaneria y tengo mas de 10 años de experiencia reparando electrodomesticos.","specialties":["plomeria","electricidad","carpinteria","herreria"],"verified":true,"verificationDocuments":null,"stripeConnectAccountId":null,"createdAt":"2025-11-18T03:50:08.114Z","updatedAt":"2025-11-20T18:17:13.997Z"}
+Exceptions API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+Blocks API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Exceptions API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Blocks API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Contractor: {"id":"76faf061-6405-4b9e-a41c-67ecff0dd47d","userId":"55698448-5a2b-4c17-9ada-a7d3de5972e9","businessName":"Roberto Padilla","description":"Hago trabajos de fontaneria y tengo mas de 10 años de experiencia reparando electrodomesticos.","specialties":["plomeria","electricidad","carpinteria","herreria"],"verified":true,"verificationDocuments":null,"stripeConnectAccountId":null,"createdAt":"2025-11-18T03:50:08.114Z","updatedAt":"2025-11-20T18:17:13.997Z"}
+Exceptions API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+Blocks API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+Blocks API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Exceptions API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Blocks API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+Contractor: {"id":"76faf061-6405-4b9e-a41c-67ecff0dd47d","userId":"55698448-5a2b-4c17-9ada-a7d3de5972e9","businessName":"Roberto Padilla","description":"Hago trabajos de fontaneria y tengo mas de 10 años de experiencia reparando electrodomesticos.","specialties":["plomeria","electricidad","carpinteria","herreria"],"verified":true,"verificationDocuments":null,"stripeConnectAccountId":null,"createdAt":"2025-11-18T03:50:08.114Z","updatedAt":"2025-11-20T18:17:13.997Z"}
+Exceptions API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Exceptions API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Blocks API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Contractor: {"id":"76faf061-6405-4b9e-a41c-67ecff0dd47d","userId":"55698448-5a2b-4c17-9ada-a7d3de5972e9","businessName":"Roberto Padilla","description":"Hago trabajos de fontaneria y tengo mas de 10 años de experiencia reparando electrodomesticos.","specialties":["plomeria","electricidad","carpinteria","herreria"],"verified":true,"verificationDocuments":null,"stripeConnectAccountId":null,"createdAt":"2025-11-18T03:50:08.114Z","updatedAt":"2025-11-20T18:17:13.997Z"}
+Blocks API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+Exceptions API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+Exceptions API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Blocks API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Exceptions API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+Contractor: {"id":"76faf061-6405-4b9e-a41c-67ecff0dd47d","userId":"55698448-5a2b-4c17-9ada-a7d3de5972e9","businessName":"Roberto Padilla","description":"Hago trabajos de fontaneria y tengo mas de 10 años de experiencia reparando electrodomesticos.","specialties":["plomeria","electricidad","carpinteria","herreria"],"verified":true,"verificationDocuments":null,"stripeConnectAccountId":null,"createdAt":"2025-11-18T03:50:08.114Z","updatedAt":"2025-11-20T18:17:13.997Z"}
+Blocks API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+Exceptions API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Blocks API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Exceptions API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+Exceptions API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Blocks API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+Contractor: {"id":"76faf061-6405-4b9e-a41c-67ecff0dd47d","userId":"55698448-5a2b-4c17-9ada-a7d3de5972e9","businessName":"Roberto Padilla","description":"Hago trabajos de fontaneria y tengo mas de 10 años de experiencia reparando electrodomesticos.","specialties":["plomeria","electricidad","carpinteria","herreria"],"verified":true,"verificationDocuments":null,"stripeConnectAccountId":null,"createdAt":"2025-11-18T03:50:08.114Z","updatedAt":"2025-11-20T18:17:13.997Z"}
+Exceptions API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+Blocks API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Blocks API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+Contractor: {"id":"76faf061-6405-4b9e-a41c-67ecff0dd47d","userId":"55698448-5a2b-4c17-9ada-a7d3de5972e9","businessName":"Roberto Padilla","description":"Hago trabajos de fontaneria y tengo mas de 10 años de experiencia reparando electrodomesticos.","specialties":["plomeria","electricidad","carpinteria","herreria"],"verified":true,"verificationDocuments":null,"stripeConnectAccountId":null,"createdAt":"2025-11-18T03:50:08.114Z","updatedAt":"2025-11-20T18:17:13.997Z"}
+UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Exceptions API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Blocks API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Contractor: {"id":"76faf061-6405-4b9e-a41c-67ecff0dd47d","userId":"55698448-5a2b-4c17-9ada-a7d3de5972e9","businessName":"Roberto Padilla","description":"Hago trabajos de fontaneria y tengo mas de 10 años de experiencia reparando electrodomesticos.","specialties":["plomeria","electricidad","carpinteria","herreria"],"verified":false,"verificationDocuments":null,"stripeConnectAccountId":null,"createdAt":"2025-11-18T03:50:08.114Z","updatedAt":"2025-11-20T18:17:13.997Z"}
+Exceptions API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+Blocks API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Blocks API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Exceptions API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Contractor: {"id":"76faf061-6405-4b9e-a41c-67ecff0dd47d","userId":"55698448-5a2b-4c17-9ada-a7d3de5972e9","businessName":"Roberto Padilla","description":"Hago trabajos de fontaneria y tengo mas de 10 años de experiencia reparando electrodomesticos.","specialties":["plomeria","electricidad","carpinteria","herreria"],"verified":false,"verificationDocuments":null,"stripeConnectAccountId":null,"createdAt":"2025-11-18T03:50:08.114Z","updatedAt":"2025-11-20T18:17:13.997Z"}
+Blocks API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+Exceptions API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Blocks API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Exceptions API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Contractor: {"id":"76faf061-6405-4b9e-a41c-67ecff0dd47d","userId":"55698448-5a2b-4c17-9ada-a7d3de5972e9","businessName":"Roberto Padilla","description":"Hago trabajos de fontaneria y tengo mas de 10 años de experiencia reparando electrodomesticos.","specialties":["plomeria","electricidad","carpinteria","herreria"],"verified":true,"verificationDocuments":null,"stripeConnectAccountId":null,"createdAt":"2025-11-18T03:50:08.114Z","updatedAt":"2025-11-20T18:17:13.997Z"}
+Blocks API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+Exceptions API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Blocks API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Exceptions API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Blocks API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+Contractor: {"id":"76faf061-6405-4b9e-a41c-67ecff0dd47d","userId":"55698448-5a2b-4c17-9ada-a7d3de5972e9","businessName":"Roberto Padilla","description":"Hago trabajos de fontaneria y tengo mas de 10 años de experiencia reparando electrodomesticos.","specialties":["plomeria","electricidad","carpinteria","herreria"],"verified":true,"verificationDocuments":null,"stripeConnectAccountId":null,"createdAt":"2025-11-18T03:50:08.114Z","updatedAt":"2025-11-20T18:17:13.997Z"}
+Exceptions API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+Exception POST - Body: {"date":"2025-11-04","intervals":[],"type":"BLOCKED","reason":""}
+createException - clerkUserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo, contractorProfileId: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+createException - profile found: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+Blocks API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Exceptions API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Blocks API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+Exceptions API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+Contractor: {"id":"76faf061-6405-4b9e-a41c-67ecff0dd47d","userId":"55698448-5a2b-4c17-9ada-a7d3de5972e9","businessName":"Roberto Padilla","description":"Hago trabajos de fontaneria y tengo mas de 10 años de experiencia reparando electrodomesticos.","specialties":["plomeria","electricidad","carpinteria","herreria"],"verified":true,"verificationDocuments":null,"stripeConnectAccountId":null,"createdAt":"2025-11-18T03:50:08.114Z","updatedAt":"2025-11-20T18:17:13.997Z"}
+UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Blocks API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Exceptions API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Contractor: {"id":"76faf061-6405-4b9e-a41c-67ecff0dd47d","userId":"55698448-5a2b-4c17-9ada-a7d3de5972e9","businessName":"Roberto Padilla","description":"Hago trabajos de fontaneria y tengo mas de 10 años de experiencia reparando electrodomesticos.","specialties":["plomeria","electricidad","carpinteria","herreria"],"verified":true,"verificationDocuments":null,"stripeConnectAccountId":null,"createdAt":"2025-11-18T03:50:08.114Z","updatedAt":"2025-11-20T18:17:13.997Z"}
+Exceptions API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+Blocks API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Exceptions API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Blocks API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Contractor: {"id":"76faf061-6405-4b9e-a41c-67ecff0dd47d","userId":"55698448-5a2b-4c17-9ada-a7d3de5972e9","businessName":"Roberto Padilla","description":"Hago trabajos de fontaneria y tengo mas de 10 años de experiencia reparando electrodomesticos.","specialties":["plomeria","electricidad","carpinteria","herreria"],"verified":true,"verificationDocuments":null,"stripeConnectAccountId":null,"createdAt":"2025-11-18T03:50:08.114Z","updatedAt":"2025-11-20T18:17:13.997Z"}
+Exceptions API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+Blocks API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+Exceptions API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Blocks API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Exceptions API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+Exceptions API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Contractor: {"id":"76faf061-6405-4b9e-a41c-67ecff0dd47d","userId":"55698448-5a2b-4c17-9ada-a7d3de5972e9","businessName":"Roberto Padilla","description":"Hago trabajos de fontaneria y tengo mas de 10 años de experiencia reparando electrodomesticos.","specialties":["plomeria","electricidad","carpinteria","herreria"],"verified":true,"verificationDocuments":null,"stripeConnectAccountId":null,"createdAt":"2025-11-18T03:50:08.114Z","updatedAt":"2025-11-20T18:17:13.997Z"}
+Blocks API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+Exceptions API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Blocks API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Contractor: {"id":"76faf061-6405-4b9e-a41c-67ecff0dd47d","userId":"55698448-5a2b-4c17-9ada-a7d3de5972e9","businessName":"Roberto Padilla","description":"Hago trabajos de fontaneria y tengo mas de 10 años de experiencia reparando electrodomesticos.","specialties":["plomeria","electricidad","carpinteria","herreria"],"verified":true,"verificationDocuments":null,"stripeConnectAccountId":null,"createdAt":"2025-11-18T03:50:08.114Z","updatedAt":"2025-11-20T18:17:13.997Z"}
+Blocks API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Blocks API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Exceptions API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Contractor: {"id":"76faf061-6405-4b9e-a41c-67ecff0dd47d","userId":"55698448-5a2b-4c17-9ada-a7d3de5972e9","businessName":"Roberto Padilla","description":"Hago trabajos de fontaneria y tengo mas de 10 años de experiencia reparando electrodomesticos.","specialties":["plomeria","electricidad","carpinteria","herreria"],"verified":true,"verificationDocuments":null,"stripeConnectAccountId":null,"createdAt":"2025-11-18T03:50:08.114Z","updatedAt":"2025-11-20T18:17:13.997Z"}
+UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Exceptions API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+Blocks API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+Contractor: {"id":"76faf061-6405-4b9e-a41c-67ecff0dd47d","userId":"55698448-5a2b-4c17-9ada-a7d3de5972e9","businessName":"Roberto Padilla","description":"Hago trabajos de fontaneria y tengo mas de 10 años de experiencia reparando electrodomesticos.","specialties":["plomeria","electricidad","carpinteria","herreria"],"verified":true,"verificationDocuments":null,"stripeConnectAccountId":null,"createdAt":"2025-11-18T03:50:08.114Z","updatedAt":"2025-11-20T18:17:13.997Z"}
+Exceptions API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Blocks API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Exceptions API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+Blocks API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Blocks API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Exceptions API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Contractor: {"id":"76faf061-6405-4b9e-a41c-67ecff0dd47d","userId":"55698448-5a2b-4c17-9ada-a7d3de5972e9","businessName":"Roberto Padilla","description":"Hago trabajos de fontaneria y tengo mas de 10 años de experiencia reparando electrodomesticos.","specialties":["plomeria","electricidad","carpinteria","herreria"],"verified":true,"verificationDocuments":null,"stripeConnectAccountId":null,"createdAt":"2025-11-18T03:50:08.114Z","updatedAt":"2025-11-20T18:17:13.997Z"}
+Blocks API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+Exceptions API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Exceptions API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Blocks API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Contractor: {"id":"76faf061-6405-4b9e-a41c-67ecff0dd47d","userId":"55698448-5a2b-4c17-9ada-a7d3de5972e9","businessName":"Roberto Padilla","description":"Hago trabajos de fontaneria y tengo mas de 10 años de experiencia reparando electrodomesticos.","specialties":["plomeria","electricidad","carpinteria","herreria"],"verified":true,"verificationDocuments":null,"stripeConnectAccountId":null,"createdAt":"2025-11-18T03:50:08.114Z","updatedAt":"2025-11-20T18:17:13.997Z"}
+Exceptions API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+Blocks API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+Exceptions API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Blocks API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Exceptions API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+Exceptions API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Blocks API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+Contractor: {"id":"76faf061-6405-4b9e-a41c-67ecff0dd47d","userId":"55698448-5a2b-4c17-9ada-a7d3de5972e9","businessName":"Roberto Padilla","description":"Hago trabajos de fontaneria y tengo mas de 10 años de experiencia reparando electrodomesticos.","specialties":["plomeria","electricidad","carpinteria","herreria"],"verified":true,"verificationDocuments":null,"stripeConnectAccountId":null,"createdAt":"2025-11-18T03:50:08.114Z","updatedAt":"2025-11-20T18:17:13.997Z"}
+Exceptions API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+Blocks API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Contractor: {"id":"76faf061-6405-4b9e-a41c-67ecff0dd47d","userId":"55698448-5a2b-4c17-9ada-a7d3de5972e9","businessName":"Roberto Padilla","description":"Hago trabajos de fontaneria y tengo mas de 10 años de experiencia reparando electrodomesticos.","specialties":["plomeria","electricidad","carpinteria","herreria"],"verified":true,"verificationDocuments":null,"stripeConnectAccountId":null,"createdAt":"2025-11-18T03:50:08.114Z","updatedAt":"2025-11-20T18:17:13.997Z"}
+Blocks API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+Blocks API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Exceptions API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Blocks API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+Blocks API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Contractor: {"id":"76faf061-6405-4b9e-a41c-67ecff0dd47d","userId":"55698448-5a2b-4c17-9ada-a7d3de5972e9","businessName":"Roberto Padilla","description":"Hago trabajos de fontaneria y tengo mas de 10 años de experiencia reparando electrodomesticos.","specialties":["plomeria","electricidad","carpinteria","herreria"],"verified":true,"verificationDocuments":null,"stripeConnectAccountId":null,"createdAt":"2025-11-18T03:50:08.114Z","updatedAt":"2025-11-20T18:17:13.997Z"}
+Exceptions API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+Blocks API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+Exceptions API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Contractor: {"id":"76faf061-6405-4b9e-a41c-67ecff0dd47d","userId":"55698448-5a2b-4c17-9ada-a7d3de5972e9","businessName":"Roberto Padilla","description":"Hago trabajos de fontaneria y tengo mas de 10 años de experiencia reparando electrodomesticos.","specialties":["plomeria","electricidad","carpinteria","herreria"],"verified":true,"verificationDocuments":null,"stripeConnectAccountId":null,"createdAt":"2025-11-18T03:50:08.114Z","updatedAt":"2025-11-20T18:17:13.997Z"}
+Exceptions API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+Blocks API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Exceptions API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Blocks API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+Blocks API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Contractor: {"id":"76faf061-6405-4b9e-a41c-67ecff0dd47d","userId":"55698448-5a2b-4c17-9ada-a7d3de5972e9","businessName":"Roberto Padilla","description":"Hago trabajos de fontaneria y tengo mas de 10 años de experiencia reparando electrodomesticos.","specialties":["plomeria","electricidad","carpinteria","herreria"],"verified":true,"verificationDocuments":null,"stripeConnectAccountId":null,"createdAt":"2025-11-18T03:50:08.114Z","updatedAt":"2025-11-20T18:17:13.997Z"}
+Exceptions API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+Blocks API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Exceptions API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Exceptions API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+Contractor: {"id":"76faf061-6405-4b9e-a41c-67ecff0dd47d","userId":"55698448-5a2b-4c17-9ada-a7d3de5972e9","businessName":"Roberto Padilla","description":"Hago trabajos de fontaneria y tengo mas de 10 años de experiencia reparando electrodomesticos.","specialties":["plomeria","electricidad","carpinteria","herreria"],"verified":true,"verificationDocuments":null,"stripeConnectAccountId":null,"createdAt":"2025-11-18T03:50:08.114Z","updatedAt":"2025-11-20T18:17:13.997Z"}
+UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Exceptions API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Blocks API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Contractor: {"id":"76faf061-6405-4b9e-a41c-67ecff0dd47d","userId":"55698448-5a2b-4c17-9ada-a7d3de5972e9","businessName":"Roberto Padilla","description":"Hago trabajos de fontaneria y tengo mas de 10 años de experiencia reparando electrodomesticos.","specialties":["plomeria","electricidad","carpinteria","herreria"],"verified":true,"verificationDocuments":null,"stripeConnectAccountId":null,"createdAt":"2025-11-18T03:50:08.114Z","updatedAt":"2025-11-20T18:17:13.997Z"}
+Blocks API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+Exceptions API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Blocks API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Exceptions API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Contractor: {"id":"76faf061-6405-4b9e-a41c-67ecff0dd47d","userId":"55698448-5a2b-4c17-9ada-a7d3de5972e9","businessName":"Roberto Padilla","description":"Hago trabajos de fontaneria y tengo mas de 10 años de experiencia reparando electrodomesticos.","specialties":["plomeria","electricidad","carpinteria","herreria"],"verified":true,"verificationDocuments":null,"stripeConnectAccountId":null,"createdAt":"2025-11-18T03:50:08.114Z","updatedAt":"2025-11-20T18:17:13.997Z"}
+Blocks API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+Exceptions API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+Blocks API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Exceptions API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Blocks API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+Exceptions API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+Contractor: {"id":"76faf061-6405-4b9e-a41c-67ecff0dd47d","userId":"55698448-5a2b-4c17-9ada-a7d3de5972e9","businessName":"Roberto Padilla","description":"Hago trabajos de fontaneria y tengo mas de 10 años de experiencia reparando electrodomesticos.","specialties":["plomeria","electricidad","carpinteria","herreria"],"verified":true,"verificationDocuments":null,"stripeConnectAccountId":null,"createdAt":"2025-11-18T03:50:08.114Z","updatedAt":"2025-11-20T18:17:13.997Z"}
+UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Blocks API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Exceptions API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Contractor: {"id":"76faf061-6405-4b9e-a41c-67ecff0dd47d","userId":"55698448-5a2b-4c17-9ada-a7d3de5972e9","businessName":"Roberto Padilla","description":"Hago trabajos de fontaneria y tengo mas de 10 años de experiencia reparando electrodomesticos.","specialties":["plomeria","electricidad","carpinteria","herreria"],"verified":true,"verificationDocuments":null,"stripeConnectAccountId":null,"createdAt":"2025-11-18T03:50:08.114Z","updatedAt":"2025-11-20T18:17:13.997Z"}
+Blocks API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+Exceptions API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+Exception POST - Body: {"date":"2025-11-03","intervals":[{"startTime":"09:00","endTime":"17:00"}],"type":"AVAILABLE","reason":""}
+createException - clerkUserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo, contractorProfileId: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+createException - profile found: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+Exceptions API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Blocks API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Exceptions API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+Blocks API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+Contractor: {"id":"76faf061-6405-4b9e-a41c-67ecff0dd47d","userId":"55698448-5a2b-4c17-9ada-a7d3de5972e9","businessName":"Roberto Padilla","description":"Hago trabajos de fontaneria y tengo mas de 10 años de experiencia reparando electrodomesticos.","specialties":["plomeria","electricidad","carpinteria","herreria"],"verified":true,"verificationDocuments":null,"stripeConnectAccountId":null,"createdAt":"2025-11-18T03:50:08.114Z","updatedAt":"2025-11-20T18:17:13.997Z"}
+UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Blocks API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Exceptions API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Contractor: {"id":"76faf061-6405-4b9e-a41c-67ecff0dd47d","userId":"55698448-5a2b-4c17-9ada-a7d3de5972e9","businessName":"Roberto Padilla","description":"Hago trabajos de fontaneria y tengo mas de 10 años de experiencia reparando electrodomesticos.","specialties":["plomeria","electricidad","carpinteria","herreria"],"verified":true,"verificationDocuments":null,"stripeConnectAccountId":null,"createdAt":"2025-11-18T03:50:08.114Z","updatedAt":"2025-11-20T18:17:13.997Z"}
+Exceptions API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+Blocks API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Exceptions API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Blocks API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Contractor: {"id":"76faf061-6405-4b9e-a41c-67ecff0dd47d","userId":"55698448-5a2b-4c17-9ada-a7d3de5972e9","businessName":"Roberto Padilla","description":"Hago trabajos de fontaneria y tengo mas de 10 años de experiencia reparando electrodomesticos.","specialties":["plomeria","electricidad","carpinteria","herreria"],"verified":true,"verificationDocuments":null,"stripeConnectAccountId":null,"createdAt":"2025-11-18T03:50:08.114Z","updatedAt":"2025-11-20T18:17:13.997Z"}
+Exceptions API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+Blocks API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+Exception POST - Body: {"date":"2025-11-27","intervals":[{"startTime":"09:00","endTime":"13:00"}],"type":"AVAILABLE","reason":""}
+createException - clerkUserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo, contractorProfileId: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+createException - profile found: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+Blocks API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Exceptions API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Blocks API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+Contractor: {"id":"76faf061-6405-4b9e-a41c-67ecff0dd47d","userId":"55698448-5a2b-4c17-9ada-a7d3de5972e9","businessName":"Roberto Padilla","description":"Hago trabajos de fontaneria y tengo mas de 10 años de experiencia reparando electrodomesticos.","specialties":["plomeria","electricidad","carpinteria","herreria"],"verified":true,"verificationDocuments":null,"stripeConnectAccountId":null,"createdAt":"2025-11-18T03:50:08.114Z","updatedAt":"2025-11-20T18:17:13.997Z"}
+Exceptions API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Exceptions API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Blocks API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Contractor: {"id":"76faf061-6405-4b9e-a41c-67ecff0dd47d","userId":"55698448-5a2b-4c17-9ada-a7d3de5972e9","businessName":"Roberto Padilla","description":"Hago trabajos de fontaneria y tengo mas de 10 años de experiencia reparando electrodomesticos.","specialties":["plomeria","electricidad","carpinteria","herreria"],"verified":true,"verificationDocuments":null,"stripeConnectAccountId":null,"createdAt":"2025-11-18T03:50:08.114Z","updatedAt":"2025-11-20T18:17:13.997Z"}
+Exceptions API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+Blocks API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+Block POST - Body: {"startDateTime":"2025-11-29T19:39:00.000Z","endDateTime":"2025-12-02T20:39:00.000Z","reason":"Vacaciones"}
+UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Exceptions API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Blocks API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Contractor: {"id":"76faf061-6405-4b9e-a41c-67ecff0dd47d","userId":"55698448-5a2b-4c17-9ada-a7d3de5972e9","businessName":"Roberto Padilla","description":"Hago trabajos de fontaneria y tengo mas de 10 años de experiencia reparando electrodomesticos.","specialties":["plomeria","electricidad","carpinteria","herreria"],"verified":true,"verificationDocuments":null,"stripeConnectAccountId":null,"createdAt":"2025-11-18T03:50:08.114Z","updatedAt":"2025-11-20T18:17:13.997Z"}
+Exceptions API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+Blocks API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+Blocks API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Exceptions API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Blocks API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+Blocks API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Contractor: {"id":"76faf061-6405-4b9e-a41c-67ecff0dd47d","userId":"55698448-5a2b-4c17-9ada-a7d3de5972e9","businessName":"Roberto Padilla","description":"Hago trabajos de fontaneria y tengo mas de 10 años de experiencia reparando electrodomesticos.","specialties":["plomeria","electricidad","carpinteria","herreria"],"verified":true,"verificationDocuments":null,"stripeConnectAccountId":null,"createdAt":"2025-11-18T03:50:08.114Z","updatedAt":"2025-11-20T18:17:13.997Z"}
+Exceptions API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+Blocks API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Exceptions API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Contractor: {"id":"76faf061-6405-4b9e-a41c-67ecff0dd47d","userId":"55698448-5a2b-4c17-9ada-a7d3de5972e9","businessName":"Roberto Padilla","description":"Hago trabajos de fontaneria y tengo mas de 10 años de experiencia reparando electrodomesticos.","specialties":["plomeria","electricidad","carpinteria","herreria"],"verified":true,"verificationDocuments":null,"stripeConnectAccountId":null,"createdAt":"2025-11-18T03:50:08.114Z","updatedAt":"2025-11-20T18:17:13.997Z"}
+Exceptions API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Blocks API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Exceptions API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Blocks API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+Contractor: {"id":"76faf061-6405-4b9e-a41c-67ecff0dd47d","userId":"55698448-5a2b-4c17-9ada-a7d3de5972e9","businessName":"Roberto Padilla","description":"Hago trabajos de fontaneria y tengo mas de 10 años de experiencia reparando electrodomesticos.","specialties":["plomeria","electricidad","carpinteria","herreria"],"verified":true,"verificationDocuments":null,"stripeConnectAccountId":null,"createdAt":"2025-11-18T03:50:08.114Z","updatedAt":"2025-11-20T18:17:13.997Z"}
+Exceptions API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Exceptions API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Blocks API - UserId: user_35dR4EHZ4t1EbUVlxnEDjDdsNSo
+Blocks API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+Exceptions API - Contractor: 76faf061-6405-4b9e-a41c-67ecff0dd47d
+Contractor: {"id":"76faf061-6405-4b9e-a41c-67ecff0dd47d","userId":"55698448-5a2b-4c17-9ada-a7d3de5972e9","businessName":"Roberto Padilla","description":"Hago trabajos de fontaneria y tengo mas de 10 años de experiencia reparando electrodomesticos.","specialties":["plomeria","electricidad","carpinteria","herreria"],"verified":true,"verificationDocuments":null,"stripeConnectAccountId":null,"createdAt":"2025-11-18T03:50:08.114Z","updatedAt":"2025-11-20T18:17:13.997Z"}

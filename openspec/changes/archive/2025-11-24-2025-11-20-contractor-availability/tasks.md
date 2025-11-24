@@ -6,6 +6,81 @@ Este documento detalla las tareas secuenciadas para implementar el feature de di
 
 ---
 
+## 🔧 UI/UX Corrections Applied (2025-11-24)
+
+### Issues Fixed
+
+#### 1. **Contador de Reglas Semanales Incorrecto** ✅
+- **Problema:** El contador mostraba `weeklyRules.length / 7` (ejemplo: "6 / 7") cuando solo había 3 días configurados
+- **Causa:** El contador contaba el número total de objetos de reglas en la base de datos, no el número de días con intervalos configurados
+- **Solución:** Cambió la lógica de conteo a:
+  ```typescript
+  {weeklyRules.filter(rule => rule.intervals && rule.intervals.length > 0).length} / 7
+  ```
+- **Archivo modificado:** `apps/web/src/components/contractors/availability/AvailabilityManager.tsx:91-93`
+- **Resultado:** Ahora muestra correctamente "3 / 7" cuando solo hay 3 días configurados
+
+#### 2. **Componentes de UI Base Mejorados** ✅
+- **Button Component:**
+  - Agregadas variantes faltantes: `ghost` y `destructive`
+  - Mejora la consistencia de estilos en toda la aplicación
+  - Archivo: `apps/web/src/components/ui/Button.tsx`
+
+- **Card Component:**
+  - Agregado soporte para `onClick` y otros atributos HTML div mediante `extends HTMLAttributes<HTMLDivElement>`
+  - Corrige errores de TypeScript al usar Cards clickeables
+  - Archivo: `apps/web/src/components/ui/Card.tsx`
+
+#### 3. **Correcciones de Linting y TypeScript** ✅
+- Eliminado uso de `any` en favor de type guards apropiados:
+  ```typescript
+  // Antes:
+  catch (err: any) { setError(err.message); }
+
+  // Después:
+  catch (err) { setError(err instanceof Error ? err.message : 'Error desconocido'); }
+  ```
+- Removidos imports no utilizados en componentes de UI
+- Archivos corregidos:
+  - `AvailabilityManager.tsx`
+  - `AvailabilityWeekly.tsx`
+  - `AvailabilityExceptions.tsx`
+  - `AvailabilityBlocks.tsx`
+
+#### 4. **Verificación de Contraste y Legibilidad** ✅
+- **Análisis realizado:** Revisión completa de todos los componentes de disponibilidad
+- **Resultado:** NO se encontraron problemas de texto blanco sobre fondo blanco
+- **Colores verificados:**
+  - Headers: `text-gray-900` sobre fondo blanco ✓
+  - Subtítulos: `text-gray-500` / `text-gray-600` sobre fondo blanco ✓
+  - Badges de intervalos: `bg-blue-100 text-blue-800` (contraste adecuado) ✓
+  - Estados vacíos: `text-gray-400` / `text-gray-500` (legible) ✓
+  - Errores: `bg-red-100 text-red-700` (contraste alto) ✓
+
+### Verificaciones Completadas
+
+| Check | Estado | Resultado |
+|-------|---------|-----------|
+| TypeScript type-check | ✅ PASS | Sin errores de compilación |
+| Contador de reglas semanales | ✅ FIXED | Muestra conteo correcto de días configurados |
+| Variantes de Button completas | ✅ DONE | ghost y destructive agregados |
+| Card component mejorado | ✅ DONE | Soporta onClick y eventos HTML |
+| Contraste de texto | ✅ VERIFIED | Todos los textos tienen contraste adecuado |
+| Imports limpios | ✅ DONE | Removidos imports no utilizados |
+| Linting TypeScript | ✅ FIXED | Eliminado uso de `any` en UI components |
+
+### Notas sobre Build
+
+Los errores de linting restantes en el build son **pre-existentes** en las rutas de API (`route.ts` files) y están relacionados con código de debugging (`require('fs')`) que debe ser removido por el equipo de backend. Estos errores **NO afectan** la funcionalidad de la UI corregida en este fix.
+
+**Archivos con errores pre-existentes (fuera del alcance de este fix):**
+- `app/api/contractors/me/availability/weekly/route.ts`
+- `app/api/contractors/me/availability/exceptions/route.ts`
+- `app/api/contractors/me/availability/blocks/route.ts`
+- Repositorios y servicios de backend
+
+---
+
 ## Phase 1: Database & Core Models
 
 ### Task 1.1: Crear migración de Prisma para modelos de disponibilidad

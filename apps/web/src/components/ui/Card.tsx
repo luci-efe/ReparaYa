@@ -1,6 +1,6 @@
-import { ReactNode } from 'react';
+import { ReactNode, HTMLAttributes } from 'react';
 
-interface CardProps {
+interface CardProps extends HTMLAttributes<HTMLDivElement> {
   children: ReactNode;
   padding?: 'none' | 'sm' | 'md' | 'lg';
   hover?: boolean;
@@ -13,7 +13,8 @@ export function Card({
   padding = 'md',
   hover = false,
   clickable = false,
-  className = ''
+  className = '',
+  ...props
 }: CardProps) {
   const paddings = {
     none: '',
@@ -26,7 +27,10 @@ export function Card({
   const cursorStyle = clickable ? 'cursor-pointer' : '';
 
   return (
-    <div className={`rounded-xl bg-white border border-gray-200 shadow-sm ${paddings[padding]} ${hoverEffect} ${cursorStyle} ${className}`}>
+    <div
+      className={`rounded-xl bg-white border border-gray-200 shadow-sm ${paddings[padding]} ${hoverEffect} ${cursorStyle} ${className}`}
+      {...props}
+    >
       {children}
     </div>
   );

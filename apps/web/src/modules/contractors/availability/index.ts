@@ -1,17 +1,14 @@
 /**
- * Contractor Availability Module
- *
- * Main barrel export for public APIs
+ * Barrel export for Contractor Availability module
  */
 
-// Services (public API)
-export * from './services';
-
-// Types (for external consumption)
 export * from './types';
-
-// Validators (for API routes)
 export * from './validators';
+export * from './repositories';
+
+// Export services with explicit naming to avoid conflicts
+export { availabilityService, UnauthorizedError, NotFoundError, BookingConflictError } from './services/availabilityService';
+export { slotGeneratorService } from './services/slotGeneratorService';
 
 // Errors (for error handling)
 export * from './errors';
