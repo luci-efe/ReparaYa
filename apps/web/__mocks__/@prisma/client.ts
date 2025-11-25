@@ -6,6 +6,32 @@
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type MockPrismaClient = any;
 
+// Enum exports matching Prisma schema
+export enum BookingStatus {
+  PENDING_APPROVAL = 'PENDING_APPROVAL',
+  PENDING_PAYMENT = 'PENDING_PAYMENT',
+  CONFIRMED = 'CONFIRMED',
+  ON_ROUTE = 'ON_ROUTE',
+  ON_SITE = 'ON_SITE',
+  IN_PROGRESS = 'IN_PROGRESS',
+  COMPLETED = 'COMPLETED',
+  CANCELLED = 'CANCELLED',
+  DISPUTED = 'DISPUTED',
+}
+
+export enum PaymentType {
+  ANTICIPO = 'ANTICIPO',
+  LIQUIDACION = 'LIQUIDACION',
+  REEMBOLSO = 'REEMBOLSO',
+}
+
+export enum PaymentStatus {
+  PENDING = 'PENDING',
+  SUCCEEDED = 'SUCCEEDED',
+  FAILED = 'FAILED',
+  REFUNDED = 'REFUNDED',
+}
+
 export const mockPrismaClient: MockPrismaClient = {
   user: {
     findUnique: jest.fn(),

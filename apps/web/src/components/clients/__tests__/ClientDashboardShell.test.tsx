@@ -28,15 +28,15 @@ describe('ClientDashboardShell', () => {
         expect(screen.getByTestId('child-content')).toBeInTheDocument();
     });
 
-    it('renders topbar with user info', () => {
+    it('renders topbar with logo and user button', () => {
         render(
             <ClientDashboardShell user={mockUser}>
                 <div>Content</div>
             </ClientDashboardShell>
         );
 
-        expect(screen.getByText('Test User')).toBeInTheDocument();
-        expect(screen.getByText('test@example.com')).toBeInTheDocument();
+        expect(screen.getByText('ReparaYa')).toBeInTheDocument();
+        expect(screen.getByTestId('user-button')).toBeInTheDocument();
     });
 
     it('toggles sidebar on mobile', () => {
@@ -52,7 +52,7 @@ describe('ClientDashboardShell', () => {
         expect(sidebars.length).toBeGreaterThan(0);
 
         // Click menu button
-        const menuButton = screen.getByLabelText('Abrir menú');
+        const menuButton = screen.getByLabelText('Abrir menú de navegación');
         fireEvent.click(menuButton);
 
         // Overlay should appear
