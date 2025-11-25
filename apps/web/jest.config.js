@@ -40,6 +40,7 @@ const customJestConfig = {
     '/tests/integration/api/contractors/location.test.ts',
     '/tests/integration/api/services-images.test.ts',
     '/tests/integration/api/admin-services.test.ts',
+    '/tests/integration/contractor/bookings-flow.test.ts',
     '/src/modules/contractors/repositories/__tests__/locationRepository.test.ts',
     '/src/modules/contractors/services/__tests__/locationService.test.ts',
     '/src/modules/services/__tests__/serviceService.test.ts',

@@ -3437,21 +3437,171 @@ npm run test:coverage
 | TC-RF-010-01 | Liquidación correcta según comisiones (BR-002) | RF-010 | Alta | Pendiente |
 | TC-BR-002-01 | Cálculo de comisiones (Ic = B - C%) | BR-002 | Alta | Pendiente |
 
-#### 4.1.7 Mensajería (Messaging)
+#### 4.1.7 Mensajería en Tiempo Real (Real-Time Messaging)
 
-| ID | Descripción | Requisito | Prioridad | Estado |
-|----|-------------|-----------|-----------|--------|
-| TC-RF-008-01 | Envío de mensaje exitoso | RF-008 | Media | Pendiente |
-| TC-RF-008-02 | Sanitización anti-XSS en mensajes | RF-008 | Alta | Pendiente |
-| TC-RF-008-03 | Retención de mensajes (7 días post-cierre) | RF-008 | Media | Pendiente |
+**Referencia de spec:** `/openspec/specs/reservation-lifecycle-messaging/spec.md`
+**Propuesta relacionada:** `/openspec/changes/2025-11-25-implement-realtime-messaging/proposal.md`
 
-#### 4.1.8 Calificaciones (Ratings)
+**Criterios de aceptación generales:**
+- Cobertura de código ≥ 70% en módulo `src/modules/messaging`
+- Mensajes se entregan en tiempo real (< 500ms latencia vía Supabase Realtime)
+- XSS prevention funciona correctamente
+- Rate limiting funciona (10 msg/min)
+- Time window de 2h post-COMPLETED se respeta
+- Authorization verifica participantes en todos los endpoints
 
-| ID | Descripción | Requisito | Prioridad | Estado |
-|----|-------------|-----------|-----------|--------|
-| TC-RF-009-01 | Creación de calificación válida | RF-009 | Media | Pendiente |
-| TC-RF-009-02 | Rechazo de calificación duplicada | RF-009 | Media | Pendiente |
-| TC-RF-009-03 | Cálculo correcto de promedio | RF-009 | Media | Pendiente |
+**Casos de prueba críticos:**
+
+| ID | Descripción | Tipo | Requisito | Prioridad | Estado |
+|----|-------------|------|-----------|-----------|--------|
+| TC-MSG-001 | Send message successfully | Integración | RF-008 | Alta | Pendiente |
+| TC-MSG-002 | Message sanitized for XSS (script tags removed) | Unitaria | RNF-3.5.3 | Alta | Pendiente |
+| TC-MSG-003 | Rate limit: 10 messages/minute enforced | Integración | RF-008 | Alta | Pendiente |
+| TC-MSG-004 | Only booking participants can send messages | Integración | RF-008 | Alta | Pendiente |
+| TC-MSG-005 | Non-participant returns 403 | Integración | RF-008 | Alta | Pendiente |
+| TC-MSG-006 | Messaging available when booking CONFIRMED | Integración | RF-008 | Alta | Pendiente |
+| TC-MSG-007 | Messaging blocked after 2h post-COMPLETED | Integración | RF-008 | Alta | Pendiente |
+| TC-MSG-008 | Supabase Realtime receives new messages | Integración | RF-008 | Alta | Pendiente |
+| TC-MSG-009 | Chat integrated in booking detail | E2E | RF-008 | Alta | Pendiente |
+
+---
+
+**Procedimientos de prueba detallados:**
+
+##### TC-MSG-001: Enviar mensaje exitosamente
+
+**Objetivo:** Validar que un usuario puede enviar un mensaje dentro del contexto de una reserva.
+
+**Precondiciones:**
+- Booking en estado CONFIRMED o superior
+- Usuario autenticado como participante
+
+**Procedimiento:**
+1. POST `/api/bookings/{bookingId}/messages` con `{ "text": "Hola" }`
+2. Verificar respuesta 201 Created
+
+**Resultado esperado:**
+- ✅ Status: 201 Created
+- ✅ Message insertado en BD
+- ✅ `text` sanitizado
+
+**Estado:** Pendiente
+
+---
+
+##### TC-MSG-007: Messaging blocked after 2h post-COMPLETED
+
+**Objetivo:** Validar que la ventana de mensajería se cierra 2 horas después de completar el booking.
+
+**Precondiciones:**
+- Booking en estado COMPLETED hace > 2 horas
+
+**Procedimiento:**
+1. Intentar POST `/api/bookings/{id}/messages`
+2. Verificar respuesta 403 Forbidden
+
+**Resultado esperado:**
+- ✅ Status: 403 Forbidden
+- ✅ Error: "La ventana de mensajería ha expirado"
+
+**Estado:** Pendiente
+
+---
+
+**Comandos de prueba:**
+
+```bash
+npm run test -- src/modules/messaging
+npm run test -- tests/integration/api/bookings/messages.test.ts
+```
+
+---
+
+#### 4.1.8 Sistema de Calificaciones Bidireccional (Bidirectional Rating System)
+
+**Referencia de spec:** `/openspec/specs/ratings/spec.md`
+**Propuesta relacionada:** `/openspec/changes/2025-11-25-implement-bidirectional-rating-system/proposal.md`
+
+**Criterios de aceptación generales:**
+- Cobertura de código ≥ 70% en módulo `src/modules/ratings`
+- Calificaciones bidireccionales funcionan (cliente → contratista Y contratista → cliente)
+- Visibilidad double-blind implementada correctamente
+- Estadísticas de calificación se calculan correctamente
+
+**Nota sobre Double-Blind:**
+Las calificaciones son ocultas hasta que:
+- a) Ambas partes han calificado, O
+- b) Han pasado 7 días desde la finalización del booking
+
+**Casos de prueba críticos:**
+
+| ID | Descripción | Tipo | Requisito | Prioridad | Estado |
+|----|-------------|------|-----------|-----------|--------|
+| TC-RF-009-01 | Cliente crea calificación válida para contratista | Integración | RF-009 | Alta | Pendiente |
+| TC-RF-009-02 | Contratista crea calificación válida para cliente | Integración | RF-009 | Alta | Pendiente |
+| TC-RF-009-03 | Rechazo de calificación duplicada | Integración | RF-009 | Alta | Pendiente |
+| TC-RF-009-04 | Visibilidad double-blind: rating oculto hasta ambos califiquen | Unitaria | RF-009 | Alta | Pendiente |
+| TC-RF-009-05 | Ratings revelados cuando ambos califican | Unitaria | RF-009 | Alta | Pendiente |
+| TC-RF-009-06 | Rating revelado por expiración de 7 días | Unitaria | RF-009 | Alta | Pendiente |
+| TC-RF-009-07 | Cálculo correcto de promedio de usuario | Unitaria | RF-009 | Media | Pendiente |
+| TC-RF-009-08 | Validación: stars debe ser 1-5 | Unitaria | RF-009 | Media | Pendiente |
+| TC-RF-009-09 | Solo cliente puede calificar al contratista | Integración | RF-009 | Alta | Pendiente |
+| TC-RF-009-10 | Modal de calificación funciona correctamente | E2E | RF-009 | Alta | Pendiente |
+
+---
+
+**Procedimientos de prueba detallados:**
+
+##### TC-RF-009-01: Cliente crea calificación válida para contratista
+
+**Objetivo:** Validar que un cliente puede calificar al contratista después de un servicio completado.
+
+**Precondiciones:**
+- Booking en estado COMPLETED
+- Usuario autenticado como CLIENT dueño del booking
+
+**Procedimiento:**
+1. POST `/api/bookings/{bookingId}/ratings/client` con `{ "stars": 5, "comment": "Excelente" }`
+2. Verificar respuesta 201 Created
+
+**Resultado esperado:**
+- ✅ Status: 201 Created
+- ✅ ClientRating insertado
+- ✅ Rating oculto para contratista (double-blind)
+
+**Estado:** Pendiente
+
+---
+
+##### TC-RF-009-04: Visibilidad double-blind
+
+**Objetivo:** Validar la lógica de visibilidad double-blind.
+
+**Precondiciones:**
+- Booking COMPLETED
+- Solo cliente ha calificado
+
+**Procedimiento:**
+1. Verificar que `canSeeRating(booking, contractorId)` retorna `false`
+2. Contratista califica
+3. Verificar que ahora ambos pueden ver ratings
+
+**Resultado esperado:**
+- ✅ Antes: ratings ocultos
+- ✅ Después: ratings visibles para ambos
+
+**Estado:** Pendiente
+
+---
+
+**Comandos de prueba:**
+
+```bash
+npm run test -- src/modules/ratings
+npm run test -- tests/integration/api/bookings/ratings.test.ts
+```
+
+---
 
 #### 4.1.9 Administración (Admin)
 
@@ -5668,6 +5818,98 @@ Los tests se implementarán en los siguientes archivos:
 - ✅ Tests de performance (4 casos) ejecutados con k6 y pasando targets
 - ✅ CI/CD pipeline verde
 - ✅ PR mergeado a dev
+
+---
+
+#### 4.1.13 Gestión de Reservas para Contratistas (Contractor Booking Management)
+
+**Referencia de spec:** `/openspec/specs/contractor-bookings/spec.md`
+**Propuesta relacionada:** `/openspec/changes/2025-11-24-implement-contractor-booking-management/proposal.md`
+
+**Criterios de aceptación generales:**
+- Cobertura de código ≥ 70% en módulo `src/modules/booking`
+- State machine de booking funciona correctamente
+- Contratista puede ver, filtrar y gestionar sus reservas
+- Cliente puede ver sus reservas y simular pago en demo mode
+- Authorization verifica ownership en todos los endpoints
+- CI/CD pasa sin errores
+
+**Casos de prueba críticos:**
+
+| ID | Descripción | Tipo | Requisito | Prioridad | Estado |
+|----|-------------|------|-----------|-----------|--------|
+| TC-BK-001 | Contractor views bookings list with status tabs | E2E | Booking List | Alta | PASS |
+| TC-BK-002 | Contractor advances booking to ON_SITE | Integración | State Transition | Alta | PASS |
+| TC-BK-003 | Contractor completes booking | Integración | State Transition | Alta | PASS |
+| TC-BK-004 | Invalid state transition returns error | Unitaria | State Machine | Alta | PASS |
+| TC-BK-005 | Contractor cannot access other contractor's booking | Integración | Authorization | Alta | PASS |
+| TC-BK-006 | Client views booking detail page | E2E | Client View | Alta | PASS |
+| TC-BK-007 | Client sees payment button when PENDING_PAYMENT | E2E | Payment Section | Alta | PASS |
+| TC-BK-008 | Client mock payment advances to CONFIRMED | Integración | Demo Payment | Alta | PASS |
+| TC-BK-009 | bookingRepository.updateStatus creates history record | Unitaria | Audit Trail | Alta | PASS |
+| TC-BK-010 | State machine allows PENDING_PAYMENT→CONFIRMED | Unitaria | State Machine | Alta | PASS |
+| TC-BK-011 | State machine rejects COMPLETED→CONFIRMED | Unitaria | State Machine | Alta | PASS |
+| TC-BK-012 | GET /api/bookings returns user's bookings only | Integración | API | Alta | PASS |
+| TC-BK-013 | PATCH /api/bookings/:id/state updates status | Integración | API | Alta | PASS |
+
+---
+
+**Procedimientos de prueba detallados:**
+
+##### TC-BK-002: Contractor advances booking to ON_SITE
+
+**Objetivo:** Validar que el contratista puede avanzar una reserva al estado ON_SITE.
+
+**Precondiciones:**
+- Booking en estado CONFIRMED
+- Usuario autenticado como CONTRACTOR dueño del servicio
+
+**Procedimiento:**
+1. PATCH `/api/bookings/{id}/state` con `{ "status": "ON_SITE" }`
+2. Verificar respuesta y estado actualizado
+
+**Resultado esperado:**
+- ✅ Status: 200 OK
+- ✅ Booking actualizado a ON_SITE
+- ✅ BookingStateHistory contiene nueva entrada
+
+**Estado:** Pendiente
+
+---
+
+##### TC-BK-004: Invalid state transition returns error
+
+**Objetivo:** Validar que el state machine rechaza transiciones inválidas.
+
+**Precondiciones:**
+- Booking en estado PENDING_PAYMENT
+
+**Procedimiento:**
+1. PATCH `/api/bookings/{id}/state` con `{ "status": "ON_SITE" }` (salta CONFIRMED)
+2. Verificar rechazo
+
+**Resultado esperado:**
+- ✅ Status: 400 Bad Request
+- ✅ Error: "Invalid state transition from PENDING_PAYMENT to ON_SITE"
+- ✅ Estado NO cambia
+
+**Estado:** Pendiente
+
+---
+
+**Comandos de prueba:**
+
+```bash
+# Tests unitarios
+npm run test -- src/modules/booking
+
+# Tests de integración
+npm run test -- tests/integration/api/bookings.test.ts
+
+# Cobertura
+npm run test:coverage
+# Objetivo: ≥ 70% en src/modules/booking
+```
 
 ---
 

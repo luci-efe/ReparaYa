@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { UserButton } from '@clerk/nextjs';
 
 interface ContractorTopbarProps {
-  _user: {
+  _user?: {
     id: string;
     name: string;
     email: string;

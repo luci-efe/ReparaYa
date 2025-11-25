@@ -77,15 +77,69 @@ export class BookingRepository {
         });
     }
 
-    async findByContractorId(contractorId: string): Promise<Booking[]> {
-        return prisma.booking.findMany({
-            where: { contractorId },
-            include: {
-                service: true,
-                client: true,
+    async findByContractorId(
+        contractorId: string,
+        filters?: {
+            status?: BookingStatus | BookingStatus[];
+            page?: number;
+            limit?: number;
+        }
+    ): Promise<{ bookings: Booking[]; total: number }> {
+        const { status, page = 1, limit = 10 } = filters || {};
+        const skip = (page - 1) * limit;
+
+        const where: { contractorId: string; status?: BookingStatus | { in: BookingStatus[] } } = { contractorId };
+
+        if (status) {
+            if (Array.isArray(status)) {
+                where.status = { in: status };
+            } else {
+                where.status = status;
+            }
+        }
+
+        const [bookings, total] = await Promise.all([
+            prisma.booking.findMany({
+                where,
+                include: {
+                    service: true,
+                    client: true,
+                },
+                orderBy: { scheduledDate: 'asc' },
+                skip,
+                take: limit,
+            }),
+            prisma.booking.count({ where }),
+        ]);
+
+        return { bookings, total };
+    }
+
+    async getBookingCounts(userId: string, role: 'CLIENT' | 'CONTRACTOR'): Promise<Record<BookingStatus, number>> {
+        const whereField = role === 'CONTRACTOR' ? 'contractorId' : 'clientId';
+
+        const counts = await prisma.booking.groupBy({
+            by: ['status'],
+            where: {
+                [whereField]: userId,
             },
-            orderBy: { scheduledDate: 'asc' },
+            _count: {
+                status: true,
+            },
         });
+
+        // Initialize all statuses with 0
+        const result = Object.values(BookingStatus).reduce((acc, status) => {
+            acc[status] = 0;
+            return acc;
+        }, {} as Record<BookingStatus, number>);
+
+        // Fill with actual counts
+        counts.forEach((item) => {
+            result[item.status] = item._count.status;
+        });
+
+        return result;
     }
 
     async updateStatus(

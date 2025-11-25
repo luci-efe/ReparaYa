@@ -116,7 +116,19 @@ export class BookingService {
     }
 
     async getContractorBookings(contractorId: string): Promise<Booking[]> {
-        return this.repository.findByContractorId(contractorId);
+        const result = await this.repository.findByContractorId(contractorId);
+        return result.bookings;
+    }
+
+    async getContractorBookingsPaged(
+        contractorId: string,
+        filters?: {
+            status?: BookingStatus | BookingStatus[];
+            page?: number;
+            limit?: number;
+        }
+    ): Promise<{ bookings: Booking[]; total: number }> {
+        return this.repository.findByContractorId(contractorId, filters);
     }
 
     async updateBookingStatus(
@@ -131,13 +143,14 @@ export class BookingService {
 
         // Authorization logic:
         // - Contractor can update to any valid state
-        // - Client can only cancel
+        // - Client can only cancel OR confirm payment
         const isContractor = booking.contractorId === userId;
         const isClient = booking.clientId === userId;
         const isCancellation = data.status === BookingStatus.CANCELLED;
+        const isPaymentConfirmation = booking.status === BookingStatus.PENDING_PAYMENT && data.status === BookingStatus.CONFIRMED;
 
         if (!isContractor) {
-            if (!(isClient && isCancellation)) {
+            if (!(isClient && (isCancellation || isPaymentConfirmation))) {
                 throw new Error('Unauthorized');
             }
         }
@@ -150,26 +163,38 @@ export class BookingService {
         return this.repository.updateStatus(id, data, userId, booking.status);
     }
 
+    async advanceState(
+        bookingId: string,
+        newState: BookingStatus,
+        userId: string,
+        notes?: string
+    ): Promise<Booking> {
+        return this.updateBookingStatus(bookingId, { status: newState, notes }, userId);
+    }
+
     async approveBooking(id: string, contractorId: string): Promise<Booking> {
+        return this.advanceState(id, BookingStatus.PENDING_PAYMENT, contractorId, 'Reserva aprobada por el contratista');
+    }
+
+    async rejectBooking(id: string, contractorId: string, reason: string): Promise<Booking> {
+        // Rejecting usually means cancelling from PENDING_APPROVAL
         const booking = await this.repository.findById(id);
-        if (!booking) {
-            throw new BookingNotFoundError(id);
-        }
+        if (!booking) throw new BookingNotFoundError(id);
 
-        if (booking.contractorId !== contractorId) {
-            throw new Error('Unauthorized');
-        }
-
+        // If it's already confirmed, it's a cancellation, not a rejection
         if (booking.status !== BookingStatus.PENDING_APPROVAL) {
-            throw new InvalidStateTransitionError(booking.status, BookingStatus.PENDING_PAYMENT);
+            throw new InvalidStateTransitionError(booking.status, BookingStatus.CANCELLED);
         }
 
-        return this.repository.updateStatus(
-            id,
-            { status: BookingStatus.PENDING_PAYMENT },
-            contractorId,
-            booking.status
-        );
+        return this.advanceState(id, BookingStatus.CANCELLED, contractorId, `Rechazada: ${reason}`);
+    }
+
+    async completeBooking(id: string, contractorId: string): Promise<Booking> {
+        return this.advanceState(id, BookingStatus.COMPLETED, contractorId, 'Trabajo completado');
+    }
+
+    async cancelBooking(id: string, userId: string, reason: string): Promise<Booking> {
+        return this.advanceState(id, BookingStatus.CANCELLED, userId, `Cancelada: ${reason}`);
     }
 
     private calculatePricing(basePrice: number): BookingPricingDetails {

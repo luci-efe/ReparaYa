@@ -1,6 +1,5 @@
 import { requireRole } from '@/modules/auth/utils/requireRole';
 import { contractorProfileService } from '@/modules/contractors';
-import { DashboardShell } from '@/components/contractors/DashboardShell';
 import { VerificationStatusWidget } from '@/components/contractors/VerificationStatusWidget';
 import { QuickAccessTiles } from '@/components/contractors/QuickAccessTiles';
 import { ServiceAreaCTA } from '@/components/contractors/ServiceAreaCTA';
@@ -36,42 +35,23 @@ export default async function ContractorDashboardPage() {
     throw error; // Re-throw other errors
   }
 
-  // Renderizar dashboard con datos del servidor
-  const userName = user.firstName
-    ? `${user.firstName}${user.lastName ? ' ' + user.lastName : ''}`
-    : user.email;
-
   return (
-    <DashboardShell
-      user={{
-        id: user.id,
-        name: userName,
-        email: user.email,
-        imageUrl: user.avatarUrl || undefined,
-      }}
-      _profile={{
-        verified: profile.verified,
-        businessName: profile.businessName || 'Mi Negocio',
-      }}
-    >
-      {/* Dashboard Content */}
-      <div className="space-y-6">
-        {/* 1. Verification Status */}
-        <VerificationStatusWidget verified={profile.verified} />
+    <div className="space-y-6">
+      {/* 1. Verification Status */}
+      <VerificationStatusWidget verified={profile.verified} />
 
-        {/* 2. Service Area CTA (conditional) */}
-        {/* TODO: Check profile.serviceArea once service area feature is implemented */}
-        <ServiceAreaCTA hasServiceArea={false} />
+      {/* 2. Service Area CTA (conditional) */}
+      {/* TODO: Check profile.serviceArea once service area feature is implemented */}
+      <ServiceAreaCTA hasServiceArea={false} />
 
-        {/* 3. Quick Access Tiles */}
-        <QuickAccessTiles />
+      {/* 3. Quick Access Tiles */}
+      <QuickAccessTiles />
 
-        {/* 4. Metrics Overview */}
-        <MetricsOverview />
+      {/* 4. Metrics Overview */}
+      <MetricsOverview />
 
-        {/* 5. Availability Summary */}
-        <AvailabilitySummary />
-      </div>
-    </DashboardShell>
+      {/* 5. Availability Summary */}
+      <AvailabilitySummary />
+    </div>
   );
 }

@@ -1,18 +1,22 @@
-import type { ReactNode } from 'react';
+'use client';
 
-/**
- * Layout compartido para todas las páginas de contratistas
- *
- * Propósito:
- * - Envolver todas las rutas bajo /contractors/* con un layout consistente
- * - Permite que componentes como sidebars persistan entre navegaciones
- * - Proporciona estructura común para futuras features (sidebar, topbar, etc.)
- */
+import { ReactNode, useState } from 'react';
+import { ContractorSidebar } from '@/components/contractors/ContractorSidebar';
+import { ContractorTopbar } from '@/components/contractors/ContractorTopbar';
+
 export default function ContractorsLayout({ children }: { children: ReactNode }) {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Main content area */}
-      {children}
+      <ContractorTopbar onMenuClick={() => setSidebarOpen(true)} />
+      <ContractorSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+
+      <main className="lg:pl-64 pt-16 min-h-screen">
+        <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
+          {children}
+        </div>
+      </main>
     </div>
   );
 }
