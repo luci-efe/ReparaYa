@@ -1,7 +1,6 @@
 'use client';
 
 import { ChatContainer } from '@/components/shared/messaging/ChatContainer';
-import { Booking } from '@prisma/client';
 
 interface BookingChatProps {
     booking: { id: string };

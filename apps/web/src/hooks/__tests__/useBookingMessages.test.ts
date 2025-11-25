@@ -4,7 +4,6 @@
 import { renderHook, waitFor } from '@testing-library/react';
 import { useBookingMessages } from '../useBookingMessages';
 import { createWrapper } from '../../../tests/utils/test-utils';
-import { supabase } from '@/lib/supabase/client';
 
 // Mock supabase
 jest.mock('@/lib/supabase/client', () => ({

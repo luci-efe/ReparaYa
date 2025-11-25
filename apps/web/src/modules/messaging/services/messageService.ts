@@ -5,7 +5,6 @@ import { timeWindowService } from './timeWindowService';
 import { createMessageSchema, getMessagesSchema } from '../validators/messageSchemas';
 import {
     MessageDTO,
-    MessageListDTO,
     MessagesResponseDTO,
     CreateMessageDTO,
     ConversationPreviewDTO,
@@ -53,7 +52,6 @@ export class MessageService {
         }
 
         // 4. Check time window
-        const windowStatus = timeWindowService.getWindowStatus(booking);
         timeWindowService.ensureMessagingAvailable(booking);
 
         // 5. Sanitize content

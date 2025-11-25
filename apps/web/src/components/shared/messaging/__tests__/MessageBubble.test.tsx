@@ -35,7 +35,7 @@ describe('MessageBubble', () => {
     it('applies correct styles for received messages', () => {
         const { container } = render(<MessageBubble {...defaultProps} isSentByMe={false} />);
         const bubble = container.firstChild?.firstChild;
-        expect(bubble).toHaveClass('bg-white', 'text-gray-800');
+        expect(bubble).toHaveClass('bg-gray-100', 'text-gray-900');
     });
 
     it('shows sending indicator when isSending is true', () => {

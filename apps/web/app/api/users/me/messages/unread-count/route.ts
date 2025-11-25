@@ -12,7 +12,7 @@ async function getInternalUserId(clerkUserId: string) {
     return user?.id;
 }
 
-export async function GET(req: NextRequest) {
+export async function GET(_req: NextRequest) {
     try {
         const { userId: clerkUserId } = auth();
         if (!clerkUserId) {

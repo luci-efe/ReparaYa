@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { MessageDTO, CreateMessageDTO, MessageListDTO } from '@/modules/messaging/types';
+import { MessageDTO } from '@/modules/messaging/types';
 import { v4 as uuidv4 } from 'uuid';
 import { useUser } from '@clerk/nextjs';
 
@@ -32,7 +32,7 @@ export function useSendMessage(bookingId: string) {
                 const optimisticMessage: MessageDTO = {
                     id: uuidv4(),
                     bookingId,
-                    senderId: 'temp-id',
+                    senderId: user.id,
                     text,
                     createdAt: new Date(),
                     sender: {

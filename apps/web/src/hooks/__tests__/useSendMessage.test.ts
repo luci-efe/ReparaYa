@@ -44,6 +44,7 @@ describe('useSendMessage', () => {
         (global.fetch as jest.Mock).mockResolvedValueOnce({
             ok: false,
             status: 500,
+            text: async () => 'Server error',
         });
 
         const { result } = renderHook(() => useSendMessage(mockBookingId), {
@@ -58,6 +59,8 @@ describe('useSendMessage', () => {
             }
         });
 
-        expect(result.current.isError).toBe(true);
+        await waitFor(() => {
+            expect(result.current.isError).toBe(true);
+        });
     });
 });

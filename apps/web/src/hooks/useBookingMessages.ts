@@ -1,13 +1,13 @@
 import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { realtime, MessagePayload } from '@/lib/supabase/realtime';
-import { MessageListDTO, MessageDTO } from '@/modules/messaging/types';
+import { MessageListDTO } from '@/modules/messaging/types';
 
 const MESSAGES_PER_PAGE = 20;
 
 export function useBookingMessages(bookingId: string) {
     const queryClient = useQueryClient();
-    const queryKey = ['messages', bookingId];
+    const queryKey = useMemo(() => ['messages', bookingId], [bookingId]);
 
     const query = useInfiniteQuery<MessageListDTO>({
         queryKey,
@@ -30,42 +30,11 @@ export function useBookingMessages(bookingId: string) {
     });
 
     useEffect(() => {
-        const handleNewMessage = (payload: MessagePayload) => {
-            const newMessage = payload.new;
-
-            // We need to fetch the sender info because Supabase payload only has raw table data
-            // Or we can optimistically add it if we know it's the current user, 
-            // but for incoming messages from others we might need to fetch or just show "Loading..."
-            // 
-            // Actually, the best way is to invalidate the query or manually update cache.
-            // Since we want instant updates, let's try to update cache.
-            // But `payload.new` lacks `sender` relation.
-            //
-            // Option 1: Invalidate query (easiest, but triggers refetch)
-            // Option 2: Fetch single message details
-            // Option 3: Just append what we have and let UI handle missing sender?
-            //
-            // Let's go with Option 1 for simplicity and correctness first, 
-            // or maybe we can do a hybrid: append immediately, then invalidate to get full data.
-            //
-            // However, the proposal says: "On INSERT event: call queryClient.setQueryData to append new message"
-            //
-            // If we only have `payload.new`, we don't have the sender name/avatar.
-            // The UI might break if it expects `sender` object.
-            //
-            // Let's check `MessageDTO`. It requires `sender`.
-            //
-            // So we should probably invalidate the query to fetch the full message with relation.
-            // OR we can fetch the single message from API.
-            //
-            // Let's try invalidating first. It's fast enough usually.
-            // But to be "Realtime" and "Optimistic", we want it instant.
-            //
-            // If the message is from CURRENT USER, we likely already have it via optimistic update in useSendMessage.
-            // So this realtime event is mostly for INCOMING messages.
-            //
-            // For incoming messages, we can invalidate.
-
+        const handleNewMessage = (_payload: MessagePayload) => {
+            // Invalidate query to refetch with full sender data.
+            // Supabase realtime payload lacks relations (sender name/avatar),
+            // so we refetch to get complete MessageDTO.
+            // Note: Current user's sent messages are handled via optimistic updates in useSendMessage.
             queryClient.invalidateQueries({ queryKey });
         };
 
