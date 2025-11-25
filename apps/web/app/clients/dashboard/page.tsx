@@ -1,5 +1,4 @@
 import { requireRole } from '@/modules/auth/utils/requireRole';
-import { ClientDashboardShell } from '@/components/clients/ClientDashboardShell';
 import { WelcomeWidget } from '@/components/clients/WelcomeWidget';
 import { ClientQuickAccessTiles } from '@/components/clients/ClientQuickAccessTiles';
 import { ClientMetricsOverview } from '@/components/clients/ClientMetricsOverview';
@@ -16,29 +15,20 @@ export default async function ClientDashboardPage() {
     const userName = getUserDisplayName(user);
 
     return (
-        <ClientDashboardShell
-            user={{
-                id: user.id,
-                name: userName,
-                email: user.email,
-                imageUrl: user.avatarUrl || undefined,
-            }}
-        >
-            <div className="space-y-6">
-                {/* 1. Welcome Widget */}
-                <WelcomeWidget
-                    user={{ name: userName, imageUrl: user.avatarUrl || undefined }}
-                />
+        <div className="space-y-6">
+            {/* 1. Welcome Widget */}
+            <WelcomeWidget
+                user={{ name: userName, imageUrl: user.avatarUrl || undefined }}
+            />
 
-                {/* 2. Quick Access Tiles */}
-                <ClientQuickAccessTiles />
+            {/* 2. Quick Access Tiles */}
+            <ClientQuickAccessTiles />
 
-                {/* 3. Metrics Overview */}
-                <ClientMetricsOverview />
+            {/* 3. Metrics Overview */}
+            <ClientMetricsOverview />
 
-                {/* 4. Upcoming Bookings */}
-                <UpcomingBookings />
-            </div>
-        </ClientDashboardShell>
+            {/* 4. Upcoming Bookings */}
+            <UpcomingBookings />
+        </div>
     );
 }

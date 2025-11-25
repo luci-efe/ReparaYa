@@ -8,15 +8,8 @@ export default async function ClientAddressesPage() {
     const userName = getUserDisplayName(user);
 
     return (
-        <ClientDashboardShell
-            user={{
-                id: user.id,
-                name: userName,
-                email: user.email,
-                imageUrl: user.avatarUrl || undefined,
-            }}
-        >
+        <div className="container mx-auto px-4 py-8">
             <AddressList />
-        </ClientDashboardShell>
+        </div>
     );
 }

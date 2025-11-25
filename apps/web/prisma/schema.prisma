@@ -151,7 +151,7 @@ model Booking {
   clientId               String
   contractorId           String
   availabilityId         String                @unique
-  status                 BookingStatus         @default(PENDING_PAYMENT)
+  status                 BookingStatus         @default(PENDING_APPROVAL)
   scheduledDate          DateTime
   address                String
   notes                  String?
@@ -331,6 +331,7 @@ enum AvailabilityStatus {
 }
 
 enum BookingStatus {
+  PENDING_APPROVAL
   PENDING_PAYMENT
   CONFIRMED
   ON_ROUTE

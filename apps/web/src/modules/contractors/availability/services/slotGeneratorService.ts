@@ -13,6 +13,7 @@ import { AvailableSlotDTO, TimeInterval } from '../types';
 import { weeklyRuleRepository } from '../repositories/weeklyRuleRepository';
 import { exceptionRepository } from '../repositories/exceptionRepository';
 import { blockRepository } from '../repositories/blockRepository';
+import { BookingRepository } from '@/modules/booking/repositories/bookingRepository';
 import { contractorProfileRepository } from '@/modules/contractors/repositories/contractorProfileRepository';
 import { subtractInterval, calculateDurationMinutes } from '../utils/intervals';
 import { convertFromUTC } from '../utils/timezone';
@@ -65,9 +66,15 @@ export const slotGeneratorService = {
     const exceptions = await exceptionRepository.findByDateRange(contractorId, startDate, endDate);
     const blocks = await blockRepository.findByDateRange(contractorId, start, end);
 
-    // TODO: Get confirmed bookings when booking module is integrated
-    // const _confirmedBookings = await bookingService.getConfirmedBookings(contractorId, start, end);
-    // const _confirmedBookings: Array<{ startDateTime: Date; endDateTime: Date }> = [];
+    // Get confirmed bookings
+    let confirmedBookings: Array<{ startDateTime: Date; endDateTime: Date }> = [];
+    try {
+      const bookingRepository = new BookingRepository();
+      confirmedBookings = await bookingRepository.getConfirmedBookings(contractorId, start, end);
+    } catch (error) {
+      console.error('Error fetching confirmed bookings:', error);
+      // Continue without filtering bookings if error occurs
+    }
 
     // Get service duration if provided
     let serviceDuration: number | undefined;
@@ -148,11 +155,34 @@ export const slotGeneratorService = {
         }
       }
 
-      // 4c. Subtract confirmed bookings (TODO: when booking module is available)
-      // When booking module is available, we will subtract booking intervals similar to blocks
-      // for (const booking of confirmedBookings) {
-      //   // Similar to blocks, subtract booking intervals
-      // }
+      // 4c. Subtract confirmed bookings
+      for (const booking of confirmedBookings) {
+        const bookingStart = new Date(booking.startDateTime);
+        const bookingEnd = new Date(booking.endDateTime);
+
+        // Check if booking intersects with this day
+        const dayStart = new Date(day);
+        dayStart.setHours(0, 0, 0, 0);
+        const dayEnd = new Date(day);
+        dayEnd.setHours(23, 59, 59, 999);
+
+        if (bookingStart <= dayEnd && bookingEnd >= dayStart) {
+          // Convert booking to time interval for this day
+          const bookingInterval = this._convertDateTimeToTimeInterval(
+            bookingStart,
+            bookingEnd,
+            day,
+            timezone
+          );
+
+          if (bookingInterval) {
+            // Subtract booking from all intervals
+            availableIntervals = availableIntervals.flatMap((interval) =>
+              subtractInterval(interval, bookingInterval)
+            );
+          }
+        }
+      }
 
       // 4d. Filter by service duration if provided
       if (serviceDuration) {
@@ -161,15 +191,47 @@ export const slotGeneratorService = {
         );
       }
 
-      // 4e. Convert intervals to slots
+      // 4e. Convert intervals to discrete slots (15-minute intervals)
+      // If serviceDuration is not provided, we just return the intervals (or default to 15 min slots?)
+      // The requirement says "choose in intervals of 15 minutes".
+      // We'll generate slots every 15 minutes that fit the service duration.
+
+      const duration = serviceDuration || 60; // Default to 60 min if not specified (shouldn't happen for booking)
+      const stepMinutes = 15;
+
       for (const interval of availableIntervals) {
-        slots.push({
-          date: dateStr,
-          startTime: interval.startTime,
-          endTime: interval.endTime,
-          durationMinutes: calculateDurationMinutes(interval),
-          timezone,
-        });
+        // Parse start and end times
+        // Interval times are strings "HH:mm"
+        const intervalStart = new Date(`${dateStr}T${interval.startTime}:00`);
+        const intervalEnd = new Date(`${dateStr}T${interval.endTime}:00`);
+
+        // Handle case where end time is "24:00" -> next day 00:00
+        if (interval.endTime === '24:00') {
+          intervalEnd.setDate(intervalEnd.getDate() + 1);
+          intervalEnd.setHours(0, 0, 0, 0);
+        }
+
+        let currentSlotStart = new Date(intervalStart);
+
+        while (true) {
+          const currentSlotEnd = new Date(currentSlotStart.getTime() + duration * 60000);
+
+          if (currentSlotEnd > intervalEnd) {
+            break;
+          }
+
+          // Add this slot
+          slots.push({
+            date: dateStr,
+            startTime: format(currentSlotStart, 'HH:mm'),
+            endTime: format(currentSlotEnd, 'HH:mm'),
+            durationMinutes: duration,
+            timezone,
+          });
+
+          // Advance by step (15 mins)
+          currentSlotStart = new Date(currentSlotStart.getTime() + stepMinutes * 60000);
+        }
       }
     }
 
