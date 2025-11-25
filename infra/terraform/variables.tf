@@ -44,3 +44,21 @@ variable "location_route_calculator_name" {
   type        = string
   default     = "reparaya-routes"
 }
+
+# Vercel Variables
+variable "vercel_api_token" {
+  description = "Token de API de Vercel"
+  type        = string
+  sensitive   = true
+}
+
+variable "vercel_project_id" {
+  description = "ID del proyecto en Vercel"
+  type        = string
+}
+
+variable "vercel_team_id" {
+  description = "ID del equipo en Vercel (opcional)"
+  type        = string
+  default     = null
+}
