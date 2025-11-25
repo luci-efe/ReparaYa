@@ -29,11 +29,11 @@ export async function GET(req: NextRequest) {
         const limit = Number(searchParams.get('limit')) || 10;
 
         // Validate status values against BookingStatus enum
-        const validStatuses = Object.values(BookingStatus);
+        const validStatuses = Object.values(BookingStatus) as string[];
         let status: BookingStatus | BookingStatus[] | undefined;
         if (statusParam) {
             const requestedStatuses = statusParam.split(',');
-            const invalidStatuses = requestedStatuses.filter(s => !validStatuses.includes(s as BookingStatus));
+            const invalidStatuses = requestedStatuses.filter(s => !validStatuses.includes(s));
             if (invalidStatuses.length > 0) {
                 return NextResponse.json(
                     { error: `Estado(s) inválido(s): ${invalidStatuses.join(', ')}` },
