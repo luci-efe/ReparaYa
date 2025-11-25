@@ -70,8 +70,13 @@ jobs:
         env:
           # Test environment variables
           NODE_ENV: test
+          CI: true
           DATABASE_URL: "postgresql://test:test@localhost:5432/test_db"
           DIRECT_URL: "postgresql://test:test@localhost:5432/test_db"
+          # Platform config for commission calculations
+          PLATFORM_MARKUP_PERCENTAGE: "10"
+          PLATFORM_COMMISSION_PERCENTAGE: "15"
+          BOOKING_ADVANCE_PERCENTAGE: "30"
 
       - name: Upload coverage
         if: success()

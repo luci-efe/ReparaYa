@@ -1392,450 +1392,6 @@ El módulo está completamente funcional y listo para merge:
 
 ---
 
-#### 4.1.2b UI de Perfil de Cliente (Client Profile UI)
-
-**Referencia de spec:** `/openspec/specs/client-profile/spec.md`
-**Propuesta relacionada:** `/openspec/changes/2025-11-24-implement-client-profile-addresses/proposal.md`
-
-**Criterios de aceptación generales:**
-- Cobertura de código ≥ 70% en componentes de perfil (`src/components/clients/ProfileForm.tsx`)
-- Todos los tests unitarios de componentes deben pasar
-- Validación client-side con Zod espejando el backend
-- Formulario accesible (WCAG 2.1 AA básico)
-- Responsive design (móvil y escritorio)
-- Estados de loading y error implementados
-
-**Casos de prueba:**
-
-| ID | Descripción | Tipo | Prioridad | Requisito | Estado |
-|----|-------------|------|-----------|-----------|--------|
-| TC-PROFILE-001 | Cliente ve su perfil completo en Mi Perfil | E2E | Alta | RF-003 | PASS |
-| TC-PROFILE-002 | Cliente edita firstName y lastName exitosamente | E2E | Alta | RF-003 | PASS |
-| TC-PROFILE-003 | Cliente edita teléfono con formato válido (10 dígitos) | E2E | Alta | RF-003 | PASS |
-| TC-PROFILE-004 | Validación rechaza teléfono inválido con mensaje de error | E2E | Media | RNF-001 | PASS |
-| TC-PROFILE-005 | Formulario muestra loading state durante actualización | Unitaria | Media | RNF-002 | PASS |
-
----
-
-**Procedimientos de prueba detallados:**
-
-##### TC-PROFILE-001: Cliente ve su perfil completo en Mi Perfil
-
-**Objetivo:** Validar que el cliente puede ver toda su información de perfil en la página Mi Perfil.
-
-**Precondiciones:**
-- Usuario autenticado con role=CLIENT
-- Usuario tiene perfil creado en base de datos
-- Aplicación corriendo en `http://localhost:3000`
-
-**Procedimiento:**
-1. Autenticarse como usuario cliente
-2. Navegar a `/clients/profile`
-3. Verificar que se muestra la información del perfil
-
-**Datos de prueba:**
-- Usuario de prueba con firstName, lastName, email, phone
-
-**Resultado esperado:**
-- ✅ Página carga sin errores
-- ✅ Se muestra firstName, lastName, email, phone, avatar
-- ✅ Email y avatar son campos de solo lectura
-- ✅ firstName, lastName, phone son editables
-
-**Estado:** PASS
-
----
-
-##### TC-PROFILE-002: Cliente edita firstName y lastName exitosamente
-
-**Objetivo:** Validar que el cliente puede editar su nombre y apellido.
-
-**Precondiciones:**
-- Usuario autenticado con role=CLIENT
-- Usuario en página `/clients/profile`
-
-**Procedimiento:**
-1. Modificar campo firstName a "NuevoNombre"
-2. Modificar campo lastName a "NuevoApellido"
-3. Hacer clic en "Guardar cambios"
-4. Verificar mensaje de éxito
-5. Refrescar página y verificar cambios persistidos
-
-**Resultado esperado:**
-- ✅ Formulario envía PATCH a `/api/users/me`
-- ✅ Se muestra toast/mensaje de éxito
-- ✅ Datos actualizados se reflejan en UI
-- ✅ Cambios persisten tras recargar página
-
-**Estado:** PASS
-
----
-
-##### TC-PROFILE-003: Cliente edita teléfono con formato válido
-
-**Objetivo:** Validar que el cliente puede editar su teléfono con 10 dígitos.
-
-**Precondiciones:**
-- Usuario autenticado con role=CLIENT
-
-**Procedimiento:**
-1. Ingresar teléfono válido: "3398765432" (10 dígitos)
-2. Verificar que el campo muestra estado válido
-3. Guardar cambios
-4. Verificar actualización exitosa
-
-**Datos de prueba:**
-- Phone válido: `"3398765432"` (10 dígitos)
-
-**Resultado esperado:**
-- ✅ Campo muestra estado válido (borde verde/check)
-- ✅ Botón de guardar habilitado
-- ✅ PATCH exitoso con status 200
-
-**Estado:** PASS
-
----
-
-##### TC-PROFILE-004: Validación rechaza teléfono inválido
-
-**Objetivo:** Validar que la validación client-side rechaza teléfonos inválidos.
-
-**Precondiciones:**
-- Usuario autenticado con role=CLIENT
-
-**Procedimiento:**
-1. Ingresar teléfono inválido: "123" (menos de 10 dígitos)
-2. Intentar guardar cambios
-3. Verificar mensaje de error
-
-**Datos de prueba:**
-- Phone inválido: `"123"` (< 10 dígitos)
-- Phone inválido: `"12345678901"` (> 10 dígitos)
-- Phone inválido: `"abcdefghij"` (no numérico)
-
-**Resultado esperado:**
-- ✅ Campo muestra estado de error (borde rojo)
-- ✅ Mensaje: "El teléfono debe tener exactamente 10 dígitos"
-- ✅ Botón de guardar deshabilitado
-- ✅ No se envía request al backend
-
-**Estado:** PASS
-
----
-
-##### TC-PROFILE-005: Formulario muestra loading state
-
-**Objetivo:** Validar que el formulario muestra estado de carga durante la actualización.
-
-**Precondiciones:**
-- Usuario autenticado con role=CLIENT
-- Datos de formulario válidos
-
-**Procedimiento:**
-1. Modificar algún campo del perfil
-2. Hacer clic en "Guardar cambios"
-3. Observar comportamiento durante la petición
-
-**Resultado esperado:**
-- ✅ Botón muestra spinner/loading
-- ✅ Campos del formulario deshabilitados durante petición
-- ✅ No se puede enviar múltiples veces
-- ✅ Loading desaparece al completar/fallar petición
-
-**Estado:** PASS
-
----
-
-#### 4.1.2c UI de Direcciones de Cliente (Client Addresses UI)
-
-**Referencia de spec:** `/openspec/specs/client-addresses/spec.md`
-**Propuesta relacionada:** `/openspec/changes/2025-11-24-implement-client-profile-addresses/proposal.md`
-
-**Criterios de aceptación generales:**
-- Cobertura de código ≥ 70% en componentes de direcciones
-- Todos los tests unitarios de componentes deben pasar
-- Reglas de negocio BR-001 y BR-002 reflejadas en UI
-- Formulario accesible (WCAG 2.1 AA básico)
-- Responsive design (móvil y escritorio)
-- Estados de loading, empty y error implementados
-
-**Casos de prueba:**
-
-| ID | Descripción | Tipo | Prioridad | Requisito | Estado |
-|----|-------------|------|-----------|-----------|--------|
-| TC-ADDR-001 | Cliente ve lista de sus direcciones | E2E | Alta | RF-003 | PASS |
-| TC-ADDR-002 | Cliente crea nueva dirección exitosamente | E2E | Alta | RF-003 | PASS |
-| TC-ADDR-003 | Validación de código postal (5 dígitos) funciona | E2E | Alta | RNF-001 | PASS |
-| TC-ADDR-004 | Cliente puede editar dirección existente | E2E | Media | RF-003 | PASS |
-| TC-ADDR-005 | Cliente puede establecer dirección como predeterminada (BR-002) | E2E | Alta | BR-002 | PASS |
-| TC-ADDR-006 | Cliente puede eliminar dirección (si tiene más de una) | E2E | Media | RF-003 | PASS |
-| TC-ADDR-007 | Sistema previene eliminar única dirección (BR-001) | E2E | Alta | BR-001 | PASS |
-| TC-ADDR-008 | Empty state cuando no hay direcciones | Unitaria | Media | RNF-002 | PASS |
-| TC-ADDR-009 | Métricas del dashboard muestran conteo real de direcciones | Integración | Media | RF-CDASH-06 | PASS |
-
----
-
-**Procedimientos de prueba detallados:**
-
-##### TC-ADDR-001: Cliente ve lista de sus direcciones
-
-**Objetivo:** Validar que el cliente puede ver todas sus direcciones en la página Direcciones.
-
-**Precondiciones:**
-- Usuario autenticado con role=CLIENT
-- Usuario tiene al menos una dirección en base de datos
-
-**Procedimiento:**
-1. Navegar a `/clients/addresses`
-2. Verificar que se muestran las direcciones
-
-**Resultado esperado:**
-- ✅ Página carga sin errores
-- ✅ Se muestran todas las direcciones del usuario como cards
-- ✅ Dirección predeterminada tiene badge "Predeterminada"
-- ✅ Cada card tiene botones de Editar y Eliminar
-
-**Estado:** PASS
-
----
-
-##### TC-ADDR-002: Cliente crea nueva dirección exitosamente
-
-**Objetivo:** Validar que el cliente puede crear una nueva dirección con validación.
-
-**Precondiciones:**
-- Usuario autenticado con role=CLIENT
-- Usuario en página `/clients/addresses`
-
-**Procedimiento:**
-1. Hacer clic en "Agregar dirección"
-2. Completar formulario:
-   - addressLine1: "Av. Chapultepec 123"
-   - city: "Guadalajara"
-   - state: "Jalisco"
-   - postalCode: "44100"
-3. Hacer clic en "Guardar"
-4. Verificar creación exitosa
-
-**Datos de prueba:**
-- AddressLine1: "Av. Chapultepec 123" (≥5 caracteres)
-- City: "Guadalajara" (2-100 caracteres)
-- State: "Jalisco" (2-100 caracteres)
-- PostalCode: "44100" (5 dígitos)
-
-**Resultado esperado:**
-- ✅ Modal/drawer de formulario se abre
-- ✅ POST a `/api/users/me/addresses` con status 201
-- ✅ Mensaje de éxito mostrado
-- ✅ Modal se cierra
-- ✅ Nueva dirección aparece en la lista
-
-**Estado:** PASS
-
----
-
-##### TC-ADDR-003: Validación de código postal funciona
-
-**Objetivo:** Validar que el código postal requiere exactamente 5 dígitos.
-
-**Precondiciones:**
-- Usuario en formulario de crear/editar dirección
-
-**Procedimiento:**
-1. Ingresar código postal inválido: "123"
-2. Verificar mensaje de error
-3. Ingresar código postal válido: "44100"
-4. Verificar estado válido
-
-**Datos de prueba:**
-- PostalCode inválido: `"123"` (< 5 dígitos)
-- PostalCode inválido: `"1234567"` (> 5 dígitos)
-- PostalCode válido: `"44100"` (exactamente 5 dígitos)
-
-**Resultado esperado:**
-- ✅ Campo muestra error con código postal inválido
-- ✅ Mensaje: "El código postal debe tener exactamente 5 dígitos"
-- ✅ Botón guardar deshabilitado con datos inválidos
-- ✅ Campo muestra estado válido con 5 dígitos
-
-**Estado:** PASS
-
----
-
-##### TC-ADDR-004: Cliente puede editar dirección existente
-
-**Objetivo:** Validar que el cliente puede editar una dirección existente.
-
-**Precondiciones:**
-- Usuario autenticado con role=CLIENT
-- Usuario tiene al menos una dirección
-
-**Procedimiento:**
-1. Hacer clic en "Editar" en una dirección
-2. Modificar addressLine1 a "Nueva Dirección 456"
-3. Guardar cambios
-4. Verificar actualización
-
-**Resultado esperado:**
-- ✅ Modal/drawer se abre con datos pre-poblados
-- ✅ PATCH a `/api/users/me/addresses/:id` con status 200
-- ✅ Mensaje de éxito mostrado
-- ✅ Dirección actualizada en la lista
-
-**Estado:** PASS
-
----
-
-##### TC-ADDR-005: Cliente establece dirección como predeterminada (BR-002)
-
-**Objetivo:** Validar que el cliente puede establecer una dirección como predeterminada y que las otras pierden el flag.
-
-**Precondiciones:**
-- Usuario autenticado con role=CLIENT
-- Usuario tiene al menos 2 direcciones
-- Una dirección ya es predeterminada
-
-**Procedimiento:**
-1. Hacer clic en "Establecer como predeterminada" en dirección NO predeterminada
-2. Verificar cambio de estado
-
-**Resultado esperado:**
-- ✅ PATCH a `/api/users/me/addresses/:id` con `{ isDefault: true }`
-- ✅ Nueva dirección tiene badge "Predeterminada"
-- ✅ Anterior dirección predeterminada pierde el badge
-- ✅ Solo UNA dirección tiene badge (BR-002)
-
-**Estado:** PASS
-
----
-
-##### TC-ADDR-006: Cliente puede eliminar dirección
-
-**Objetivo:** Validar que el cliente puede eliminar una dirección cuando tiene más de una.
-
-**Precondiciones:**
-- Usuario autenticado con role=CLIENT
-- Usuario tiene al menos 2 direcciones
-
-**Procedimiento:**
-1. Hacer clic en "Eliminar" en una dirección
-2. Confirmar en diálogo de confirmación
-3. Verificar eliminación
-
-**Resultado esperado:**
-- ✅ Diálogo de confirmación aparece
-- ✅ DELETE a `/api/users/me/addresses/:id` con status 204
-- ✅ Mensaje de éxito mostrado
-- ✅ Dirección removida de la lista
-
-**Estado:** PASS
-
----
-
-##### TC-ADDR-007: Sistema previene eliminar única dirección (BR-001)
-
-**Objetivo:** Validar que el sistema no permite eliminar la última dirección del usuario.
-
-**Precondiciones:**
-- Usuario autenticado con role=CLIENT
-- Usuario tiene exactamente 1 dirección
-
-**Procedimiento:**
-1. Navegar a `/clients/addresses`
-2. Verificar estado del botón "Eliminar"
-
-**Resultado esperado:**
-- ✅ Botón "Eliminar" está oculto o deshabilitado
-- ✅ Tooltip explica: "No puedes eliminar tu única dirección"
-- ✅ No es posible triggear la eliminación
-
-**Estado:** PASS
-
----
-
-##### TC-ADDR-008: Empty state cuando no hay direcciones
-
-**Objetivo:** Validar que se muestra estado vacío apropiado cuando el usuario no tiene direcciones.
-
-**Precondiciones:**
-- Usuario autenticado con role=CLIENT
-- Usuario NO tiene direcciones en base de datos
-
-**Procedimiento:**
-1. Navegar a `/clients/addresses`
-2. Verificar estado vacío
-
-**Resultado esperado:**
-- ✅ Mensaje: "No tienes direcciones guardadas"
-- ✅ Botón prominente "Agregar dirección"
-- ✅ Texto de ayuda: "Agrega una dirección para poder solicitar servicios"
-
-**Estado:** PASS
-
----
-
-##### TC-ADDR-009: Métricas del dashboard muestran conteo real
-
-**Objetivo:** Validar que las métricas del dashboard reflejan el conteo real de direcciones.
-
-**Precondiciones:**
-- Usuario autenticado con role=CLIENT
-- Usuario tiene N direcciones
-
-**Procedimiento:**
-1. Navegar a `/clients/dashboard`
-2. Verificar widget de métricas
-3. Crear nueva dirección
-4. Volver al dashboard
-5. Verificar actualización del conteo
-
-**Resultado esperado:**
-- ✅ Métrica "Direcciones" muestra número correcto
-- ✅ Conteo se actualiza tras crear/eliminar direcciones
-- ✅ WelcomeWidget muestra conteo correcto
-
-**Estado:** PASS
-
----
-
-#### Resultados de Ejecución - 2025-11-24
-
-**Fecha de ejecución:** 2025-11-24
-**Ejecutado por:** Claude Code Agent
-**Ambiente:** Desarrollo local (jsdom)
-**Commit:** feature/client-profile-addresses
-**Estado:** ✅ **EXITOSO**
-
-##### Resumen de Pruebas Unitarias (Componentes)
-
-**Comando:** `npm test src/components/clients/__tests__/`
-
-| Archivo | Tests | Pasados | Fallidos | Omitidos | Cobertura |
-|---------|-------|---------|----------|----------|-----------|
-| `ProfileForm.test.tsx` | 5 | 5 | 0 | 0 | 100% |
-| `AddressForm.test.tsx` | 5 | 4 | 0 | 1 | 90% |
-| `AddressList.test.tsx` | 5 | 5 | 0 | 0 | 100% |
-| **Total** | **15** | **14** | **0** | **1** | **~96%** |
-
-**Notas:**
-- `AddressForm.test.tsx`: Un test ("submits valid data") fue omitido temporalmente debido a un problema de configuración del entorno de pruebas con `react-hook-form` y `jsdom`. La funcionalidad fue verificada manualmente y funciona correctamente en el navegador.
-- Todos los demás tests de renderizado, validación y manejo de errores pasaron exitosamente.
-
-##### Verificación Manual (E2E)
-
-| ID | Descripción | Estado | Observaciones |
-|----|-------------|--------|---------------|
-| TC-PROFILE-001 | Ver perfil | ✅ PASS | Datos cargan correctamente |
-| TC-PROFILE-002 | Editar nombre | ✅ PASS | Actualización exitosa |
-| TC-PROFILE-003 | Editar teléfono | ✅ PASS | Validación y actualización correctas |
-| TC-PROFILE-004 | Validación teléfono | ✅ PASS | Error mostrado correctamente |
-| TC-ADDR-001 | Ver direcciones | ✅ PASS | Lista renderizada correctamente |
-| TC-ADDR-002 | Crear dirección | ✅ PASS | Creación y validación correctas |
-| TC-ADDR-005 | Set default | ✅ PASS | Cambio de estado correcto |
-| TC-ADDR-009 | Dashboard metrics | ✅ PASS | Conteo actualizado en tiempo real |
-
----
-
 #### 4.1.3 Perfiles de Contratista (Contractor Profiles)
 
 **Referencia de spec:** `/openspec/specs/contractors/spec.md`
@@ -2299,7 +1855,7 @@ npm run test:coverage
 - ✅ Mensaje: "Tu perfil está en revisión. Podrás publicar servicios cuando sea aprobado."
 - ✅ No hay errores en consola
 
-**Estado:** PASS
+**Estado:** Pendiente
 
 ---
 
@@ -2324,7 +1880,7 @@ npm run test:coverage
 - ✅ Widget muestra badge verde "✓ Verificado"
 - ✅ Mensaje: "Tu perfil ha sido aprobado. Ya puedes publicar servicios."
 
-**Estado:** PASS
+**Estado:** Pendiente
 
 ---
 
@@ -2346,7 +1902,7 @@ npm run test:coverage
 - ✅ Mensaje: "Configura tu zona de operación para recibir solicitudes"
 - ✅ Botón "Configurar →" presente
 
-**Estado:** PASS
+**Estado:** Pendiente
 
 ---
 
@@ -2367,7 +1923,7 @@ npm run test:coverage
 - ✅ Widget CTA NO se muestra
 - ✅ Dashboard muestra otras secciones normalmente
 
-**Estado:** PASS
+**Estado:** Pendiente
 
 ---
 
@@ -2393,7 +1949,7 @@ npm run test:coverage
 - ✅ Click en "Mensajes" → navega a `/contractors/messages` (placeholder)
 - ✅ Placeholders muestran mensaje "Próximamente" o equivalente
 
-**Estado:** PASS
+**Estado:** Pendiente
 
 ---
 
@@ -2414,7 +1970,7 @@ npm run test:coverage
 - ✅ Redirect a dashboard apropiado (`/dashboard` para CLIENT, `/admin/dashboard` para ADMIN)
 - ✅ Mensaje de error: "No tienes permisos para acceder a esta página"
 
-**Estado:** PASS
+**Estado:** Pendiente
 
 ---
 
@@ -2435,7 +1991,7 @@ npm run test:coverage
 - ✅ Parámetro `redirect_url=/contractors/dashboard` en query string
 - ✅ Después de login exitoso, redirect de vuelta a dashboard
 
-**Estado:** PASS
+**Estado:** Pendiente
 
 ---
 
@@ -2464,7 +2020,7 @@ fetchContractorProfile.mockImplementation(() =>
 - ✅ Elementos interactivos deshabilitados
 - ✅ No se muestran secciones vacías antes de cargar
 
-**Estado:** PASS
+**Estado:** Pendiente
 
 ---
 
@@ -2490,7 +2046,7 @@ fetchContractorProfile.mockRejectedValue(new Error('Network error'));
 - ✅ Sugerencia de contactar soporte si persiste
 - ✅ No se muestra contenido parcial o corrupto
 
-**Estado:** PASS
+**Estado:** Pendiente
 
 ---
 
@@ -2511,7 +2067,7 @@ fetchContractorProfile.mockRejectedValue(new Error('Network error'));
 - ✅ CTA visible: "Crear mi primer servicio"
 - ✅ No hay errores de renderizado
 
-**Estado:** PASS
+**Estado:** Pendiente
 
 ---
 
@@ -2537,7 +2093,7 @@ fetchContractorProfile.mockRejectedValue(new Error('Network error'));
 - ✅ Enter/Space activan links y botones
 - ✅ Esc cierra sidebar en mobile (si aplica)
 
-**Estado:** PASS
+**Estado:** Pendiente
 
 ---
 
@@ -2566,7 +2122,7 @@ fetchContractorProfile.mockRejectedValue(new Error('Network error'));
 - ✅ Botones sin texto tienen `aria-label`
 - ✅ Status messages usan `role="status"` o `aria-live="polite"`
 
-**Estado:** PASS
+**Estado:** Pendiente
 
 ---
 
@@ -2593,7 +2149,7 @@ fetchContractorProfile.mockRejectedValue(new Error('Network error'));
 - ✅ No hay scroll horizontal
 - ✅ Hamburger menu ☰ funciona (toggle sidebar)
 
-**Estado:** PASS
+**Estado:** Pendiente
 
 ---
 
@@ -2614,7 +2170,7 @@ fetchContractorProfile.mockRejectedValue(new Error('Network error'));
 - ✅ Topbar visible con logo + user menu
 - ✅ Contenido aprovecha ancho de pantalla
 
-**Estado:** PASS
+**Estado:** Pendiente
 
 ---
 
@@ -2636,7 +2192,7 @@ fetchContractorProfile.mockRejectedValue(new Error('Network error'));
 - ✅ Máximo ancho de contenido (max-w-7xl)
 - ✅ Espaciado generoso entre secciones
 
-**Estado:** PASS
+**Estado:** Pendiente
 
 ---
 
@@ -2669,7 +2225,7 @@ fetchContractorProfile.mockRejectedValue(new Error('Network error'));
 - Chrome DevTools Performance tab
 - Lighthouse CI (si disponible)
 
-**Estado:** PASS
+**Estado:** Pendiente
 
 ---
 
@@ -3118,490 +2674,301 @@ npm run test:coverage
 
 ---
 
-#### 4.1.6 Dashboard de Cliente (Client Dashboard)
-
-**Referencia de spec:** `/openspec/changes/2025-11-24-create-client-dashboard/design.md`
-
-**Criterios de aceptación generales:**
-- Cobertura de código ≥ 70% en componentes de dashboard
-- Tests de integración de redirección pasando
-- Tests unitarios de componentes pasando
-
-**Casos de prueba:**
-
-| ID | Descripción | Tipo | Prioridad | Estado |
-|----|-------------|------|-----------|--------|
-| TC-CLDASH-001 | Redirección de usuario CLIENT a /clients/dashboard | Integración | Alta | PASS |
-| TC-CLDASH-002 | Redirección de usuario CONTRACTOR a /contractors/dashboard | Integración | Alta | PASS |
-| TC-CLDASH-003 | Manejo de error en verificación de rol | Integración | Media | PASS |
-| TC-CLDASH-004 | Estado de carga durante verificación de perfil | Integración | Media | PASS |
-| TC-CLDASH-005 | Renderizado de Shell de Cliente (Sidebar, Topbar) | Unitaria | Alta | PASS |
-| TC-CLDASH-006 | Renderizado de Widgets (Welcome, QuickAccess, Metrics) | Unitaria | Alta | PASS |
-| TC-CLDASH-007 | Navegación en Sidebar de Cliente (Links activos) | Unitaria | Alta | PASS |
-| TC-CLDASH-008 | Responsive Sidebar (Mobile/Desktop) | Unitaria | Media | PASS |
-
-**Procedimientos de prueba detallados:**
-
-##### TC-CLDASH-001: Redirección de usuario CLIENT
-
-**Objetivo:** Validar que `DashboardContent` redirige correctamente a usuarios con rol CLIENT.
-
-**Procedimiento:**
-1. Mockear `useUserRole` para retornar 'CLIENT'.
-2. Renderizar `<DashboardContent />`.
-3. Verificar llamada a `router.push('/clients/dashboard')`.
-
-**Estado:** PASS (tests/integration/clients/dashboard.test.tsx)
-
----
-
-##### TC-CLDASH-002: Redirección de usuario CONTRACTOR
-
-**Objetivo:** Validar que `DashboardContent` redirige correctamente a usuarios con rol CONTRACTOR.
-
-**Procedimiento:**
-1. Mockear `useUserRole` para retornar 'CONTRACTOR'.
-2. Renderizar `<DashboardContent />`.
-3. Verificar llamada a `router.push('/contractors/dashboard')`.
-
-**Estado:** PASS (tests/integration/clients/dashboard.test.tsx)
-
----
-
-##### TC-CLDASH-005: Renderizado de Shell de Cliente
-
-**Objetivo:** Validar estructura base del dashboard de cliente.
-
-**Procedimiento:**
-1. Renderizar `<ClientDashboardShell>`.
-2. Verificar presencia de Sidebar y Topbar.
-3. Verificar que `children` se renderizan correctamente.
-
-**Estado:** PASS (src/components/clients/__tests__/ClientDashboardShell.test.tsx)
-
----
-
-#### 4.1.7 Búsqueda de Servicios (Service Search)
-
-**Referencia de spec:** `/openspec/changes/archive/2025-11-25-2025-11-24-service-search-booking-demo/specs/service-search/spec.md`
-**Propuesta relacionada:** `/openspec/changes/archive/2025-11-25-2025-11-24-service-search-booking-demo/proposal.md`
-
-**Criterios de aceptación generales:**
-- Cobertura de código ≥ 70% en módulo `src/modules/services` para nuevas funcionalidades
-- Todos los tests unitarios e integración automatizados deben pasar
-- Página de búsqueda accesible públicamente (sin autenticación)
-- Performance de búsqueda: P95 ≤ 1.2s
-
-| ID | Descripción | Tipo | Requisito | Prioridad | Estado (plan) | Estado (ejecución) |
-|----|-------------|------|-----------|-----------|---------------|---------------------|
-| TC-RF-004-01 | Búsqueda de servicios por categoría retorna solo servicios de esa categoría | Integración | RF-004 | Alta | Pendiente | PASS |
-| TC-RF-004-02 | Búsqueda de servicios por término de búsqueda (texto) | Integración | RF-004 | Alta | Pendiente | PASS |
-| TC-RF-004-03 | Filtrado de servicios por rango de precio (minPrice, maxPrice) | Integración | RF-004 | Media | Pendiente | PASS |
-| TC-RF-004-04 | Paginación de resultados de búsqueda (page, limit) | Integración | RF-004 | Media | Pendiente | Pendiente |
-| TC-RF-004-05 | Servicios inactivos (PAUSED, DRAFT) no aparecen en búsqueda pública | Integración | RF-004 | Alta | Pendiente | Pendiente |
-| TC-RF-004-06 | Vista de detalle de servicio muestra información completa | E2E | RF-004 | Alta | Pendiente | Pendiente |
-| TC-RF-004-07 | Detalle de servicio muestra slots disponibles (próximos 7 días) | Integración | RF-004 | Alta | PASS | PASS |
-| TC-RF-004-08 | Slots ya reservados no se muestran en disponibilidad | Integración | RF-004 | Alta | PASS | PASS |
-| TC-RF-004-09 | Acceso a servicio inexistente retorna 404 | Integración | RF-004 | Media | Pendiente | Pendiente |
-| TC-RF-004-10 | Performance: P95 ≤ 1.2s con 10 RPS en búsqueda | Performance | RNF-3.5.1 | Alta | Pendiente | Pendiente |
-
-> **Nota:** La columna "Estado (ejecución)" refleja el estado real de los casos de prueba según la tabla de ejecución en la sección 4.1.6. La columna "Estado (plan)" indica el estado original de planificación.
-
----
-
-**Procedimientos de prueba detallados:**
-
-##### TC-RF-004-01: Búsqueda de servicios por categoría
-
-**Objetivo:** Validar que la búsqueda por categoryId filtra correctamente los servicios.
-
-**Precondiciones:**
-- Existen al menos 5 servicios activos en la categoría "plomeria"
-- Existen al menos 3 servicios activos en la categoría "electricidad"
-
-**Procedimiento:**
-1. Ejecutar GET `/api/services?categoryId=plomeria-uuid`
-2. Verificar que todos los servicios retornados pertenecen a la categoría "plomeria"
-3. Verificar que no se incluyen servicios de otras categorías
-
-**Datos de prueba:**
-- categoryId: UUID de categoría "plomeria"
-
-**Resultado esperado:**
-- ✅ Solo servicios de categoría "plomeria" retornados
-- ✅ Campos incluidos: id, title, description, basePrice, categoryName, contractor info
-- ✅ Paginación funciona (totalCount, page, limit)
-
-**Estado:** PASS
-
----
-
-##### TC-RF-004-07: Detalle de servicio muestra slots disponibles
-
-**Objetivo:** Validar que GET `/api/services/[id]/slots` retorna slots disponibles para reserva.
-
-**Precondiciones:**
-- Contratista tiene reglas de disponibilidad semanal configuradas
-- Servicio está activo (visibilityStatus = ACTIVE)
-
-**Procedimiento:**
-1. GET `/api/services/{serviceId}/slots`
-2. Verificar estructura de respuesta
-3. Verificar que slots están dentro de los próximos 7 días
-4. Verificar que slots coinciden con reglas de disponibilidad del contratista
-
-**Resultado esperado:**
-- ✅ Slots agrupados por fecha
-- ✅ Cada slot incluye: date, startTime, endTime, available
-- ✅ No incluye slots en fechas pasadas
-- ✅ No incluye slots con bookings existentes
-
-**Estado:** PASS
-
----
-
-#### 4.1.8 Reservas y Checkout (Booking)
-
-**Referencia de spec:** `/openspec/changes/2025-11-24-service-search-booking-demo/specs/booking-flow/spec.md`
-**Propuesta relacionada:** `/openspec/changes/2025-11-24-service-search-booking-demo/proposal.md`
-
-**Criterios de aceptación generales:**
-- Cobertura de código ≥ 70% en módulo `src/modules/booking`
-- Todos los tests unitarios e integración automatizados deben pasar
-- State machine de booking funciona correctamente
-- Audit trail completo en BookingStateHistory
-
-| ID | Descripción | Tipo | Requisito | Prioridad | Estado |
-|----|-------------|------|-----------|-----------|--------|
-| TC-RF-005-01 | Creación de reserva con slot disponible exitosa | Integración | RF-005 | Alta | Pendiente |
-| TC-RF-005-02 | Creación de reserva falla si slot ya está reservado (409 Conflict) | Integración | RF-005 | Alta | Pendiente |
-| TC-RF-005-03 | Cálculo correcto de precios: anticipoAmount = 30%, liquidacionAmount = 70% | Unitaria | RF-005 | Alta | Pendiente |
-| TC-RF-005-04 | Cálculo correcto de comisión: comisionAmount = 10%, contractorPayoutAmount = 90% | Unitaria | RF-005 | Alta | Pendiente |
-| TC-RF-005-05 | Cliente no puede reservar su propio servicio | Integración | RF-005 | Media | Pendiente |
-| TC-RF-005-06 | Solo servicios ACTIVE pueden ser reservados | Integración | RF-005 | Alta | Pendiente |
-| TC-RF-006-01 | Transición PENDING_PAYMENT → CONFIRMED válida (después de pago) | Unitaria | RF-006 | Alta | Pendiente |
-| TC-RF-006-02 | Transición CONFIRMED → ON_ROUTE válida | Unitaria | RF-006 | Alta | Pendiente |
-| TC-RF-006-03 | Transición ON_ROUTE → ON_SITE válida | Unitaria | RF-006 | Alta | Pendiente |
-| TC-RF-006-04 | Transición ON_SITE → IN_PROGRESS válida | Unitaria | RF-006 | Alta | Pendiente |
-| TC-RF-006-05 | Transición IN_PROGRESS → COMPLETED válida | Unitaria | RF-006 | Alta | Pendiente |
-| TC-RF-006-06 | Transición PENDING_PAYMENT → ON_ROUTE inválida (salta estados) | Unitaria | RF-006 | Alta | Pendiente |
-| TC-RF-006-07 | Transición desde CANCELLED no permitida | Unitaria | RF-006 | Alta | Pendiente |
-| TC-RF-006-08 | BookingStateHistory registra cada transición con changedBy | Integración | RF-006 | Alta | Pendiente |
-| TC-RF-006-09 | Cliente solo puede ver sus propias reservas | Integración | RF-006 | Alta | Pendiente |
-| TC-RF-006-10 | Contratista solo puede ver reservas de sus servicios | Integración | RF-006 | Alta | Pendiente |
-| TC-RF-006-11 | Solo contratista puede cambiar estado de booking | Integración | RF-006 | Alta | Pendiente |
-
----
-
-**Procedimientos de prueba detallados:**
-
-##### TC-RF-005-01: Creación de reserva con slot disponible
-
-**Objetivo:** Validar el flujo completo de creación de reserva.
-
-**Precondiciones:**
-- Usuario autenticado con rol CLIENT
-- Servicio activo con slots disponibles
-- Usuario tiene al menos una dirección guardada
-
-**Procedimiento:**
-1. POST `/api/bookings` con:
-   ```json
-   {
-     "serviceId": "service-uuid",
-     "availabilitySlotId": "slot-uuid",
-     "addressId": "address-uuid",
-     "notes": "Necesito que sea en la mañana"
-   }
-   ```
-2. Verificar respuesta 201 Created
-3. Verificar booking creado con status PENDING_PAYMENT
-4. Verificar Availability actualizada a BOOKED
-5. Verificar cálculo de precios correcto
-
-**Resultado esperado:**
-- ✅ Booking creado con status PENDING_PAYMENT
-- ✅ Availability vinculada al booking (bookingId)
-- ✅ Precios calculados: anticipo 30%, liquidación 70%, comisión 10%
-- ✅ BookingStateHistory contiene entrada inicial
-
-**Estado:** PASS
-
----
-
-##### TC-RF-006-08: BookingStateHistory registra transiciones
-
-**Objetivo:** Validar que cada cambio de estado queda registrado en el historial.
-
-**Precondiciones:**
-- Booking existente en status CONFIRMED
-- Usuario autenticado como CONTRACTOR dueño del servicio
-
-**Procedimiento:**
-1. PATCH `/api/bookings/{id}/status` con `{ "status": "ON_ROUTE" }`
-2. GET `/api/bookings/{id}` y verificar stateHistory
-3. Repetir para transiciones subsecuentes
-
-**Resultado esperado:**
-- ✅ BookingStateHistory contiene entrada con fromState, toState, changedBy
-- ✅ Timestamps son correctos
-- ✅ Historial ordenado cronológicamente
-
-**Estado:** PASS
-
----
-
-#### 4.1.9 Simulación Demo (Demo Simulation)
-
-**Referencia de spec:** `/openspec/changes/2025-11-24-service-search-booking-demo/specs/demo-simulation/spec.md`
-**Propuesta relacionada:** `/openspec/changes/2025-11-24-service-search-booking-demo/proposal.md`
-
-**Criterios de aceptación generales:**
-- Simulación respeta intervalos de 30 segundos
-- Pagos simulados se registran en tabla Payment
-- Manual override funciona en cualquier punto
-
-| ID | Descripción | Tipo | Requisito | Prioridad | Estado |
-|----|-------------|------|-----------|-----------|--------|
-| TC-DEMO-01 | Simulación de pago ANTICIPO cambia booking a CONFIRMED | Integración | Demo | Alta | Pendiente |
-| TC-DEMO-02 | Simulación de pago LIQUIDACION se crea al COMPLETED | Integración | Demo | Alta | Pendiente |
-| TC-DEMO-03 | Simulación automática respeta intervalo de 30 segundos | Integración | Demo | Alta | Pendiente |
-| TC-DEMO-04 | Simulación inicia al llegar scheduledDate | Integración | Demo | Alta | Pendiente |
-| TC-DEMO-05 | Trigger manual inicia simulación inmediatamente | Integración | Demo | Alta | Pendiente |
-| TC-DEMO-06 | Manual override avanza estado sin esperar intervalo | Integración | Demo | Media | Pendiente |
-| TC-DEMO-07 | Payments simulados tienen stripePaymentIntentId null | Unitaria | Demo | Media | Pendiente |
-| TC-DEMO-08 | Polling de status cada 30s actualiza UI | E2E | Demo | Media | Pendiente |
-
----
-
-**Procedimientos de prueba detallados:**
-
-##### TC-DEMO-01: Simulación de pago ANTICIPO
-
-**Objetivo:** Validar que simular el pago anticipo actualiza correctamente el booking.
-
-**Precondiciones:**
-- Booking existente en status PENDING_PAYMENT
-- Usuario autenticado como CLIENT dueño del booking
-
-**Procedimiento:**
-1. POST `/api/payments/simulate` con:
-   ```json
-   {
-     "bookingId": "booking-uuid",
-     "type": "ANTICIPO"
-   }
-   ```
-2. Verificar Payment creado con status SUCCEEDED
-3. Verificar Booking actualizado a CONFIRMED
-4. Verificar BookingStateHistory actualizado
-
-**Resultado esperado:**
-- ✅ Payment creado: type=ANTICIPO, status=SUCCEEDED, amount=anticipoAmount
-- ✅ Booking status = CONFIRMED
-- ✅ BookingStateHistory entrada: PENDING_PAYMENT → CONFIRMED
-
-**Estado:** PASS
-
----
-
-##### TC-DEMO-03: Simulación automática respeta intervalo
-
-**Objetivo:** Validar que los estados avanzan con intervalos de 30 segundos.
-
-**Precondiciones:**
-- Booking en CONFIRMED
-- scheduledDate ha llegado o trigger manual activado
-
-**Procedimiento:**
-1. POST `/api/bookings/{id}/simulate` para iniciar
-2. Registrar timestamps de cada transición
-3. Verificar intervalos entre transiciones ≈ 30s
-
-**Resultado esperado:**
-- ✅ ON_ROUTE → ON_SITE: ~30 segundos
-- ✅ ON_SITE → IN_PROGRESS: ~30 segundos
-- ✅ IN_PROGRESS → COMPLETED: ~30 segundos
-- ✅ Total ~90 segundos desde inicio
-
-**Estado:** PASS
-
----
-
-#### 4.1.10 Pagos y Webhooks (Payments)
+#### 4.1.6 Búsqueda de servicios (Catalog)
 
 | ID | Descripción | Requisito | Prioridad | Estado |
 |----|-------------|-----------|-----------|--------|
-| TC-RF-007-01 | Webhook payment_intent.succeeded actualiza reserva | RF-007 | Alta | Pendiente |
-| TC-RF-007-02 | Idempotencia en webhooks (mismo evento 2 veces) | RF-007 | Alta | Pendiente |
-| TC-RF-010-01 | Liquidación correcta según comisiones (BR-002) | RF-010 | Alta | Pendiente |
-| TC-BR-002-01 | Cálculo de comisiones (Ic = B - C%) | BR-002 | Alta | Pendiente |
+| TC-RF-001-01 | Búsqueda por ubicación retorna resultados relevantes | RF-001 | Alta | Pendiente |
+| TC-RF-001-02 | Filtrado por categoría funciona correctamente | RF-001 | Alta | Pendiente |
+| TC-RF-001-03 | Performance: P95 ≤ 1.2s con 10 RPS | RNF-3.5.1 | Alta | Pendiente |
+| TC-RF-002-01 | Visualización de detalle de servicio | RF-002 | Media | Pendiente |
 
-#### 4.1.7 Mensajería en Tiempo Real (Real-Time Messaging)
+#### 4.1.5 Reservas y Checkout (Booking)
 
-**Referencia de spec:** `/openspec/specs/reservation-lifecycle-messaging/spec.md`
-**Propuesta relacionada:** `/openspec/changes/2025-11-25-implement-realtime-messaging/proposal.md`
+| ID | Descripción | Requisito | Prioridad | Estado |
+|----|-------------|-----------|-----------|--------|
+| TC-RF-005-01 | Creación de reserva y redirección a checkout | RF-005 | Alta | Pendiente |
+| TC-RF-005-02 | Validación de disponibilidad (no duplicar reserva) | RF-005 | Alta | Pendiente |
+| TC-RF-006-01 | Transiciones válidas de estado | RF-006 | Alta | Pendiente |
+| TC-RF-006-02 | Rechazo de transiciones inválidas | RF-006 | Alta | Pendiente |
+
+#### 4.1.6 Pagos y Webhooks (Payments - Stripe Integration)
+
+**Referencia de spec:** `/openspec/specs/payments-webhooks/spec.md`
+**Propuesta relacionada:** `/openspec/changes/implement-stripe-payments/proposal.md`
 
 **Criterios de aceptación generales:**
-- Cobertura de código ≥ 70% en módulo `src/modules/messaging`
-- Mensajes se entregan en tiempo real (< 500ms latencia vía Supabase Realtime)
-- XSS prevention funciona correctamente
-- Rate limiting funciona (10 msg/min)
-- Time window de 2h post-COMPLETED se respeta
-- Authorization verifica participantes en todos los endpoints
+- Cobertura de código ≥ 75% en módulo `src/modules/payments` ✅ **COMPLETADO** (81.85% statements, 81.69% lines, 82.05% functions)
+- Todos los tests unitarios e integración (50+) deben pasar ✅ **COMPLETADO** (112 tests pasaron, 4 skipped por Stripe Connect)
+- Webhook idempotencia garantizada (verificado con eventos duplicados) ✅ **COMPLETADO**
+- Cálculos de comisiones coinciden exactamente con BR-001, BR-002, BR-003 ✅ **COMPLETADO**
+- Performance de webhooks: P95 ≤ 0.8s, P99 ≤ 1.2s ⏳ **PENDIENTE** (tests k6 no ejecutados)
+- Seguridad: Verificación de firmas Stripe webhook funciona ✅ **COMPLETADO**
+- Stripe Test Mode: Todas las pruebas usan claves de test ✅ **COMPLETADO**
 
-**Casos de prueba críticos:**
+**Casos de prueba:**
+
+##### Stripe Client & Configuration
 
 | ID | Descripción | Tipo | Requisito | Prioridad | Estado |
 |----|-------------|------|-----------|-----------|--------|
-| TC-MSG-001 | Send message successfully | Integración | RF-008 | Alta | Pendiente |
-| TC-MSG-002 | Message sanitized for XSS (script tags removed) | Unitaria | RNF-3.5.3 | Alta | Pendiente |
-| TC-MSG-003 | Rate limit: 10 messages/minute enforced | Integración | RF-008 | Alta | Pendiente |
-| TC-MSG-004 | Only booking participants can send messages | Integración | RF-008 | Alta | Pendiente |
-| TC-MSG-005 | Non-participant returns 403 | Integración | RF-008 | Alta | Pendiente |
-| TC-MSG-006 | Messaging available when booking CONFIRMED | Integración | RF-008 | Alta | Pendiente |
-| TC-MSG-007 | Messaging blocked after 2h post-COMPLETED | Integración | RF-008 | Alta | Pendiente |
-| TC-MSG-008 | Supabase Realtime receives new messages | Integración | RF-008 | Alta | Pendiente |
-| TC-MSG-009 | Chat integrated in booking detail | E2E | RF-008 | Alta | Pendiente |
+| TC-PAY-001-01 | Stripe client inicializa con credenciales válidas | Unitaria | PAY-001 | Alta | ✅ Pasó |
+| TC-PAY-001-02 | Stripe client falla con clave inválida | Unitaria | PAY-001 | Alta | ✅ Pasó |
 
----
-
-**Procedimientos de prueba detallados:**
-
-##### TC-MSG-001: Enviar mensaje exitosamente
-
-**Objetivo:** Validar que un usuario puede enviar un mensaje dentro del contexto de una reserva.
-
-**Precondiciones:**
-- Booking en estado CONFIRMED o superior
-- Usuario autenticado como participante
-
-**Procedimiento:**
-1. POST `/api/bookings/{bookingId}/messages` con `{ "text": "Hola" }`
-2. Verificar respuesta 201 Created
-
-**Resultado esperado:**
-- ✅ Status: 201 Created
-- ✅ Message insertado en BD
-- ✅ `text` sanitizado
-
-**Estado:** Pendiente
-
----
-
-##### TC-MSG-007: Messaging blocked after 2h post-COMPLETED
-
-**Objetivo:** Validar que la ventana de mensajería se cierra 2 horas después de completar el booking.
-
-**Precondiciones:**
-- Booking en estado COMPLETED hace > 2 horas
-
-**Procedimiento:**
-1. Intentar POST `/api/bookings/{id}/messages`
-2. Verificar respuesta 403 Forbidden
-
-**Resultado esperado:**
-- ✅ Status: 403 Forbidden
-- ✅ Error: "La ventana de mensajería ha expirado"
-
-**Estado:** Pendiente
-
----
-
-**Comandos de prueba:**
-
-```bash
-npm run test -- src/modules/messaging
-npm run test -- tests/integration/api/bookings/messages.test.ts
-```
-
----
-
-#### 4.1.8 Sistema de Calificaciones Bidireccional (Bidirectional Rating System)
-
-**Referencia de spec:** `/openspec/specs/ratings/spec.md`
-**Propuesta relacionada:** `/openspec/changes/2025-11-25-implement-bidirectional-rating-system/proposal.md`
-
-**Criterios de aceptación generales:**
-- Cobertura de código ≥ 70% en módulo `src/modules/ratings`
-- Calificaciones bidireccionales funcionan (cliente → contratista Y contratista → cliente)
-- Visibilidad double-blind implementada correctamente
-- Estadísticas de calificación se calculan correctamente
-
-**Nota sobre Double-Blind:**
-Las calificaciones son ocultas hasta que:
-- a) Ambas partes han calificado, O
-- b) Han pasado 7 días desde la finalización del booking
-
-**Casos de prueba críticos:**
+##### Cálculo de Comisiones (Business Rules)
 
 | ID | Descripción | Tipo | Requisito | Prioridad | Estado |
 |----|-------------|------|-----------|-----------|--------|
-| TC-RF-009-01 | Cliente crea calificación válida para contratista | Integración | RF-009 | Alta | Pendiente |
-| TC-RF-009-02 | Contratista crea calificación válida para cliente | Integración | RF-009 | Alta | Pendiente |
-| TC-RF-009-03 | Rechazo de calificación duplicada | Integración | RF-009 | Alta | Pendiente |
-| TC-RF-009-04 | Visibilidad double-blind: rating oculto hasta ambos califiquen | Unitaria | RF-009 | Alta | Pendiente |
-| TC-RF-009-05 | Ratings revelados cuando ambos califican | Unitaria | RF-009 | Alta | Pendiente |
-| TC-RF-009-06 | Rating revelado por expiración de 7 días | Unitaria | RF-009 | Alta | Pendiente |
-| TC-RF-009-07 | Cálculo correcto de promedio de usuario | Unitaria | RF-009 | Media | Pendiente |
-| TC-RF-009-08 | Validación: stars debe ser 1-5 | Unitaria | RF-009 | Media | Pendiente |
-| TC-RF-009-09 | Solo cliente puede calificar al contratista | Integración | RF-009 | Alta | Pendiente |
-| TC-RF-009-10 | Modal de calificación funciona correctamente | E2E | RF-009 | Alta | Pendiente |
+| TC-BR-001-01 | Calcular precio final con markup 10% | Unitaria | BR-001 | Alta | ✅ Pasó |
+| TC-BR-002-01 | Calcular comisión plataforma (15% de precio final) | Unitaria | BR-002 | Alta | ✅ Pasó |
+| TC-BR-003-01 | Calcular anticipo (30% de precio final) | Unitaria | BR-003 | Alta | ✅ Pasó |
+| TC-BR-003-02 | Calcular liquidación (70% de precio final) | Unitaria | BR-003 | Alta | ✅ Pasó |
+| TC-BR-002-02 | Calcular pago a contratista (precio final - 15%) | Unitaria | BR-002 | Alta | ✅ Pasó |
+| TC-PAY-002-01 | Flujo completo de cálculo para reserva | Unitaria | BR-001/002/003 | Alta | ✅ Pasó |
+| TC-PAY-002-02 | Cálculo con precio decimal $50.50 (precisión) | Unitaria | BR-001/002/003 | Alta | ✅ Pasó |
+| TC-PAY-002-03 | Cálculo con precio $0.01 (caso límite) | Unitaria | BR-001/002/003 | Media | ✅ Pasó |
+
+##### Checkout Service
+
+| ID | Descripción | Tipo | Requisito | Prioridad | Estado |
+|----|-------------|------|-----------|-----------|--------|
+| TC-RF-005-01 | Crear checkout session para anticipo de reserva | Integración | RF-005 | Alta | ✅ Pasó |
+| TC-RF-005-02 | Session incluye metadata correcta (booking_id, service_id, client_id) | Integración | RF-005 | Alta | ✅ Pasó |
+| TC-RF-005-03 | Monto de session coincide con anticipo calculado (30%) | Integración | RF-005 | Alta | ✅ Pasó |
+| TC-RF-005-04 | Session falla para booking ID inválido | Integración | RF-005 | Alta | ✅ Pasó |
+| TC-RF-005-05 | Session incluye success_url y cancel_url correctas | Integración | RF-005 | Media | ✅ Pasó |
+| TC-RF-005-06 | Payment record creado con status PENDING | Integración | RF-005 | Alta | ✅ Pasó |
+
+##### Webhook Processing
+
+| ID | Descripción | Tipo | Requisito | Prioridad | Estado |
+|----|-------------|------|-----------|-----------|--------|
+| TC-RF-007-01 | Webhook procesa payment_intent.succeeded | Integración | RF-007 | Alta | ✅ Pasó |
+| TC-RF-007-02 | Webhook actualiza booking a CONFIRMED después de pago | Integración | RF-007 | Alta | ✅ Pasó |
+| TC-RF-007-03 | Webhook procesa payment_intent.payment_failed | Integración | RF-007 | Alta | ✅ Pasó |
+| TC-RF-007-04 | Webhook procesa charge.refunded | Integración | RF-007 | Alta | ✅ Pasó |
+| TC-RF-007-05 | Webhook procesa account.updated (Connect) | Integración | RF-007 | Alta | ✅ Pasó |
+| TC-RF-007-06 | Idempotencia - evento duplicado ignorado | Integración | RF-007 | Crítica | ✅ Pasó |
+| TC-RF-007-07 | Webhook rechaza evento con firma inválida | Integración | RF-007 | Crítica | ✅ Pasó (unit test) |
+| TC-RF-007-08 | Webhook almacena event ID en ProcessedWebhookEvent | Integración | RF-007 | Alta | ✅ Pasó |
+| TC-RF-007-09 | Performance: webhook P95 ≤ 0.8s | Performance | RNF-3.5.1 | Alta | ⏳ No ejecutado (k6) |
+| TC-RF-007-10 | Webhook retorna 200 OK para evento procesado | Integración | RF-007 | Alta | ✅ Pasó (unit test) |
+| TC-RF-007-11 | Webhook retorna 400 para firma inválida | Integración | RF-007 | Alta | ⏳ Requiere endpoint |
+| TC-RF-007-12 | Webhook retorna 500 para error de procesamiento | Integración | RF-007 | Media | ✅ Pasó (unit test) |
+
+##### Payment Repository
+
+| ID | Descripción | Tipo | Requisito | Prioridad | Estado |
+|----|-------------|------|-----------|-----------|--------|
+| TC-PAY-003-01 | Crear payment record con tipo ANTICIPO | Unitaria | Infraestructura | Alta | ✅ Pasó |
+| TC-PAY-003-02 | Crear payment record con tipo LIQUIDACION | Unitaria | Infraestructura | Alta | ✅ Pasó |
+| TC-PAY-003-03 | Crear payment record con tipo REEMBOLSO | Unitaria | Infraestructura | Alta | ✅ Pasó |
+| TC-PAY-003-04 | Buscar payment por Stripe Payment Intent ID | Unitaria | Infraestructura | Alta | ✅ Pasó |
+| TC-PAY-003-05 | Buscar todos los payments de una reserva | Unitaria | Infraestructura | Alta | ✅ Pasó |
+| TC-PAY-003-06 | Actualizar payment status a SUCCEEDED | Unitaria | Infraestructura | Alta | ✅ Pasó |
+| TC-PAY-003-07 | Actualizar payment status a FAILED | Unitaria | Infraestructura | Alta | ✅ Pasó |
+| TC-PAY-003-08 | Actualizar payment status a REFUNDED | Unitaria | Infraestructura | Media | ✅ Pasó |
+
+##### Payout Service (Stripe Connect)
+
+| ID | Descripción | Tipo | Requisito | Prioridad | Estado |
+|----|-------------|------|-----------|-----------|--------|
+| TC-RF-010-01 | Crear payout a contratista cuando booking COMPLETED | Integración | RF-010 | Alta | ⏸️ Skipped (Stripe Connect no habilitado) |
+| TC-RF-010-02 | Monto de payout coincide con pago contratista (85% de final) | Integración | RF-010 | Alta | ⏸️ Skipped (Stripe Connect no habilitado) |
+| TC-RF-010-03 | Payout incluye Stripe Transfer ID correcto | Integración | RF-010 | Alta | ✅ Pasó (unit test) |
+| TC-RF-010-04 | Payout falla si contratista sin Connect account | Integración | RF-010 | Alta | ✅ Pasó |
+| TC-RF-010-05 | Payout crea Payment record con tipo LIQUIDACION | Integración | RF-010 | Alta | ✅ Pasó (unit test) |
+| TC-RF-010-06 | Payout es idempotente (evita doble pago) | Integración | RF-010 | Crítica | ⏸️ Skipped (Stripe Connect no habilitado) |
+
+##### Stripe Connect
+
+| ID | Descripción | Tipo | Requisito | Prioridad | Estado |
+|----|-------------|------|-----------|-----------|--------|
+| TC-PAY-004-01 | Crear Stripe Connect Express account para contratista | Integración | PAY-006 | Media | ✅ Pasó (stripeConnectService) |
+| TC-PAY-004-02 | Generar onboarding link para KYC contratista | Integración | PAY-006 | Media | ✅ Pasó (stripeConnectService) |
+| TC-PAY-004-03 | Verificar account status (charges_enabled, payouts_enabled) | Integración | PAY-006 | Media | ✅ Pasó (stripeConnectService) |
+| TC-PAY-004-04 | Actualizar ContractorProfile con stripeConnectAccountId | Integración | PAY-006 | Media | ✅ Pasó (stripeConnectService) |
+| TC-PAY-004-05 | Onboarding link expira después de tiempo definido | Integración | PAY-006 | Baja | ⏳ No prioritario para MVP |
+
+##### Refund Service
+
+| ID | Descripción | Tipo | Requisito | Prioridad | Estado |
+|----|-------------|------|-----------|-----------|--------|
+| TC-PAY-005-01 | Procesar reembolso completo para booking cancelado | Integración | BR-004 | Media | ✅ Pasó |
+| TC-PAY-005-02 | Procesar reembolso parcial según política de cancelación | Integración | BR-004 | Media | ✅ Pasó |
+| TC-PAY-005-03 | Refund crea Payment record con tipo REEMBOLSO | Integración | BR-004 | Media | ✅ Pasó |
+| TC-PAY-005-04 | Refund actualiza payment original a status REFUNDED | Integración | BR-004 | Media | ✅ Pasó |
+
+##### Seguridad
+
+| ID | Descripción | Tipo | Requisito | Prioridad | Estado |
+|----|-------------|------|-----------|-----------|--------|
+| TC-SEC-001-01 | Verificación de firma previene llamadas no autorizadas | Integración | Seguridad | Crítica | ✅ Pasó (webhook signature verification) |
+| TC-SEC-001-02 | Stripe secret keys no expuestas en logs o responses | Integración | Seguridad | Crítica | ✅ Pasó (code review) |
+| TC-SEC-001-03 | Metadata de pago sanitizada antes de almacenar | Unitaria | Seguridad | Alta | ✅ Pasó |
+
+##### End-to-End Flows
+
+| ID | Descripción | Tipo | Requisito | Prioridad | Estado |
+|----|-------------|------|-----------|-----------|--------|
+| TC-E2E-001-01 | Flujo completo: crear booking → checkout → webhook → booking confirmed | E2E | RF-005, RF-007 | Alta | ✅ Pasó (integration tests) |
+| TC-E2E-001-02 | Flujo completo: booking completed → payout a contratista | E2E | RF-010 | Alta | ⏸️ Skipped (Stripe Connect) |
+| TC-E2E-001-03 | Flujo completo: booking cancelled → refund a cliente | E2E | BR-004 | Media | ✅ Pasó (integration tests) |
+
+**Total de casos de prueba: 57**
+**Ejecutados: 53** | **Pasaron: 50** | **Skipped: 3** (Stripe Connect) | **No prioritarios: 4**
 
 ---
 
-**Procedimientos de prueba detallados:**
+**Procedimientos de prueba detallados (selección):**
 
-##### TC-RF-009-01: Cliente crea calificación válida para contratista
+##### TC-BR-001-01: Calcular precio final con markup 10%
 
-**Objetivo:** Validar que un cliente puede calificar al contratista después de un servicio completado.
+**Objetivo:** Validar que el cálculo de precio final aplica exactamente 10% de markup sobre el precio base según BR-001.
 
 **Precondiciones:**
-- Booking en estado COMPLETED
-- Usuario autenticado como CLIENT dueño del booking
+- Commission service implementado
+- Variables de entorno configuradas: `PLATFORM_MARKUP_PERCENTAGE=10`
 
 **Procedimiento:**
-1. POST `/api/bookings/{bookingId}/ratings/client` con `{ "stars": 5, "comment": "Excelente" }`
-2. Verificar respuesta 201 Created
+1. Ejecutar test unitario:
+   ```typescript
+   import { calculateBookingAmounts } from '@/modules/payments/services/commissionService';
+   import { Decimal } from '@prisma/client/runtime/library';
 
-**Resultado esperado:**
-- ✅ Status: 201 Created
-- ✅ ClientRating insertado
-- ✅ Rating oculto para contratista (double-blind)
+   const basePrice = new Decimal(100.00);
+   const amounts = calculateBookingAmounts(basePrice);
+   ```
+2. Verificar que `amounts.finalPrice` = 110.00
 
-**Estado:** Pendiente
-
----
-
-##### TC-RF-009-04: Visibilidad double-blind
-
-**Objetivo:** Validar la lógica de visibilidad double-blind.
-
-**Precondiciones:**
-- Booking COMPLETED
-- Solo cliente ha calificado
-
-**Procedimiento:**
-1. Verificar que `canSeeRating(booking, contractorId)` retorna `false`
-2. Contratista califica
-3. Verificar que ahora ambos pueden ver ratings
-
-**Resultado esperado:**
-- ✅ Antes: ratings ocultos
-- ✅ Después: ratings visibles para ambos
-
-**Estado:** Pendiente
-
----
-
-**Comandos de prueba:**
-
-```bash
-npm run test -- src/modules/ratings
-npm run test -- tests/integration/api/bookings/ratings.test.ts
+**Datos de prueba:**
+```typescript
+const testCases = [
+  { basePrice: 100.00, expectedFinalPrice: 110.00 },
+  { basePrice: 50.50, expectedFinalPrice: 55.55 },
+  { basePrice: 1000.00, expectedFinalPrice: 1100.00 },
+  { basePrice: 0.01, expectedFinalPrice: 0.011 },
+];
 ```
 
+**Resultado esperado:**
+- ✅ `finalPrice` = `basePrice × 1.10` (exacto, sin errores de redondeo)
+- ✅ Usa tipo `Decimal` (no `number`)
+- ✅ Cálculo es determinístico y repetible
+
+**Estado:** Pendiente
+
 ---
+
+##### TC-RF-007-06: Idempotencia - evento duplicado ignorado
+
+**Objetivo:** Validar que el webhook no procesa dos veces el mismo evento de Stripe (idempotencia).
+
+**Precondiciones:**
+- Webhook endpoint `/api/webhooks/stripe` implementado
+- Base de datos con tabla `ProcessedWebhookEvent`
+- `STRIPE_WEBHOOK_SECRET` configurado
+
+**Procedimiento:**
+1. Enviar webhook event `payment_intent.succeeded` con ID `evt_test_12345`
+2. Verificar que se procesa correctamente (HTTP 200)
+3. Verificar que `ProcessedWebhookEvent` contiene `evt_test_12345`
+4. Enviar el **mismo evento otra vez** (simulando retry de Stripe)
+5. Verificar respuesta
+
+**Datos de prueba:**
+```json
+{
+  "id": "evt_test_12345",
+  "type": "payment_intent.succeeded",
+  "data": {
+    "object": {
+      "id": "pi_test_67890",
+      "amount": 3300,
+      "currency": "mxn",
+      "status": "succeeded",
+      "metadata": {
+        "booking_id": "booking_123"
+      }
+    }
+  }
+}
+```
+
+**Resultado esperado:**
+- ✅ Primera llamada: Procesa evento, retorna HTTP 200
+- ✅ Primera llamada: Actualiza payment a SUCCEEDED
+- ✅ Primera llamada: Crea registro en `ProcessedWebhookEvent`
+- ✅ Segunda llamada: Detecta evento duplicado
+- ✅ Segunda llamada: NO procesa evento nuevamente
+- ✅ Segunda llamada: Retorna HTTP 200 (éxito - idempotencia funcionando)
+- ✅ Log indica: "Event evt_test_12345 already processed, skipping"
+- ✅ Payment status no cambia en segunda llamada
+
+**Estado:** Pendiente
+
+---
+
+##### TC-E2E-001-01: Flujo completo de pago
+
+**Objetivo:** Validar el flujo completo desde crear booking hasta confirmación post-pago.
+
+**Precondiciones:**
+- Todos los módulos implementados
+- Stripe Test Mode configurado
+- Tarjeta de prueba: `4242 4242 4242 4242`
+
+**Procedimiento:**
+1. **Crear booking** (mock/stub de booking service):
+   - Cliente: `user_client_123`
+   - Servicio: `service_456` (precio base $100)
+   - Fecha: mañana
+   - Resultado: `booking_789` creado con status `PENDING_PAYMENT`
+2. **Crear checkout session**:
+   ```typescript
+   const { sessionId, checkoutUrl } = await checkoutService.createCheckoutSession('booking_789');
+   ```
+   - Verificar: URL de Stripe Checkout retornada
+   - Verificar: Payment record creado (type=ANTICIPO, status=PENDING, amount=$33.00)
+3. **Simular pago exitoso** (usando Stripe Test API):
+   - Confirmar payment intent con tarjeta test `4242424242424242`
+4. **Esperar webhook** `payment_intent.succeeded`:
+   - Stripe envía webhook a `/api/webhooks/stripe`
+   - Webhook verifica firma
+   - Webhook actualiza payment a SUCCEEDED
+   - Webhook actualiza booking a CONFIRMED
+5. **Verificar estado final**:
+   - Query booking: status = CONFIRMED
+   - Query payment: status = SUCCEEDED
+   - Query ProcessedWebhookEvent: evento registrado
+
+**Resultado esperado:**
+- ✅ Booking creado con cálculos correctos (final=$110, anticipo=$33, liquidación=$77)
+- ✅ Checkout session generada con metadata correcta
+- ✅ Payment record en DB vinculado a booking
+- ✅ Pago procesado exitosamente en Stripe
+- ✅ Webhook recibido y procesado (idempotencia OK)
+- ✅ Booking actualizado a CONFIRMED
+- ✅ Payment actualizado a SUCCEEDED
+- ✅ Todo el flujo < 5 segundos
+
+**Estado:** Pendiente
+
+#### 4.1.7 Mensajería (Messaging)
+
+| ID | Descripción | Requisito | Prioridad | Estado |
+|----|-------------|-----------|-----------|--------|
+| TC-RF-008-01 | Envío de mensaje exitoso | RF-008 | Media | Pendiente |
+| TC-RF-008-02 | Sanitización anti-XSS en mensajes | RF-008 | Alta | Pendiente |
+| TC-RF-008-03 | Retención de mensajes (7 días post-cierre) | RF-008 | Media | Pendiente |
+
+#### 4.1.8 Calificaciones (Ratings)
+
+| ID | Descripción | Requisito | Prioridad | Estado |
+|----|-------------|-----------|-----------|--------|
+| TC-RF-009-01 | Creación de calificación válida | RF-009 | Media | Pendiente |
+| TC-RF-009-02 | Rechazo de calificación duplicada | RF-009 | Media | Pendiente |
+| TC-RF-009-03 | Cálculo correcto de promedio | RF-009 | Media | Pendiente |
 
 #### 4.1.9 Administración (Admin)
 
@@ -4146,26 +3513,24 @@ La infraestructura de base de datos está correctamente implementada, testeada y
 - Timezone conversions correctas incluyendo DST
 - Race conditions en bookings manejadas correctamente
 
-**Resumen de ejecución (última actualización: 2025-11-24):**
-- ✅ Tests de integración (manual): 3/25 ejecutados
-- ✅ Tests unitarios (validadores): 3/25 ejecutados  
+**Resumen de ejecución (última actualización: Pendiente):**
+- ⏳ Tests unitarios: 0/15 ejecutados
+- ⏳ Tests de integración: 0/8 ejecutados
 - ⏳ Tests E2E: 0/2 ejecutados
-- ✅ Correcciones críticas aplicadas: 2/3 (Excepciones y Bloqueos funcionando)
-- ✅ **Total tests ejecutados: 6/25 (24%)**
 
 **Casos de prueba:**
 
 | ID | Descripción | Tipo | Requisito | Prioridad | Estado | Resultado |
 |----|-------------|------|-----------|-----------|--------|-----------|
-| TC-RF-CTR-AVAIL-001 | Crear horario semanal con intervalos válidos | Integración | RF-CTR-AVAIL-001 | Alta | ✅ PASS | 2025-11-24: 3 reglas semanales creadas exitosamente |
-| TC-RF-CTR-AVAIL-002 | Rechazar intervalos superpuestos en el mismo día | Unitaria | RF-CTR-AVAIL-001 | Alta | ✅ PASS | 2025-11-24: Validador rechaza correctamente traslapes |
-| TC-RF-CTR-AVAIL-003 | Rechazar formatos de tiempo y rangos inválidos | Unitaria | RF-CTR-AVAIL-001 | Alta | ✅ PASS | 2025-11-24: Validador rechaza formatos incorrectos |
-| TC-RF-CTR-AVAIL-004 | Crear excepción de cierre de día completo | Integración | RF-CTR-AVAIL-002 | Alta | ✅ PASS | 2025-11-24: 3 excepciones BLOCKED creadas (Nov 28, 29, 30) |
+| TC-RF-CTR-AVAIL-001 | Crear horario semanal con intervalos válidos | Integración | RF-CTR-AVAIL-001 | Alta | ⏳ Pendiente | - |
+| TC-RF-CTR-AVAIL-002 | Rechazar intervalos superpuestos en el mismo día | Unitaria | RF-CTR-AVAIL-001 | Alta | ⏳ Pendiente | - |
+| TC-RF-CTR-AVAIL-003 | Rechazar formatos de tiempo y rangos inválidos | Unitaria | RF-CTR-AVAIL-001 | Alta | ⏳ Pendiente | - |
+| TC-RF-CTR-AVAIL-004 | Crear excepción de cierre de día completo | Integración | RF-CTR-AVAIL-002 | Alta | ⏳ Pendiente | - |
 | TC-RF-CTR-AVAIL-005 | Crear excepción de día festivo recurrente | Integración | RF-CTR-AVAIL-002 | Alta | ⏳ Pendiente | - |
 | TC-RF-CTR-AVAIL-006 | Crear excepción de cierre parcial | Integración | RF-CTR-AVAIL-002 | Media | ⏳ Pendiente | - |
-| TC-RF-CTR-AVAIL-007 | Crear bloqueo manual exitosamente | Integración | RF-CTR-AVAIL-003 | Alta | ✅ PASS | 2025-11-24: Bloqueo creado (Dec 1, 10:00-12:00) |
-| TC-RF-CTR-AVAIL-008 | Rechazar bloqueo que superpone reserva confirmada | Integración | RF-CTR-AVAIL-003 | Alta | ⏳ Pendiente | No hay reservas para probar |
-| TC-RF-CTR-AVAIL-009 | Rechazar bloqueo en el pasado | Unitaria | RF-CTR-AVAIL-003 | Alta | ✅ PASS | 2025-11-24: Validador verifica rangos de tiempo |
+| TC-RF-CTR-AVAIL-007 | Crear bloqueo manual exitosamente | Integración | RF-CTR-AVAIL-003 | Alta | ⏳ Pendiente | - |
+| TC-RF-CTR-AVAIL-008 | Rechazar bloqueo que superpone reserva confirmada | Integración | RF-CTR-AVAIL-003 | Alta | ⏳ Pendiente | - |
+| TC-RF-CTR-AVAIL-009 | Rechazar bloqueo en el pasado | Unitaria | RF-CTR-AVAIL-003 | Alta | ⏳ Pendiente | - |
 | TC-RF-CTR-AVAIL-010 | Generar slots desde horario semanal | Unitaria | RF-CTR-AVAIL-004 | Alta | ⏳ Pendiente | - |
 | TC-RF-CTR-AVAIL-011 | Generar slots excluyendo excepciones | Integración | RF-CTR-AVAIL-004 | Alta | ⏳ Pendiente | - |
 | TC-RF-CTR-AVAIL-012 | Generar slots excluyendo bloqueos | Integración | RF-CTR-AVAIL-004 | Alta | ⏳ Pendiente | - |
@@ -4238,11 +3603,8 @@ La infraestructura de base de datos está correctamente implementada, testeada y
 - ✅ Timezone y granularidad correctos
 - ✅ No hay errores de validación
 
-**Estado:** ✅ PASS (2025-11-24)
-**Cobertura:** Manual browser testing
-**Navegador:** Chrome 120
-**Resultado:** 3 reglas semanales creadas exitosamente. Visible en UI con contador "3/7".
-**Evidencia:** Reglas visibles en pestaña "Horario Semanal" de `/contractors/availability`
+**Estado:** Pendiente
+**Cobertura:** N/A
 
 ---
 
@@ -4281,14 +3643,8 @@ La infraestructura de base de datos está correctamente implementada, testeada y
 - ✅ Mensaje de error: "Overlapping intervals detected within the same day"
 - ✅ No se crea horario en base de datos
 
-**Estado:** ✅ PASS (2025-11-24)
-**Cobertura:** Validador Zod (weeklyRule.ts)
-**Método de prueba:** Script de validación automatizado
-**Resultado:** Validador rechaza correctamente intervalos superpuestos (08:00-12:00 y 11:00-15:00).
-**Evidencia:** 
-- Test 1: Intervalos superpuestos rechazados con mensaje "Los intervalos no deben traslaparse"
-- Test 2: Intervalos adyacentes (12:00-16:00) aceptados correctamente
-**Nota:** El validador ordena los intervalos y verifica que endTime[i] <= startTime[i+1]
+**Estado:** Pendiente
+**Cobertura:** Validador Zod
 
 ---
 
@@ -4326,12 +3682,8 @@ La infraestructura de base de datos está correctamente implementada, testeada y
 - ✅ Al generar slots para esa fecha, retorna array vacío
 - ✅ Fecha excluida correctamente del calendario
 
-**Estado:** ✅ PASS (2025-11-24)
-**Cobertura:** Manual browser testing
-**Navegador:** Chrome 120
-**Resultado:** 3 excepciones BLOCKED creadas exitosamente (Nov 28, 29, 30). Visible en UI con contador "3".
-**Evidencia:** Excepciones visibles en pestaña "Excepciones y Feriados" con tipo BLOCKED y razones correspondientes.
-**Nota:** Se corrigió validador Zod para aceptar `intervals: []` para tipo BLOCKED y se corrigió autorización usando `findByClerkId`.
+**Estado:** Pendiente
+**Cobertura:** N/A
 
 ---
 
@@ -4370,12 +3722,8 @@ La infraestructura de base de datos está correctamente implementada, testeada y
 - ✅ Al generar slots, rango 14:00-16:00 excluido
 - ✅ No afecta otros días ni horarios
 
-**Estado:** ✅ PASS (2025-11-24)
-**Cobertura:** Manual browser testing
-**Navegador:** Chrome 120
-**Resultado:** 1 bloqueo manual creado exitosamente (Dec 1, 10:00-12:00, "Cita médica"). Visible en UI con contador "1".
-**Evidencia:** Bloqueo visible en pestaña "Bloqueos Manuales" con fecha, hora y razón correctas.
-**Nota:** Se corrigió validador Zod para aceptar formato simplificado `YYYY-MM-DDTHH:mm` además del formato ISO8601 completo.
+**Estado:** Pendiente
+**Cobertura:** N/A
 
 ---
 
@@ -4412,7 +3760,7 @@ La infraestructura de base de datos está correctamente implementada, testeada y
 - ✅ Bloqueo NO se crea en base de datos
 - ✅ Reserva existente no se afecta
 
-**Estado:** PASS
+**Estado:** Pendiente
 **Cobertura:** blockoutService validation
 
 ---
@@ -4445,7 +3793,7 @@ La infraestructura de base de datos está correctamente implementada, testeada y
 - ✅ Timezone en respuesta: "America/Mexico_City"
 - ✅ Total: 16 slots (8 en mañana + 8 en tarde)
 
-**Estado:** PASS
+**Estado:** Pendiente
 **Cobertura:** slotGenerator utility
 
 ---
@@ -4480,7 +3828,7 @@ La infraestructura de base de datos está correctamente implementada, testeada y
 - ✅ 0 errores HTTP 500
 - ✅ Todas las respuestas HTTP 200
 
-**Estado:** PASS
+**Estado:** Pendiente
 **Cobertura:** k6 performance test
 
 ---
@@ -4512,7 +3860,7 @@ La infraestructura de base de datos está correctamente implementada, testeada y
 - ✅ No hay "trampas de teclado" (keyboard traps)
 - ✅ Skip links funcionan correctamente
 
-**Estado:** PASS
+**Estado:** Pendiente
 **Cobertura:** Playwright E2E test
 
 ---
@@ -5692,7 +5040,7 @@ La infraestructura de base de datos está correctamente implementada, testeada y
 - ✅ P99 latency ≤ 800ms
 - ✅ 0 errores HTTP 500
 
-**Estado:** PASS
+**Estado:** Pendiente
 **Cobertura:** k6 performance test
 
 ---
@@ -5718,7 +5066,7 @@ La infraestructura de base de datos está correctamente implementada, testeada y
 - ✅ P99 latency ≤ 500ms
 - ✅ 0 errores
 
-**Estado:** PASS
+**Estado:** Pendiente
 **Cobertura:** k6 performance test
 
 ---
@@ -5743,7 +5091,7 @@ La infraestructura de base de datos está correctamente implementada, testeada y
 - ✅ P95 latency ≤ 200ms
 - ✅ P99 latency ≤ 400ms
 
-**Estado:** PASS
+**Estado:** Pendiente
 **Cobertura:** k6 performance test
 
 ---
@@ -5771,7 +5119,7 @@ La infraestructura de base de datos está correctamente implementada, testeada y
 - ✅ Upload exitoso verificado en S3
 - ✅ Metadata guardada en BD
 
-**Estado:** PASS
+**Estado:** Pendiente
 **Cobertura:** k6 performance test (end-to-end upload)
 
 ---
@@ -5816,503 +5164,6 @@ Los tests se implementarán en los siguientes archivos:
 - ✅ Tests de integración (19 casos) automatizados y pasando
 - ✅ Tests de autorización (6 casos) automatizados y pasando
 - ✅ Tests de performance (4 casos) ejecutados con k6 y pasando targets
-- ✅ CI/CD pipeline verde
-- ✅ PR mergeado a dev
-
----
-
-#### 4.1.13 Gestión de Reservas para Contratistas (Contractor Booking Management)
-
-**Referencia de spec:** `/openspec/specs/contractor-bookings/spec.md`
-**Propuesta relacionada:** `/openspec/changes/2025-11-24-implement-contractor-booking-management/proposal.md`
-
-**Criterios de aceptación generales:**
-- Cobertura de código ≥ 70% en módulo `src/modules/booking`
-- State machine de booking funciona correctamente
-- Contratista puede ver, filtrar y gestionar sus reservas
-- Cliente puede ver sus reservas y simular pago en demo mode
-- Authorization verifica ownership en todos los endpoints
-- CI/CD pasa sin errores
-
-**Casos de prueba críticos:**
-
-| ID | Descripción | Tipo | Requisito | Prioridad | Estado |
-|----|-------------|------|-----------|-----------|--------|
-| TC-BK-001 | Contractor views bookings list with status tabs | E2E | Booking List | Alta | PASS |
-| TC-BK-002 | Contractor advances booking to ON_SITE | Integración | State Transition | Alta | PASS |
-| TC-BK-003 | Contractor completes booking | Integración | State Transition | Alta | PASS |
-| TC-BK-004 | Invalid state transition returns error | Unitaria | State Machine | Alta | PASS |
-| TC-BK-005 | Contractor cannot access other contractor's booking | Integración | Authorization | Alta | PASS |
-| TC-BK-006 | Client views booking detail page | E2E | Client View | Alta | PASS |
-| TC-BK-007 | Client sees payment button when PENDING_PAYMENT | E2E | Payment Section | Alta | PASS |
-| TC-BK-008 | Client mock payment advances to CONFIRMED | Integración | Demo Payment | Alta | PASS |
-| TC-BK-009 | bookingRepository.updateStatus creates history record | Unitaria | Audit Trail | Alta | PASS |
-| TC-BK-010 | State machine allows PENDING_PAYMENT→CONFIRMED | Unitaria | State Machine | Alta | PASS |
-| TC-BK-011 | State machine rejects COMPLETED→CONFIRMED | Unitaria | State Machine | Alta | PASS |
-| TC-BK-012 | GET /api/bookings returns user's bookings only | Integración | API | Alta | PASS |
-| TC-BK-013 | PATCH /api/bookings/:id/state updates status | Integración | API | Alta | PASS |
-
----
-
-**Procedimientos de prueba detallados:**
-
-##### TC-BK-002: Contractor advances booking to ON_SITE
-
-**Objetivo:** Validar que el contratista puede avanzar una reserva al estado ON_SITE.
-
-**Precondiciones:**
-- Booking en estado CONFIRMED
-- Usuario autenticado como CONTRACTOR dueño del servicio
-
-**Procedimiento:**
-1. PATCH `/api/bookings/{id}/state` con `{ "status": "ON_SITE" }`
-2. Verificar respuesta y estado actualizado
-
-**Resultado esperado:**
-- ✅ Status: 200 OK
-- ✅ Booking actualizado a ON_SITE
-- ✅ BookingStateHistory contiene nueva entrada
-
-**Estado:** Pendiente
-
----
-
-##### TC-BK-004: Invalid state transition returns error
-
-**Objetivo:** Validar que el state machine rechaza transiciones inválidas.
-
-**Precondiciones:**
-- Booking en estado PENDING_PAYMENT
-
-**Procedimiento:**
-1. PATCH `/api/bookings/{id}/state` con `{ "status": "ON_SITE" }` (salta CONFIRMED)
-2. Verificar rechazo
-
-**Resultado esperado:**
-- ✅ Status: 400 Bad Request
-- ✅ Error: "Invalid state transition from PENDING_PAYMENT to ON_SITE"
-- ✅ Estado NO cambia
-
-**Estado:** Pendiente
-
----
-
-**Comandos de prueba:**
-
-```bash
-# Tests unitarios
-npm run test -- src/modules/booking
-
-# Tests de integración
-npm run test -- tests/integration/api/bookings.test.ts
-
-# Cobertura
-npm run test:coverage
-# Objetivo: ≥ 70% en src/modules/booking
-```
-
----
-
-#### 4.1.6 Búsqueda de Servicios, Flujo de Reserva y Demo de Simulación
-
-**Referencia de spec:** `/openspec/changes/archive/2025-11-25-2025-11-24-service-search-booking-demo/`
-**Propuesta relacionada:** `/openspec/changes/archive/2025-11-25-2025-11-24-service-search-booking-demo/proposal.md`
-
-**Criterios de aceptación generales:**
-- Cobertura de código ≥ 70% en módulos `src/modules/booking` y `src/modules/payments`
-- Todos los tests unitarios e integración automatizados deben pasar
-- Demo simulation funciona end-to-end con intervalos de 30s
-- Estado de booking visible en tiempo real (polling cada 30s)
-- Contractor puede override manual en cualquier momento
-- CI/CD pasa sin errores
-
-**Casos de prueba (tabla canónica de estado de ejecución):**
-
-> **Nota:** Esta tabla es la fuente de verdad autoritativa para el estado de ejecución de los casos de prueba TC-RF-004-0X, TC-RF-005-0X, TC-RF-006-0X y TC-DEMO-0X. Los casos listados aquí con estado PASS han sido verificados en el entorno de pruebas. La sección 4.1.7 mantiene los estados de planificación original y referencia esta tabla para el estado de ejecución real.
-
-| ID | Descripción | Tipo | Prioridad | Requisito | Estado |
-|----|-------------|------|-----------|-----------|--------|
-| TC-RF-004-01 | Búsqueda de servicios por categoría | Integración | Alta | RF-004 | PASS |
-| TC-RF-004-02 | Búsqueda de servicios por término de búsqueda | Integración | Alta | RF-004 | PASS |
-| TC-RF-004-03 | Filtrado de servicios por rango de precio | Integración | Media | RF-004 | PASS |
-| TC-RF-004-04 | Paginación de resultados de búsqueda | Integración | Media | RF-004 | Pendiente |
-| TC-RF-004-05 | Vista de detalle de servicio muestra información completa | E2E | Alta | RF-004 | Pendiente |
-| TC-RF-005-01 | Creación de reserva con slot disponible | Integración | Alta | RF-005 | PASS |
-| TC-RF-005-02 | Validación de slot no disponible (ya reservado) | Integración | Alta | RF-005 | Pendiente |
-| TC-RF-005-03 | Cálculo correcto de precios (anticipo, liquidación, comisión) | Unitaria | Alta | RF-005 | Pendiente |
-| TC-RF-005-04 | Simulación de pago ANTICIPO cambia estado a CONFIRMED | Integración | Alta | RF-005 | PASS |
-| TC-RF-006-01 | Transición CONFIRMED → ON_ROUTE válida | Unitaria | Alta | RF-006 | Pendiente |
-| TC-RF-006-02 | Transición PENDING_PAYMENT → ON_ROUTE inválida | Unitaria | Alta | RF-006 | Pendiente |
-| TC-RF-006-03 | BookingStateHistory registra cada transición | Integración | Alta | RF-006 | Pendiente |
-| TC-RF-006-04 | Demo simulation avanza estados automáticamente | Integración | Alta | RF-006 | PASS |
-| TC-RF-006-05 | Manual override detiene simulación automática | Integración | Media | RF-006 | Pendiente |
-| TC-DEMO-01 | Simulación respeta intervalo de 30 segundos | Integración | Alta | Demo | Pendiente |
-| TC-DEMO-02 | Simulación inicia al llegar scheduledDate | Integración | Alta | Demo | Pendiente |
-| TC-DEMO-03 | Simulación genera Payment LIQUIDACION al completar | Integración | Alta | Demo | Pendiente |
-| TC-UI-001 | Tile "Buscar Servicios" es más prominente en dashboard | E2E | Media | UI | Pendiente |
-| TC-UI-002 | Cliente puede ver historial de reservas | E2E | Alta | RF-006 | Pendiente |
-| TC-UI-003 | Contratista puede avanzar estado manualmente | E2E | Alta | RF-006 | Pendiente |
-
----
-
-**Procedimientos de prueba detallados:**
-
-##### TC-RF-004-01: Búsqueda de servicios por categoría
-
-**Objetivo:** Validar que el sistema filtra servicios correctamente por categoría.
-
-**Precondiciones:**
-- Servicios ACTIVE existen en múltiples categorías
-- API `/api/services` funcionando
-
-**Procedimiento:**
-1. Navegar a `/search`
-2. Seleccionar categoría "Plomería" en filtros
-3. Verificar que solo se muestran servicios de esa categoría
-
-**Datos de prueba:**
-- CategoryId: ID de categoría Plomería
-- Servicios de prueba en diferentes categorías
-
-**Resultado esperado:**
-- ✅ Solo servicios de categoría seleccionada aparecen
-- ✅ Contador muestra cantidad correcta
-- ✅ Paginación funciona con filtro aplicado
-
-**Estado:** PASS
-
----
-
-##### TC-RF-004-02: Búsqueda de servicios por término de búsqueda
-
-**Objetivo:** Validar que la búsqueda por texto funciona case-insensitive.
-
-**Precondiciones:**
-- Servicios con diferentes títulos y descripciones
-
-**Procedimiento:**
-1. Navegar a `/search`
-2. Ingresar "plomería" en campo de búsqueda
-3. Verificar resultados
-
-**Resultado esperado:**
-- ✅ Servicios con "plomería" en título aparecen
-- ✅ Servicios con "Plomería" (mayúscula) también aparecen
-- ✅ Búsqueda es case-insensitive
-
-**Estado:** PASS
-
----
-
-##### TC-RF-004-05: Vista de detalle de servicio muestra información completa
-
-**Objetivo:** Validar que la página de detalle muestra toda la información del servicio.
-
-**Precondiciones:**
-- Servicio ACTIVE con imágenes, disponibilidad y contractor profile
-
-**Procedimiento:**
-1. Navegar a `/services/[id]`
-2. Verificar que se muestra:
-   - Título y descripción
-   - Galería de imágenes
-   - Precio base y duración
-   - Información del contratista
-   - Slots de disponibilidad
-
-**Resultado esperado:**
-- ✅ Toda la información visible
-- ✅ Slots disponibles de próximos 7 días
-- ✅ Botón "Reservar" presente (requiere auth)
-
-**Estado:** PASS
-
----
-
-##### TC-RF-005-01: Creación de reserva con slot disponible
-
-**Objetivo:** Validar flujo completo de creación de booking.
-
-**Precondiciones:**
-- Cliente autenticado
-- Servicio con slots disponibles
-- Cliente tiene al menos una dirección
-
-**Procedimiento:**
-1. Navegar a `/services/[id]`
-2. Seleccionar slot disponible
-3. Confirmar dirección de servicio
-4. Agregar notas (opcional)
-5. Crear reserva
-
-**Datos de prueba:**
-```json
-{
-  "serviceId": "service-uuid",
-  "availabilitySlotId": "slot-uuid",
-  "addressId": "address-uuid",
-  "notes": "Timbre descompuesto"
-}
-```
-
-**Resultado esperado:**
-- ✅ Status 201 Created
-- ✅ Booking creado con status PENDING_PAYMENT
-- ✅ Availability marcado como BOOKED
-- ✅ Pricing calculado correctamente:
-  - anticipoAmount = 30% de finalPrice
-  - liquidacionAmount = 70% de finalPrice
-  - comisionAmount = 10% de finalPrice
-
-**Estado:** PASS
-
----
-
-##### TC-RF-005-02: Validación de slot no disponible
-
-**Objetivo:** Validar que no se puede reservar un slot ya ocupado.
-
-**Precondiciones:**
-- Slot ya reservado por otro cliente
-
-**Procedimiento:**
-1. Cliente A reserva slot X (exitoso)
-2. Cliente B intenta reservar slot X
-3. Verificar error de concurrencia
-
-**Resultado esperado:**
-- ✅ Status 409 Conflict
-- ✅ Mensaje: "Este horario ya no está disponible"
-- ✅ No se crea booking duplicado
-
-**Estado:** PASS
-
----
-
-##### TC-RF-005-03: Cálculo correcto de precios
-
-**Objetivo:** Validar lógica de cálculo de pricing.
-
-**Precondiciones:**
-- Servicio con basePrice conocido
-
-**Procedimiento:**
-1. Crear booking para servicio con basePrice = $1000
-2. Verificar breakdown:
-   - finalPrice = $1000
-   - anticipoAmount = $300 (30%)
-   - liquidacionAmount = $700 (70%)
-   - comisionAmount = $100 (10%)
-   - contractorPayoutAmount = $900
-
-**Resultado esperado:**
-- ✅ Cálculos son exactos
-- ✅ No hay errores de redondeo
-- ✅ Currency es MXN
-
-**Estado:** PASS
-
----
-
-##### TC-RF-006-01: Transición CONFIRMED → ON_ROUTE válida
-
-**Objetivo:** Validar state machine permite transición válida.
-
-**Precondiciones:**
-- Booking en estado CONFIRMED
-
-**Procedimiento:**
-1. PATCH `/api/bookings/[id]/status` con `{ status: "ON_ROUTE" }`
-2. Verificar actualización
-
-**Resultado esperado:**
-- ✅ Status 200 OK
-- ✅ Booking.status = ON_ROUTE
-- ✅ BookingStateHistory creado con transición
-
-**Estado:** PASS
-
----
-
-##### TC-RF-006-02: Transición PENDING_PAYMENT → ON_ROUTE inválida
-
-**Objetivo:** Validar state machine rechaza transición inválida.
-
-**Precondiciones:**
-- Booking en estado PENDING_PAYMENT
-
-**Procedimiento:**
-1. PATCH `/api/bookings/[id]/status` con `{ status: "ON_ROUTE" }`
-2. Verificar error
-
-**Resultado esperado:**
-- ✅ Status 400 Bad Request
-- ✅ Mensaje: "Transición de estado no válida"
-- ✅ Estado no cambia
-
-**Estado:** PASS
-
----
-
-##### TC-RF-006-04: Demo simulation avanza estados automáticamente
-
-**Objetivo:** Validar que la simulación automática funciona correctamente.
-
-**Precondiciones:**
-- Booking en estado CONFIRMED
-- scheduledDate ya pasó o trigger manual invocado
-
-**Procedimiento:**
-1. POST `/api/bookings/[id]/simulate`
-2. Esperar 90 segundos (3 x 30s)
-3. Verificar progresión de estados
-
-**Resultado esperado:**
-- ✅ Estados avanzan: CONFIRMED → ON_ROUTE → ON_SITE → IN_PROGRESS → COMPLETED
-- ✅ Intervalos respetan ~30 segundos
-- ✅ BookingStateHistory registra cada transición con changedBy="SYSTEM"
-- ✅ Payment LIQUIDACION creado al completar
-
-**Estado:** PASS
-
----
-
-##### TC-DEMO-01: Simulación respeta intervalo de 30 segundos
-
-**Objetivo:** Validar timing de simulación.
-
-**Precondiciones:**
-- Booking en simulación activa
-
-**Procedimiento:**
-1. Iniciar simulación
-2. Medir tiempo entre cada transición de estado
-
-**Resultado esperado:**
-- ✅ Intervalo promedio ~30 segundos (±5s tolerancia)
-- ✅ No hay race conditions
-- ✅ Logs muestran timestamps consistentes
-
-**Estado:** PASS
-
----
-
-##### TC-DEMO-03: Simulación genera Payment LIQUIDACION al completar
-
-**Objetivo:** Validar que se crea el pago de liquidación automáticamente.
-
-**Precondiciones:**
-- Booking transiciona a COMPLETED via simulación
-
-**Procedimiento:**
-1. Completar simulación hasta COMPLETED
-2. Query Payments por bookingId
-3. Verificar Payment LIQUIDACION
-
-**Resultado esperado:**
-- ✅ Payment con type=LIQUIDACION existe
-- ✅ amount = booking.liquidacionAmount
-- ✅ status = SUCCEEDED
-- ✅ metadata.simulated = true
-- ✅ stripePaymentIntentId = null (simulated)
-
-**Estado:** PASS
-
----
-
-##### TC-UI-001: Tile "Buscar Servicios" es más prominente en dashboard
-
-**Objetivo:** Validar enhancement visual del tile de búsqueda.
-
-**Precondiciones:**
-- Cliente autenticado en dashboard
-
-**Procedimiento:**
-1. Navegar a `/clients/dashboard`
-2. Verificar tile "Buscar Servicios"
-
-**Resultado esperado:**
-- ✅ Tile ocupa 2 columnas en desktop
-- ✅ Gradiente emerald-teal aplicado
-- ✅ Tamaño de icono y texto más grande
-- ✅ Link a `/search` funciona
-
-**Estado:** PASS
-
----
-
-##### TC-UI-002: Cliente puede ver historial de reservas
-
-**Objetivo:** Validar página de listado de bookings para cliente.
-
-**Precondiciones:**
-- Cliente con múltiples bookings en diferentes estados
-
-**Procedimiento:**
-1. Navegar a `/clients/bookings`
-2. Verificar tabs y contenido
-
-**Resultado esperado:**
-- ✅ Tabs: Activas, Completadas, Canceladas
-- ✅ Bookings ordenadas por scheduledDate
-- ✅ Cada card muestra: servicio, fecha, estado, contractor
-- ✅ Click navega a detalle
-
-**Estado:** PASS
-
----
-
-##### TC-UI-003: Contratista puede avanzar estado manualmente
-
-**Objetivo:** Validar controles de contratista para status management.
-
-**Precondiciones:**
-- Booking asignado al contratista en estado CONFIRMED
-
-**Procedimiento:**
-1. Navegar a `/contractors/bookings/[id]`
-2. Click en "Avanzar a EN CAMINO"
-3. Verificar actualización
-
-**Resultado esperado:**
-- ✅ Status cambia a ON_ROUTE
-- ✅ UI se actualiza inmediatamente
-- ✅ Timeline muestra nueva entrada
-- ✅ Siguiente estado válido disponible
-
-**Estado:** PASS
-
----
-
-**Archivos de test:**
-
-**Tests unitarios (implementados):**
-- ✅ `apps/web/src/modules/booking/services/__tests__/bookingService.test.ts`
-- ✅ `apps/web/src/modules/booking/services/__tests__/bookingStateMachine.test.ts`
-- ✅ `apps/web/src/modules/payments/services/__tests__/paymentService.test.ts`
-
-**Tests unitarios (pendientes de implementar):**
-- `apps/web/src/modules/booking/repositories/__tests__/bookingRepository.test.ts`
-- `apps/web/src/modules/booking/services/__tests__/demoSimulationService.test.ts`
-
-**Tests de integración (implementados):**
-- ✅ `apps/web/tests/integration/booking/api.test.ts` (skip: requiere contractor visibility)
-
-**Tests de integración (pendientes de implementar):**
-- `apps/web/tests/integration/api/services-slots.test.ts`
-- `apps/web/tests/integration/api/payments-simulate.test.ts`
-
-**Mocks y fixtures:**
-- Mock de Prisma client para unit tests
-- Fixtures de servicios, usuarios, bookings de prueba
-- Mock de setTimeout/setInterval para simulation tests
-
-**Criterios de éxito para archivado:**
-- ✅ Todos los 20 casos de prueba documentados
-- ✅ Cobertura ≥ 70% en módulos booking y payments
-- ✅ Demo simulation funciona E2E
-- ✅ Polling de status cada 30s funciona
-- ✅ Contractor override manual funciona
 - ✅ CI/CD pipeline verde
 - ✅ PR mergeado a dev
 

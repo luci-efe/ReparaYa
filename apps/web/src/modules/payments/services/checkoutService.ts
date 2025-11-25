@@ -1,0 +1,174 @@
+/**
+ * Checkout Service
+ * Creates Stripe Checkout Sessions for advance payments
+ */
+
+import { PrismaClient } from '@prisma/client';
+import Stripe from 'stripe';
+import { stripe } from './stripeService';
+import { calculateBookingAmounts } from './commissionService';
+import { PaymentRepository, getPaymentRepository } from '../repositories/paymentRepository';
+import {
+  BookingNotFoundError,
+  CheckoutSessionResult,
+  PaymentError,
+} from '../types';
+
+/**
+ * Checkout service for creating payment sessions
+ */
+export class CheckoutService {
+  private paymentRepository: PaymentRepository;
+
+  constructor(private prisma: PrismaClient) {
+    this.paymentRepository = getPaymentRepository(prisma);
+  }
+
+  /**
+   * Create a Stripe Checkout Session for advance payment (30%)
+   *
+   * Flow:
+   * 1. Fetch booking with service and client data
+   * 2. Calculate advance amount (30% of final price)
+   * 3. Create Stripe Checkout Session
+   * 4. Create Payment record with status PENDING
+   * 5. Return session URL
+   *
+   * @param bookingId - Booking ID to create checkout for
+   * @returns Checkout session ID, URL, and payment record
+   */
+  async createCheckoutSession(
+    bookingId: string
+  ): Promise<CheckoutSessionResult> {
+    // 1. Fetch booking data
+    const booking = await this.prisma.booking.findUnique({
+      where: { id: bookingId },
+      include: {
+        service: {
+          include: {
+            images: {
+              orderBy: { order: 'asc' },
+              take: 1,
+            },
+          },
+        },
+        client: true,
+      },
+    });
+
+    if (!booking) {
+      throw new BookingNotFoundError(bookingId);
+    }
+
+    // 2. Get amounts (should already be calculated and stored in booking)
+    // But we can recalculate to ensure consistency
+    const amounts = calculateBookingAmounts(booking.basePrice);
+
+    // 3. Create Stripe Checkout Session
+    const appUrl =
+      process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+
+    const metadata: Record<string, string> = {
+      booking_id: booking.id,
+      service_id: booking.serviceId,
+      client_id: booking.clientId,
+    };
+
+    const sessionParams: Stripe.Checkout.SessionCreateParams = {
+      mode: 'payment',
+      payment_method_types: ['card'],
+      line_items: [
+        {
+          price_data: {
+            currency: 'mxn',
+            unit_amount: Math.round(amounts.anticipoAmount.toNumber() * 100), // Convert to cents
+            product_data: {
+              name: booking.service.title,
+              description: `Anticipo 30% - Servicio programado para ${booking.scheduledDate.toLocaleDateString('es-MX')}`,
+              images: booking.service.images.length > 0
+                ? [booking.service.images[0].s3Url]
+                : undefined,
+            },
+          },
+          quantity: 1,
+        },
+      ],
+      customer_email: booking.client.email ?? undefined,
+      success_url: `${appUrl}/bookings/${booking.id}/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${appUrl}/bookings/${booking.id}/cancelled`,
+      metadata,
+      payment_intent_data: {
+        metadata,
+      },
+    };
+
+    // 3. Create Stripe Checkout Session with error handling
+    let session: Stripe.Checkout.Session;
+    try {
+      session = await stripe.checkout.sessions.create(sessionParams);
+    } catch (error) {
+      console.error('[CheckoutService] Failed to create checkout session:', {
+        bookingId: booking.id,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw new PaymentError(
+        `Failed to create checkout session for booking ${booking.id}`,
+        'CHECKOUT_SESSION_CREATION_FAILED',
+        500
+      );
+    }
+
+    // 4. Validate session URL exists
+    if (!session.url) {
+      console.error('[CheckoutService] Stripe session created without URL:', {
+        bookingId: booking.id,
+        sessionId: session.id,
+      });
+      throw new PaymentError(
+        `Stripe checkout session ${session.id} has no URL`,
+        'CHECKOUT_SESSION_NO_URL',
+        500
+      );
+    }
+
+    // 5. Create Payment record
+    const payment = await this.paymentRepository.createPayment({
+      bookingId: booking.id,
+      type: 'ANTICIPO',
+      amount: amounts.anticipoAmount,
+      currency: 'mxn',
+      stripeCheckoutSessionId: session.id,
+      status: 'PENDING',
+      metadata: {
+        sessionUrl: session.url,
+        createdAt: new Date().toISOString(),
+      },
+    });
+
+    console.log('[CheckoutService] Created checkout session:', {
+      bookingId: booking.id,
+      sessionId: session.id,
+      amount: amounts.anticipoAmount.toString(),
+      paymentId: payment.id,
+    });
+
+    // 6. Return result
+    return {
+      sessionId: session.id,
+      checkoutUrl: session.url,
+      payment,
+    };
+  }
+}
+
+/**
+ * Singleton instance
+ */
+let checkoutService: CheckoutService | null = null;
+
+export function getCheckoutService(prisma: PrismaClient): CheckoutService {
+  if (!checkoutService) {
+    checkoutService = new CheckoutService(prisma);
+  }
+  return checkoutService;
+}

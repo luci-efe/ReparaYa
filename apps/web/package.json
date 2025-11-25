@@ -38,7 +38,7 @@
     "react-day-picker": "^9.11.2",
     "react-dom": "^18.3.0",
     "react-hook-form": "^7.66.1",
-    "stripe": "^16.0.0",
+    "stripe": "^20.0.0",
     "svix": "^1.81.0",
     "uuid": "^13.0.0",
     "zod": "^3.23.0"
