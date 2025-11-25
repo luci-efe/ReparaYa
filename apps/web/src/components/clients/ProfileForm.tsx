@@ -9,7 +9,7 @@ import { FormButton } from "@/components/ui/FormButton";
 import { useEffect, useState } from "react";
 
 export function ProfileForm() {
-    const { user, isLoading, error, updateProfile } = useProfile();
+    const { user, isLoading, error, updateProfile, refetch } = useProfile();
     const [isSaving, setIsSaving] = useState(false);
     const [saveMessage, setSaveMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
@@ -60,8 +60,14 @@ export function ProfileForm() {
 
     if (error) {
         return (
-            <div className="p-4 text-red-700 bg-red-100 rounded-lg">
-                Error al cargar el perfil: {error}
+            <div className="p-4 text-red-700 bg-red-100 rounded-lg flex items-center justify-between">
+                <span>Error al cargar el perfil: {error}</span>
+                <button
+                    onClick={() => refetch()}
+                    className="ml-4 px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-sm"
+                >
+                    Reintentar
+                </button>
             </div>
         );
     }
@@ -90,11 +96,13 @@ export function ProfileForm() {
                         label="Nombre"
                         {...register("firstName")}
                         error={errors.firstName?.message}
+                        disabled={isSaving}
                     />
                     <Input
                         label="Apellido"
                         {...register("lastName")}
                         error={errors.lastName?.message}
+                        disabled={isSaving}
                     />
                 </div>
 
@@ -103,6 +111,7 @@ export function ProfileForm() {
                     {...register("phone")}
                     error={errors.phone?.message}
                     placeholder="10 dígitos"
+                    disabled={isSaving}
                 />
 
                 {saveMessage && (

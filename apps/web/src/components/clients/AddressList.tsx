@@ -25,25 +25,32 @@ export function AddressList() {
     const [deletingAddress, setDeletingAddress] = useState<Address | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [settingDefaultId, setSettingDefaultId] = useState<string | null>(null);
+    const [actionError, setActionError] = useState<string | null>(null);
 
     const handleCreate = () => {
         setEditingAddress(undefined);
         setIsModalOpen(true);
+        setActionError(null);
     };
 
     const handleEdit = (address: Address) => {
         setEditingAddress(address);
         setIsModalOpen(true);
+        setActionError(null);
     };
 
     const handleDeleteClick = (address: Address) => {
         setDeletingAddress(address);
+        setActionError(null);
     };
 
     const handleSetDefault = async (address: Address) => {
         try {
             setSettingDefaultId(address.id);
+            setActionError(null);
             await setDefaultAddress(address.id);
+        } catch (err) {
+            setActionError(err instanceof Error ? err.message : "Error al establecer dirección predeterminada");
         } finally {
             setSettingDefaultId(null);
         }
@@ -52,12 +59,15 @@ export function AddressList() {
     const handleSubmit = async (data: CreateAddressValues) => {
         try {
             setIsSubmitting(true);
+            setActionError(null);
             if (editingAddress) {
                 await updateAddress(editingAddress.id, data);
             } else {
                 await createAddress(data);
             }
             setIsModalOpen(false);
+        } catch (err) {
+            setActionError(err instanceof Error ? err.message : "Error al guardar dirección");
         } finally {
             setIsSubmitting(false);
         }
@@ -67,8 +77,11 @@ export function AddressList() {
         if (!deletingAddress) return;
         try {
             setIsSubmitting(true);
+            setActionError(null);
             await deleteAddress(deletingAddress.id);
             setDeletingAddress(null);
+        } catch (err) {
+            setActionError(err instanceof Error ? err.message : "Error al eliminar dirección");
         } finally {
             setIsSubmitting(false);
         }
@@ -101,13 +114,19 @@ export function AddressList() {
                 </Button>
             </div>
 
+            {actionError && (
+                <div className="p-3 mb-4 text-red-700 bg-red-100 rounded-lg text-sm">
+                    {actionError}
+                </div>
+            )}
+
             {addresses.length === 0 ? (
                 <div className="text-center py-12 bg-white rounded-lg border border-dashed border-gray-300">
                     <div className="mx-auto h-12 w-12 text-gray-400 mb-4">
                         <MapPinIcon />
                     </div>
                     <h3 className="text-lg font-medium text-gray-900 mb-1">No tienes direcciones guardadas</h3>
-                    <p className="text-gray-500 mb-6">Agrega una dirección para facilitar tus solicitudes de servicio.</p>
+                    <p className="text-gray-500 mb-6">Agrega una dirección para poder solicitar servicios</p>
                     <Button onClick={handleCreate}>Agregar dirección</Button>
                 </div>
             ) : (
@@ -120,6 +139,7 @@ export function AddressList() {
                             onDelete={handleDeleteClick}
                             onSetDefault={handleSetDefault}
                             isSettingDefault={settingDefaultId === address.id}
+                            canDelete={addresses.length > 1}
                         />
                     ))}
                 </div>
