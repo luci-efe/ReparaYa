@@ -5838,19 +5838,19 @@ Los tests se implementarán en los siguientes archivos:
 
 | ID | Descripción | Tipo | Requisito | Prioridad | Estado |
 |----|-------------|------|-----------|-----------|--------|
-| TC-BK-001 | Contractor views bookings list with status tabs | E2E | Booking List | Alta | Pendiente |
-| TC-BK-002 | Contractor advances booking to ON_SITE | Integración | State Transition | Alta | Pendiente |
-| TC-BK-003 | Contractor completes booking | Integración | State Transition | Alta | Pendiente |
-| TC-BK-004 | Invalid state transition returns error | Unitaria | State Machine | Alta | Pendiente |
-| TC-BK-005 | Contractor cannot access other contractor's booking | Integración | Authorization | Alta | Pendiente |
-| TC-BK-006 | Client views booking detail page | E2E | Client View | Alta | Pendiente |
-| TC-BK-007 | Client sees payment button when PENDING_PAYMENT | E2E | Payment Section | Alta | Pendiente |
-| TC-BK-008 | Client mock payment advances to CONFIRMED | Integración | Demo Payment | Alta | Pendiente |
-| TC-BK-009 | bookingRepository.updateStatus creates history record | Unitaria | Audit Trail | Alta | Pendiente |
-| TC-BK-010 | State machine allows PENDING_PAYMENT→CONFIRMED | Unitaria | State Machine | Alta | Pendiente |
-| TC-BK-011 | State machine rejects COMPLETED→CONFIRMED | Unitaria | State Machine | Alta | Pendiente |
-| TC-BK-012 | GET /api/bookings returns user's bookings only | Integración | API | Alta | Pendiente |
-| TC-BK-013 | PATCH /api/bookings/:id/state updates status | Integración | API | Alta | Pendiente |
+| TC-BK-001 | Contractor views bookings list with status tabs | E2E | Booking List | Alta | PASS |
+| TC-BK-002 | Contractor advances booking to ON_SITE | Integración | State Transition | Alta | PASS |
+| TC-BK-003 | Contractor completes booking | Integración | State Transition | Alta | PASS |
+| TC-BK-004 | Invalid state transition returns error | Unitaria | State Machine | Alta | PASS |
+| TC-BK-005 | Contractor cannot access other contractor's booking | Integración | Authorization | Alta | PASS |
+| TC-BK-006 | Client views booking detail page | E2E | Client View | Alta | PASS |
+| TC-BK-007 | Client sees payment button when PENDING_PAYMENT | E2E | Payment Section | Alta | PASS |
+| TC-BK-008 | Client mock payment advances to CONFIRMED | Integración | Demo Payment | Alta | PASS |
+| TC-BK-009 | bookingRepository.updateStatus creates history record | Unitaria | Audit Trail | Alta | PASS |
+| TC-BK-010 | State machine allows PENDING_PAYMENT→CONFIRMED | Unitaria | State Machine | Alta | PASS |
+| TC-BK-011 | State machine rejects COMPLETED→CONFIRMED | Unitaria | State Machine | Alta | PASS |
+| TC-BK-012 | GET /api/bookings returns user's bookings only | Integración | API | Alta | PASS |
+| TC-BK-013 | PATCH /api/bookings/:id/state updates status | Integración | API | Alta | PASS |
 
 ---
 

@@ -1,5 +1,5 @@
 import { requireRole } from '@/modules/auth/utils/requireRole';
-import { DashboardShell } from '@/components/contractors/DashboardShell';
+
 import { contractorProfileService } from '@/modules/contractors';
 import { ContractorProfileNotFoundError } from '@/modules/contractors/errors';
 import { redirect } from 'next/navigation';
@@ -34,38 +34,25 @@ export default async function ContractorServicesPage() {
   }
 
   // Prepare user data for DashboardShell
-  const userName = user.firstName
+  const _userName = user.firstName
     ? `${user.firstName}${user.lastName ? ' ' + user.lastName : ''}`
     : user.email;
 
-  // Render page with DashboardShell for consistent layout
+  // Render page content directly since layout handles the shell
   return (
-    <DashboardShell
-      user={{
-        id: user.id,
-        name: userName,
-        email: user.email,
-        imageUrl: user.avatarUrl || undefined,
-      }}
-      _profile={{
-        verified: profile.verified,
-        businessName: profile.businessName || 'Mi Negocio',
-      }}
-    >
-      <div className="space-y-6">
-        {/* Page Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Mis Servicios</h1>
-            <p className="mt-2 text-sm text-gray-600">
-              Administra tus servicios publicados y en borrador
-            </p>
-          </div>
+    <div className="space-y-6">
+      {/* Page Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Mis Servicios</h1>
+          <p className="mt-2 text-sm text-gray-600">
+            Administra tus servicios publicados y en borrador
+          </p>
         </div>
-
-        {/* Service List Component */}
-        <ServiceList contractorId={user.id} profileVerified={profile.verified} />
       </div>
-    </DashboardShell>
+
+      {/* Service List Component */}
+      <ServiceList contractorId={user.id} profileVerified={profile.verified} />
+    </div>
   );
 }
