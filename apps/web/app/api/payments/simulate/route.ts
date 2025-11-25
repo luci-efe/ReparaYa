@@ -4,8 +4,7 @@ import { z } from 'zod';
 import { PaymentService } from '@/modules/payments/services/paymentService';
 import { BookingService } from '@/modules/booking/services/bookingService';
 import { prisma } from '@/lib/db';
-import { BookingStatus } from '@/modules/booking/types';
-import { PaymentType } from '@prisma/client';
+import { BookingStatus, PaymentType } from '@/modules/booking/types';
 
 const paymentService = new PaymentService();
 const bookingService = new BookingService();

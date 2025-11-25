@@ -4,6 +4,7 @@
 import { POST } from '../../../app/api/bookings/route';
 import { GET as GET_ME } from '../../../app/api/bookings/me/route';
 import { bookingService } from '@/modules/booking/services/bookingService';
+import { prisma } from '@/lib/db';
 
 jest.mock('@/modules/booking/services/bookingService');
 jest.mock('@/lib/db', () => ({
@@ -21,12 +22,14 @@ jest.mock('@clerk/nextjs/server', () => ({
     currentUser: () => Promise.resolve({ id: 'user_123', firstName: 'Test', lastName: 'User' }),
 }));
 
+// Get the mocked prisma instance for use in tests
+const mockedPrisma = prisma as jest.Mocked<typeof prisma>;
+
 // TODO: Re-enable when contractor service visibility feature is complete
 // These tests depend on the booking demo which requires contractor service visibility
 describe.skip('Booking API Integration', () => {
     beforeEach(() => {
-        const { prisma } = require('@/lib/db');
-        (prisma.user.findUnique as jest.Mock).mockResolvedValue({
+        (mockedPrisma.user.findUnique as jest.Mock).mockResolvedValue({
             id: 'local_user_123',
             clerkUserId: 'user_123',
         });
@@ -70,11 +73,10 @@ describe.skip('Booking API Integration', () => {
 
     describe('GET /api/bookings/me', () => {
         it('should return user bookings', async () => {
-            const { prisma } = require('@/lib/db');
             const mockBookings = [
                 { id: 'booking_123', clientId: 'local_user_123', status: 'PENDING_APPROVAL' },
             ];
-            (prisma.booking.findMany as jest.Mock).mockResolvedValue(mockBookings);
+            (mockedPrisma.booking.findMany as jest.Mock).mockResolvedValue(mockBookings);
 
             const request = new Request('http://localhost:3000/api/bookings/me', {
                 method: 'GET',
