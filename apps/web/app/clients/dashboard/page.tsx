@@ -1,5 +1,4 @@
-import { requireAuth } from '@/modules/auth/utils/requireAuth';
-import { redirect } from 'next/navigation';
+import { requireRole } from '@/modules/auth/utils/requireRole';
 import { ClientDashboardShell } from '@/components/clients/ClientDashboardShell';
 import { WelcomeWidget } from '@/components/clients/WelcomeWidget';
 import { ClientQuickAccessTiles } from '@/components/clients/ClientQuickAccessTiles';
@@ -11,22 +10,8 @@ import { getUserDisplayName } from '@/lib/userUtils';
 export const dynamic = 'force-dynamic';
 
 export default async function ClientDashboardPage() {
-    // Verify authentication
-    const user = await requireAuth();
-
-    // Verify role and redirect if not CLIENT
-    if (user.role !== 'CLIENT') {
-        if (user.role === 'CONTRACTOR') {
-            redirect('/contractors/dashboard');
-        }
-        if (user.role === 'ADMIN') {
-            redirect('/admin/dashboard');
-        }
-        redirect('/');
-    }
-
-    // TODO: Fetch user addresses count
-    const addressCount = 0;
+    // Verify authentication and role
+    const user = await requireRole('CLIENT');
 
     const userName = getUserDisplayName(user);
 

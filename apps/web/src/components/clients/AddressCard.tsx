@@ -12,6 +12,7 @@ interface AddressCardProps {
     onSetDefault: (address: Address) => void;
     isDeleting?: boolean;
     isSettingDefault?: boolean;
+    canDelete?: boolean;
 }
 
 export function AddressCard({
@@ -21,7 +22,9 @@ export function AddressCard({
     onSetDefault,
     isDeleting = false,
     isSettingDefault = false,
+    canDelete = true,
 }: AddressCardProps) {
+    const isDeleteDisabled = isDeleting || !canDelete;
     return (
         <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow relative">
             <div className="flex justify-between items-start mb-2">
@@ -47,9 +50,10 @@ export function AddressCard({
                         variant="ghost"
                         size="sm"
                         onClick={() => onDelete(address)}
-                        disabled={isDeleting || address.isDefault}
+                        disabled={isDeleteDisabled}
                         aria-label="Eliminar dirección"
                         className="text-gray-500 hover:text-red-600 disabled:opacity-30"
+                        title={!canDelete ? "No puedes eliminar tu única dirección" : undefined}
                     >
                         <TrashIcon className="w-4 h-4" />
                     </Button>
