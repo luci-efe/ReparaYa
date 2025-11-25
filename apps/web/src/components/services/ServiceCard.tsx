@@ -21,7 +21,7 @@ interface ServiceCardProps {
 }
 
 export function ServiceCard({ service }: ServiceCardProps) {
-    const imageUrl = service.images[0]?.s3Url || '/placeholder-service.jpg';
+    const imageUrl = service.images[0]?.s3Url || '/placeholder-service.svg';
     const contractorName = service.contractor.contractorProfile?.businessName || `${service.contractor.firstName} ${service.contractor.lastName}`;
 
     return (

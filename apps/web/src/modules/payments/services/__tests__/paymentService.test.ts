@@ -9,8 +9,7 @@ describe('PaymentService', () => {
 
     beforeEach(() => {
         mockRepository = new PaymentRepository() as jest.Mocked<PaymentRepository>;
-        paymentService = new PaymentService();
-        (paymentService as any).paymentRepository = mockRepository;
+        paymentService = new PaymentService(mockRepository);
     });
 
     it('should be defined', () => {

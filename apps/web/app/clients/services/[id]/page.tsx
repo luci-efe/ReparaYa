@@ -28,7 +28,7 @@ export default async function ServiceDetailPage({
         notFound();
     }
 
-    if (service.status !== 'ACTIVE' && service.visibilityStatus !== 'ACTIVE') {
+    if (service.status !== 'ACTIVE' || service.visibilityStatus !== 'ACTIVE') {
         // TODO: Allow owner to view draft
         notFound();
     }
