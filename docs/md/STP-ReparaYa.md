@@ -3192,18 +3192,20 @@ npm run test:coverage
 - Página de búsqueda accesible públicamente (sin autenticación)
 - Performance de búsqueda: P95 ≤ 1.2s
 
-| ID | Descripción | Tipo | Requisito | Prioridad | Estado |
-|----|-------------|------|-----------|-----------|--------|
-| TC-RF-004-01 | Búsqueda de servicios por categoría retorna solo servicios de esa categoría | Integración | RF-004 | Alta | Pendiente |
-| TC-RF-004-02 | Búsqueda de servicios por término de búsqueda (texto) | Integración | RF-004 | Alta | Pendiente |
-| TC-RF-004-03 | Filtrado de servicios por rango de precio (minPrice, maxPrice) | Integración | RF-004 | Media | Pendiente |
-| TC-RF-004-04 | Paginación de resultados de búsqueda (page, limit) | Integración | RF-004 | Media | Pendiente |
-| TC-RF-004-05 | Servicios inactivos (PAUSED, DRAFT) no aparecen en búsqueda pública | Integración | RF-004 | Alta | Pendiente |
-| TC-RF-004-06 | Vista de detalle de servicio muestra información completa | E2E | RF-004 | Alta | Pendiente |
-| TC-RF-004-07 | Detalle de servicio muestra slots disponibles (próximos 7 días) | Integración | RF-004 | Alta | PASS |
-| TC-RF-004-08 | Slots ya reservados no se muestran en disponibilidad | Integración | RF-004 | Alta | PASS |
-| TC-RF-004-09 | Acceso a servicio inexistente retorna 404 | Integración | RF-004 | Media | Pendiente |
-| TC-RF-004-10 | Performance: P95 ≤ 1.2s con 10 RPS en búsqueda | Performance | RNF-3.5.1 | Alta | Pendiente |
+| ID | Descripción | Tipo | Requisito | Prioridad | Estado (plan) | Estado (ejecución) |
+|----|-------------|------|-----------|-----------|---------------|---------------------|
+| TC-RF-004-01 | Búsqueda de servicios por categoría retorna solo servicios de esa categoría | Integración | RF-004 | Alta | Pendiente | PASS |
+| TC-RF-004-02 | Búsqueda de servicios por término de búsqueda (texto) | Integración | RF-004 | Alta | Pendiente | PASS |
+| TC-RF-004-03 | Filtrado de servicios por rango de precio (minPrice, maxPrice) | Integración | RF-004 | Media | Pendiente | PASS |
+| TC-RF-004-04 | Paginación de resultados de búsqueda (page, limit) | Integración | RF-004 | Media | Pendiente | Pendiente |
+| TC-RF-004-05 | Servicios inactivos (PAUSED, DRAFT) no aparecen en búsqueda pública | Integración | RF-004 | Alta | Pendiente | Pendiente |
+| TC-RF-004-06 | Vista de detalle de servicio muestra información completa | E2E | RF-004 | Alta | Pendiente | Pendiente |
+| TC-RF-004-07 | Detalle de servicio muestra slots disponibles (próximos 7 días) | Integración | RF-004 | Alta | PASS | PASS |
+| TC-RF-004-08 | Slots ya reservados no se muestran en disponibilidad | Integración | RF-004 | Alta | PASS | PASS |
+| TC-RF-004-09 | Acceso a servicio inexistente retorna 404 | Integración | RF-004 | Media | Pendiente | Pendiente |
+| TC-RF-004-10 | Performance: P95 ≤ 1.2s con 10 RPS en búsqueda | Performance | RNF-3.5.1 | Alta | Pendiente | Pendiente |
+
+> **Nota:** La columna "Estado (ejecución)" refleja el estado real de los casos de prueba según la tabla de ejecución en la sección 4.1.6. La columna "Estado (plan)" indica el estado original de planificación.
 
 ---
 
@@ -5682,7 +5684,9 @@ Los tests se implementarán en los siguientes archivos:
 - Contractor puede override manual en cualquier momento
 - CI/CD pasa sin errores
 
-**Casos de prueba:**
+**Casos de prueba (tabla canónica de estado de ejecución):**
+
+> **Nota:** Esta tabla es la fuente de verdad autoritativa para el estado de ejecución de los casos de prueba TC-RF-004-0X, TC-RF-005-0X, TC-RF-006-0X y TC-DEMO-0X. Los casos listados aquí con estado PASS han sido verificados en el entorno de pruebas. La sección 4.1.7 mantiene los estados de planificación original y referencia esta tabla para el estado de ejecución real.
 
 | ID | Descripción | Tipo | Prioridad | Requisito | Estado |
 |----|-------------|------|-----------|-----------|--------|
