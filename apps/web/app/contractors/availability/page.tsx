@@ -1,7 +1,6 @@
-import { auth, currentUser } from '@clerk/nextjs/server';
+import { auth } from '@clerk/nextjs/server';
 import { redirect } from 'next/navigation';
 import { contractorProfileRepository } from '@/modules/contractors/repositories/contractorProfileRepository';
-import { DashboardShell } from '@/components/contractors/DashboardShell';
 import { AvailabilityManager } from '@/components/contractors/availability/AvailabilityManager';
 
 export const metadata = {
@@ -12,11 +11,6 @@ export const metadata = {
 export default async function AvailabilityPage() {
     const { userId } = auth();
     if (!userId) {
-        redirect('/sign-in');
-    }
-
-    const user = await currentUser();
-    if (!user) {
         redirect('/sign-in');
     }
 
@@ -33,21 +27,5 @@ export default async function AvailabilityPage() {
         );
     }
 
-    const mappedUser = {
-        id: user.id,
-        name: `${user.firstName} ${user.lastName}`.trim() || user.username || 'Usuario',
-        email: user.emailAddresses[0]?.emailAddress || '',
-        imageUrl: user.imageUrl,
-    };
-
-    const mappedProfile = {
-        verified: profile.verified,
-        businessName: profile.businessName,
-    };
-
-    return (
-        <DashboardShell user={mappedUser} _profile={mappedProfile}>
-            <AvailabilityManager />
-        </DashboardShell>
-    );
+    return <AvailabilityManager />;
 }

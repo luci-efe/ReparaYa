@@ -1,6 +1,5 @@
 import { requireRole } from '@/modules/auth/utils/requireRole';
 import { contractorProfileService } from '@/modules/contractors';
-import { DashboardShell } from '@/components/contractors/DashboardShell';
 import { ContractorProfileNotFoundError } from '@/modules/contractors/errors';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
@@ -20,9 +19,8 @@ export default async function ContractorSettingsPage() {
   const user = await requireRole('CONTRACTOR');
 
   // Obtener perfil de contratista
-  let profile;
   try {
-    profile = await contractorProfileService.getProfileByUserId(user.id);
+    await contractorProfileService.getProfileByUserId(user.id);
   } catch (error) {
     if (error instanceof ContractorProfileNotFoundError) {
       redirect('/onboarding/contractor-profile');
@@ -30,24 +28,8 @@ export default async function ContractorSettingsPage() {
     throw error;
   }
 
-  const userName = user.firstName
-    ? `${user.firstName}${user.lastName ? ' ' + user.lastName : ''}`
-    : user.email;
-
   return (
-    <DashboardShell
-      user={{
-        id: user.id,
-        name: userName,
-        email: user.email,
-        imageUrl: user.avatarUrl || undefined,
-      }}
-      _profile={{
-        verified: profile.verified,
-        businessName: profile.businessName || 'Mi Negocio',
-      }}
-    >
-      <div className="space-y-6">
+    <div className="space-y-6">
         {/* Header */}
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Configuración</h1>
@@ -242,6 +224,5 @@ export default async function ContractorSettingsPage() {
           </div>
         </div>
       </div>
-    </DashboardShell>
   );
 }
