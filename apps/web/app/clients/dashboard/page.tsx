@@ -1,4 +1,5 @@
-import { requireRole } from '@/modules/auth/utils/requireRole';
+import { requireAuth } from '@/modules/auth/utils/requireAuth';
+import { redirect } from 'next/navigation';
 import { ClientDashboardShell } from '@/components/clients/ClientDashboardShell';
 import { WelcomeWidget } from '@/components/clients/WelcomeWidget';
 import { ClientQuickAccessTiles } from '@/components/clients/ClientQuickAccessTiles';
@@ -10,8 +11,19 @@ import { getUserDisplayName } from '@/lib/userUtils';
 export const dynamic = 'force-dynamic';
 
 export default async function ClientDashboardPage() {
-    // Verify authentication and role
-    const user = await requireRole('CLIENT');
+    // Verify authentication
+    const user = await requireAuth();
+
+    // Verify role and redirect if not CLIENT
+    if (user.role !== 'CLIENT') {
+        if (user.role === 'CONTRACTOR') {
+            redirect('/contractors/dashboard');
+        }
+        if (user.role === 'ADMIN') {
+            redirect('/admin/dashboard');
+        }
+        redirect('/');
+    }
 
     // TODO: Fetch user addresses count
     const addressCount = 0;
@@ -31,7 +43,6 @@ export default async function ClientDashboardPage() {
                 {/* 1. Welcome Widget */}
                 <WelcomeWidget
                     user={{ name: userName, imageUrl: user.avatarUrl || undefined }}
-                    addressCount={addressCount}
                 />
 
                 {/* 2. Quick Access Tiles */}

@@ -1,4 +1,4 @@
-import { requireRole } from '@/modules/auth/utils/requireRole';
+import { requireAuth } from '@/modules/auth/utils/requireAuth';
 import { contractorProfileService } from '@/modules/contractors';
 import { DashboardShell } from '@/components/contractors/DashboardShell';
 import { VerificationStatusWidget } from '@/components/contractors/VerificationStatusWidget';
@@ -21,8 +21,19 @@ export const dynamic = 'force-dynamic';
  * - Muestra estado de verificación y secciones del dashboard
  */
 export default async function ContractorDashboardPage() {
-  // Verificar autenticación y rol
-  const user = await requireRole('CONTRACTOR');
+  // Verificar autenticación
+  const user = await requireAuth();
+
+  // Verificar rol y redirigir si no es CONTRACTOR
+  if (user.role !== 'CONTRACTOR') {
+    if (user.role === 'CLIENT') {
+      redirect('/clients/dashboard');
+    }
+    if (user.role === 'ADMIN') {
+      redirect('/admin/dashboard');
+    }
+    redirect('/');
+  }
 
   // Intentar obtener perfil de contratista
   let profile;
