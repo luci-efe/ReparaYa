@@ -15,7 +15,7 @@ export const createAddressSchema = z.object({
         .min(5, "La dirección debe tener al menos 5 caracteres")
         .max(200, "La dirección no puede exceder 200 caracteres"),
     addressLine2: z.string().optional(),
-    city: z.string().min(1, "La ciudad es requerida"),
+    city: z.string().min(2, "La ciudad debe tener al menos 2 caracteres"),
     state: z.string().min(2, "El estado es requerido").max(100),
     postalCode: z
         .string()

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 
@@ -20,6 +20,14 @@ export function Modal({
     maxWidth = "md",
 }: ModalProps) {
     const modalRef = useRef<HTMLDivElement>(null);
+    const previousActiveElement = useRef<Element | null>(null);
+
+    const getFocusableElements = useCallback(() => {
+        if (!modalRef.current) return [];
+        return modalRef.current.querySelectorAll<HTMLElement>(
+            'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
+    }, []);
 
     useEffect(() => {
         const handleEscape = (e: KeyboardEvent) => {
@@ -28,16 +36,50 @@ export function Modal({
             }
         };
 
+        const handleTab = (e: KeyboardEvent) => {
+            if (e.key !== "Tab") return;
+            
+            const focusableElements = getFocusableElements();
+            if (focusableElements.length === 0) return;
+
+            const firstElement = focusableElements[0];
+            const lastElement = focusableElements[focusableElements.length - 1];
+
+            if (e.shiftKey && document.activeElement === firstElement) {
+                e.preventDefault();
+                lastElement.focus();
+            } else if (!e.shiftKey && document.activeElement === lastElement) {
+                e.preventDefault();
+                firstElement.focus();
+            }
+        };
+
         if (isOpen) {
+            previousActiveElement.current = document.activeElement;
             document.addEventListener("keydown", handleEscape);
+            document.addEventListener("keydown", handleTab);
             document.body.style.overflow = "hidden";
+            
+            // Focus the first focusable element after mount
+            requestAnimationFrame(() => {
+                const focusableElements = getFocusableElements();
+                if (focusableElements.length > 0) {
+                    focusableElements[0].focus();
+                }
+            });
         }
 
         return () => {
             document.removeEventListener("keydown", handleEscape);
+            document.removeEventListener("keydown", handleTab);
             document.body.style.overflow = "unset";
+            
+            // Return focus to the element that was focused before opening
+            if (previousActiveElement.current && previousActiveElement.current instanceof HTMLElement) {
+                previousActiveElement.current.focus();
+            }
         };
-    }, [isOpen, onClose]);
+    }, [isOpen, onClose, getFocusableElements]);
 
     if (!isOpen) return null;
 
@@ -50,13 +92,17 @@ export function Modal({
     };
 
     return createPortal(
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm transition-opacity">
+        <div 
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm transition-opacity"
+            onClick={onClose}
+        >
             <div
                 ref={modalRef}
                 className={`bg-white rounded-xl shadow-xl w-full ${maxWidthClasses[maxWidth]} max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200`}
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby="modal-title"
+                onClick={(e) => e.stopPropagation()}
             >
                 <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
                     <h2 id="modal-title" className="text-lg font-semibold text-gray-900">
