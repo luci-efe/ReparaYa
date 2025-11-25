@@ -18,7 +18,7 @@ export default async function ContractorSettingsPage() {
   // Verificar autenticación y rol
   const user = await requireRole('CONTRACTOR');
 
-  // Obtener perfil de contratista
+  // Verify contractor has a profile, redirect to onboarding if not
   try {
     await contractorProfileService.getProfileByUserId(user.id);
   } catch (error) {

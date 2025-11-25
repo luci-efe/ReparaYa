@@ -1,7 +1,7 @@
-import { auth } from '@clerk/nextjs/server';
-import { redirect } from 'next/navigation';
+import { requireRole } from '@/modules/auth/utils/requireRole';
 import { contractorProfileRepository } from '@/modules/contractors/repositories/contractorProfileRepository';
 import { AvailabilityManager } from '@/components/contractors/availability/AvailabilityManager';
+import { redirect } from 'next/navigation';
 
 export const metadata = {
     title: 'Gestionar Disponibilidad | ReparaYa',
@@ -9,22 +9,12 @@ export const metadata = {
 };
 
 export default async function AvailabilityPage() {
-    const { userId } = auth();
-    if (!userId) {
-        redirect('/sign-in');
-    }
+    const user = await requireRole('CONTRACTOR');
 
-    const profile = await contractorProfileRepository.findByClerkId(userId);
+    const profile = await contractorProfileRepository.findByUserId(user.id);
 
     if (!profile) {
-        // If no profile, maybe redirect to onboarding or show error
-        // For now, let's assume they should have one if they are in this route
-        return (
-            <div className="p-8 text-center">
-                <h1 className="text-2xl font-bold text-red-600">No se encontró perfil de contratista</h1>
-                <p className="mt-2 text-gray-600">Por favor completa tu registro como contratista.</p>
-            </div>
-        );
+        redirect('/onboarding/contractor-profile');
     }
 
     return <AvailabilityManager />;
