@@ -118,8 +118,8 @@ describe('Contractor Booking Flow Integration', () => {
             if (serviceId) {
                 await testPrisma.service.deleteMany({ where: { id: serviceId } });
             }
-            if (contractorId || clientId) {
-                await testPrisma.user.deleteMany({ where: { id: { in: [contractorId, clientId].filter(Boolean) } } });
+            if (contractorId && clientId) {
+                await testPrisma.user.deleteMany({ where: { id: { in: [contractorId, clientId] } } });
             }
         } catch (error) {
             console.error('Error during test cleanup:', error);

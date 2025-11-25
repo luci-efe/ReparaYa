@@ -5,6 +5,10 @@ import { requireRole, UnauthorizedError, ForbiddenError } from '@/modules/auth';
 
 const bookingService = new BookingService();
 
+// Pagination constants
+const DEFAULT_PAGE_SIZE = 10;
+const MAX_PAGE_SIZE = 100;
+
 export async function GET(req: NextRequest) {
     try {
         // Verify user is authenticated and has CONTRACTOR role
@@ -14,7 +18,7 @@ export async function GET(req: NextRequest) {
         const searchParams = req.nextUrl.searchParams;
         const statusParam = searchParams.get('status');
         const page = Math.max(1, Number(searchParams.get('page')) || 1);
-        const limit = Math.min(100, Math.max(1, Number(searchParams.get('limit')) || 10));
+        const limit = Math.min(MAX_PAGE_SIZE, Math.max(1, Number(searchParams.get('limit')) || DEFAULT_PAGE_SIZE));
 
         // Validate status values against BookingStatus enum
         const validStatuses = Object.values(BookingStatus) as string[];
