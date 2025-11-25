@@ -1,7 +1,7 @@
 # contractor-bookings Specification
 
 ## Purpose
-TBD - created by archiving change 2025-11-24-implement-contractor-booking-management. Update Purpose after archive.
+This specification defines the booking management functionality for contractors, enabling them to view, filter, and manage their service bookings through a dedicated dashboard. Contractors can track booking statuses, advance bookings through the service lifecycle, and maintain a history of all transactions. The system supports reliable scheduling, status tracking, and provides an auditable record of all booking state changes.
 ## Requirements
 ### Requirement: Contractor Bookings List Page
 

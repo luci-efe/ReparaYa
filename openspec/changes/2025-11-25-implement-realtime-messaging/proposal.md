@@ -164,12 +164,20 @@ CREATE POLICY "Users can send messages to own bookings" ON "Message"
 
 ## Testing Plan
 
-See `tasks.md` for detailed test plan with cases:
-- TC-MSG-001 to TC-MSG-010: Message sending and receiving
-- TC-MSG-011 to TC-MSG-015: Real-time functionality
-- TC-MSG-016 to TC-MSG-020: Security and sanitization
-- TC-MSG-021 to TC-MSG-025: Time window restrictions
-- TC-MSG-026 to TC-MSG-030: UI integration tests
+| ID | Description | Type | Priority | Requirement |
+|----|-------------|------|----------|-------------|
+| TC-RF-MSG-001-01 | Client can send message to contractor | RF | High | messaging-module |
+| TC-RF-MSG-002-01 | Contractor can send message to client | RF | High | messaging-module |
+| TC-RF-MSG-003-01 | Messages display in real-time via WebSocket | RF | High | messaging-realtime |
+| TC-RF-MSG-004-01 | Message history loads on page open | RF | High | messaging-module |
+| TC-RF-MSG-005-01 | Messaging window enforces 2-hour limit after completion | RF | High | messaging-timewindow |
+| TC-RF-MSG-006-01 | Only booking participants can access messages | RF | High | messaging-security |
+| TC-BR-MSG-007-01 | XSS content is sanitized from messages | BR | High | messaging-security |
+| TC-BR-MSG-008-01 | Rate limiting prevents spam (10 msg/min) | BR | Medium | messaging-security |
+| TC-RNF-MSG-009-01 | Message delivery latency < 100ms | RNF | Medium | messaging-realtime |
+| TC-RNF-MSG-010-01 | Message history loads within 1 second | RNF | Medium | messaging-module |
+
+See `tasks.md` for additional test cases TC-MSG-011 to TC-MSG-030.
 
 **Coverage target:** ≥70% for messaging module
 

@@ -1,4 +1,3 @@
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { prisma } from '../../../src/lib/db';
 import { BookingStatus } from '../../../src/modules/booking/types';
 import { BookingService } from '../../../src/modules/booking/services/bookingService';

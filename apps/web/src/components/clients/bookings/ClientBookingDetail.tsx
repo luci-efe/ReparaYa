@@ -38,7 +38,9 @@ export function ClientBookingDetail({ bookingId }: ClientBookingDetailProps) {
 
     // Demo Auto-Advance Logic
     useEffect(() => {
-        let timeout: NodeJS.Timeout;
+        let outerTimeout: NodeJS.Timeout;
+        let innerTimeout: NodeJS.Timeout;
+        let cancelled = false;
 
         const autoAdvance = async () => {
             // Only auto-advance if status is CONFIRMED, ON_ROUTE, ON_SITE, or IN_PROGRESS
@@ -48,30 +50,46 @@ export function ClientBookingDetail({ bookingId }: ClientBookingDetailProps) {
             if (booking && activeStates.includes(booking.status)) {
                 try {
                     // Wait 5 seconds before advancing
-                    await new Promise(resolve => setTimeout(resolve, 5000));
+                    await new Promise<void>((resolve, reject) => {
+                        innerTimeout = setTimeout(() => {
+                            if (cancelled) {
+                                reject(new Error('Cancelled'));
+                            } else {
+                                resolve();
+                            }
+                        }, 5000);
+                    });
+
+                    if (cancelled) return;
 
                     const res = await fetch(`/api/demo/advance/${booking.id}`, {
                         method: 'POST',
                     });
 
-                    if (res.ok) {
+                    if (res.ok && !cancelled) {
                         const data = await res.json();
                         if (data.status) {
                             fetchBooking(); // Refresh UI
                         }
                     }
                 } catch (error) {
-                    console.error('Auto-advance error:', error);
+                    if (!cancelled) {
+                        console.error('Auto-advance error:', error);
+                    }
                 }
             }
         };
 
         if (booking) {
-            timeout = setTimeout(autoAdvance, 2000); // Check/Start after 2s
+            outerTimeout = setTimeout(autoAdvance, 2000); // Check/Start after 2s
         }
 
-        return () => clearTimeout(timeout);
-    }, [booking?.status, booking?.id, fetchBooking]);
+        return () => {
+            cancelled = true;
+            clearTimeout(outerTimeout);
+            clearTimeout(innerTimeout);
+        };
+    }, [booking, fetchBooking]);
 
     if (loading) return <div className="p-8 text-center">Cargando detalles...</div>;
     if (error) return <div className="p-8 text-center text-red-600">{error}</div>;
