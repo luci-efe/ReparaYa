@@ -1,23 +1,20 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import { BookingStatusBadge } from '@/components/booking/BookingStatusBadge';
 import { BookingTimeline } from '@/components/booking/BookingTimeline';
 import { ContractorBookingControls } from '@/components/booking/ContractorBookingControls';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { BookingDTO } from '@/modules/booking/types';
 
 export default function ContractorBookingDetailPage() {
     const params = useParams();
-    const [booking, setBooking] = useState<any>(null);
+    const [booking, setBooking] = useState<BookingDTO | null>(null);
     const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        fetchBooking();
-    }, [params.id]);
-
-    const fetchBooking = async () => {
+    const fetchBooking = useCallback(async () => {
         try {
             const res = await fetch(`/api/bookings/${params.id}`);
             if (res.ok) {
@@ -29,7 +26,11 @@ export default function ContractorBookingDetailPage() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [params.id]);
+
+    useEffect(() => {
+        fetchBooking();
+    }, [fetchBooking]);
 
     if (loading) return <div className="p-8 text-center">Cargando...</div>;
     if (!booking) return <div className="p-8 text-center">Reserva no encontrada</div>;
@@ -40,9 +41,9 @@ export default function ContractorBookingDetailPage() {
                 <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden mb-6">
                     <div className="p-6 border-b border-gray-100 flex justify-between items-start">
                         <div>
-                            <h1 className="text-2xl font-bold text-gray-900 mb-2">{booking.service.title}</h1>
+                            <h1 className="text-2xl font-bold text-gray-900 mb-2">{booking.service?.title || 'Servicio'}</h1>
                             <p className="text-gray-500">
-                                Cliente: {booking.client?.firstName} {booking.client?.lastName}
+                                Cliente: {booking.client?.firstName || ''} {booking.client?.lastName || ''}
                             </p>
                         </div>
                         <BookingStatusBadge status={booking.status} />
@@ -72,7 +73,7 @@ export default function ContractorBookingDetailPage() {
 
                 <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-6">
                     <h3 className="text-lg font-semibold text-gray-900 mb-6">Historial de Estado</h3>
-                    <BookingTimeline history={booking.stateHistory} />
+                    <BookingTimeline history={booking.stateHistory || []} />
                 </div>
             </div>
         </div>

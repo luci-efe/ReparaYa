@@ -5,7 +5,7 @@ interface BookingStatusBadgeProps {
 }
 
 const statusConfig: Record<BookingStatus, { label: string; color: string }> = {
-    [BookingStatus.PENDING_APPROVAL as BookingStatus]: { label: 'Esperando Confirmación', color: 'bg-amber-100 text-amber-800' },
+    [BookingStatus.PENDING_APPROVAL]: { label: 'Esperando Confirmación', color: 'bg-amber-100 text-amber-800' },
     [BookingStatus.PENDING_PAYMENT]: { label: 'Pendiente de Pago', color: 'bg-yellow-100 text-yellow-800' },
     [BookingStatus.CONFIRMED]: { label: 'Confirmada', color: 'bg-blue-100 text-blue-800' },
     [BookingStatus.ON_ROUTE]: { label: 'En Camino', color: 'bg-indigo-100 text-indigo-800' },

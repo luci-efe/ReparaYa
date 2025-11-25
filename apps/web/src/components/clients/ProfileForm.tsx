@@ -7,6 +7,7 @@ import { useProfile } from "@/hooks/useProfile";
 import { Input } from "@/components/ui/Input";
 import { FormButton } from "@/components/ui/FormButton";
 import { useEffect, useState } from "react";
+import Image from "next/image";
 
 export function ProfileForm() {
     const { user, isLoading, error, updateProfile, refetch } = useProfile();
@@ -78,10 +79,12 @@ export function ProfileForm() {
 
             <div className="mb-6 flex items-center space-x-4">
                 {user?.imageUrl && (
-                    <img
+                    <Image
                         src={user.imageUrl}
                         alt="Avatar"
-                        className="h-16 w-16 rounded-full object-cover border border-gray-200"
+                        width={64}
+                        height={64}
+                        className="rounded-full object-cover border border-gray-200"
                     />
                 )}
                 <div>

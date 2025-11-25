@@ -5,7 +5,7 @@ import { prisma } from '@/lib/db';
 
 const bookingService = new BookingService();
 
-export async function GET(req: NextRequest) {
+export async function GET(_req: NextRequest) {
     try {
         const { userId } = await auth();
 

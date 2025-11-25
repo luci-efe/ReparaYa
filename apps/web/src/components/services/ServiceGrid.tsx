@@ -1,7 +1,24 @@
 import { ServiceCard } from './ServiceCard';
+import type { Decimal } from '@prisma/client/runtime/library';
+
+interface ServiceData {
+    id: string;
+    title: string;
+    description: string;
+    basePrice: number | Decimal;
+    images: { s3Url: string }[];
+    contractor: {
+        firstName: string;
+        lastName: string;
+        avatarUrl: string | null;
+        contractorProfile: {
+            businessName: string;
+        } | null;
+    };
+}
 
 interface ServiceGridProps {
-    services: any[];
+    services: ServiceData[];
     loading: boolean;
 }
 

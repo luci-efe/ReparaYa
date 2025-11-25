@@ -1,6 +1,6 @@
 import { PaymentRepository } from '../repositories/paymentRepository';
-import { CreatePaymentDTO, PaymentStatus, PaymentType } from '../types';
-import { Payment } from '@prisma/client';
+import { CreatePaymentDTO } from '../types';
+import { Payment, PaymentStatus } from '@prisma/client';
 
 export class PaymentService {
     private repository: PaymentRepository;

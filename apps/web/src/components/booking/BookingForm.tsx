@@ -5,10 +5,16 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { createBookingSchema } from '@/modules/booking/validators';
 import { z } from 'zod';
-import { useRouter } from 'next/navigation';
 
-type BookingFormSchema = z.infer<typeof createBookingSchema>;
+type BookingFormOutput = z.output<typeof createBookingSchema>;
 type BookingFormInput = z.input<typeof createBookingSchema>;
+
+interface Address {
+    id: string;
+    addressLine1: string;
+    city: string;
+    isDefault: boolean;
+}
 
 interface BookingFormProps {
     serviceId: string;
@@ -21,10 +27,10 @@ interface BookingFormProps {
 export function BookingForm({ serviceId, slotId, scheduledDate, onSuccess, onCancel }: BookingFormProps) {
     const [error, setError] = useState<string | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [addresses, setAddresses] = useState<any[]>([]);
+    const [addresses, setAddresses] = useState<Address[]>([]);
     const [loadingAddresses, setLoadingAddresses] = useState(true);
 
-    const { register, handleSubmit, setValue, formState: { errors } } = useForm<BookingFormInput>({
+    const { register, handleSubmit, setValue, formState: { errors } } = useForm<BookingFormInput, unknown, BookingFormOutput>({
         resolver: zodResolver(createBookingSchema),
         defaultValues: {
             serviceId,
@@ -41,9 +47,9 @@ export function BookingForm({ serviceId, slotId, scheduledDate, onSuccess, onCan
             .then(res => res.json())
             .then(data => {
                 if (Array.isArray(data)) {
-                    setAddresses(data);
+                    setAddresses(data as Address[]);
                     // Set default address if available
-                    const defaultAddr = data.find((a: any) => a.isDefault);
+                    const defaultAddr = data.find((a: Address) => a.isDefault);
                     if (defaultAddr) {
                         setValue('address', `${defaultAddr.addressLine1}, ${defaultAddr.city}`);
                     } else if (data.length > 0) {
@@ -58,7 +64,7 @@ export function BookingForm({ serviceId, slotId, scheduledDate, onSuccess, onCan
             });
     }, [setValue]);
 
-    const onSubmit = async (data: BookingFormSchema) => {
+    const onSubmit = async (data: BookingFormOutput) => {
         setIsSubmitting(true);
         setError(null);
 
@@ -85,7 +91,7 @@ export function BookingForm({ serviceId, slotId, scheduledDate, onSuccess, onCan
     };
 
     return (
-        <form onSubmit={handleSubmit(onSubmit as any)} className="space-y-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             {error && (
                 <div className="p-3 bg-red-50 text-red-700 rounded-md text-sm">
                     {error}

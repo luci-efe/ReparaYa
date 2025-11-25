@@ -1,6 +1,11 @@
-import { Booking, BookingStatus, PaymentStatus, PaymentType, BookingStateHistory, Service, User, Availability, Payment } from '@prisma/client';
+import { BookingStatus, PaymentStatus, PaymentType, BookingStateHistory, Service, User, Availability, Payment, ContractorProfile } from '@prisma/client';
 
 export { BookingStatus, PaymentStatus, PaymentType };
+
+// Extended User type that includes contractor profile relation
+export interface UserWithContractorProfile extends User {
+    contractorProfile?: ContractorProfile | null;
+}
 
 export interface BookingDTO {
     id: string;
@@ -24,7 +29,7 @@ export interface BookingDTO {
     // Relations
     service?: Service;
     client?: User;
-    contractor?: User;
+    contractor?: UserWithContractorProfile;
     availability?: Availability;
     stateHistory?: BookingStateHistory[];
     payments?: Payment[];

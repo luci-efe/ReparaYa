@@ -1,7 +1,7 @@
 import { BookingStatus } from '../types';
 
 export const VALID_TRANSITIONS: Record<BookingStatus, BookingStatus[]> = {
-    [BookingStatus.PENDING_APPROVAL as BookingStatus]: [BookingStatus.PENDING_PAYMENT, BookingStatus.CANCELLED],
+    [BookingStatus.PENDING_APPROVAL]: [BookingStatus.PENDING_PAYMENT, BookingStatus.CANCELLED],
     [BookingStatus.PENDING_PAYMENT]: [BookingStatus.CONFIRMED, BookingStatus.CANCELLED],
     [BookingStatus.CONFIRMED]: [BookingStatus.ON_ROUTE, BookingStatus.CANCELLED],
     [BookingStatus.ON_ROUTE]: [BookingStatus.ON_SITE, BookingStatus.CANCELLED],

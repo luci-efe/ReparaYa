@@ -2,11 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import { BookingCard } from '@/components/booking/BookingCard';
-import { BookingStatus } from '@/modules/booking/types';
+import { BookingStatus, BookingDTO } from '@/modules/booking/types';
 import { EmptyState } from '@/components/ui/EmptyState';
 
 export default function ClientBookingsPage() {
-    const [bookings, setBookings] = useState<any[]>([]);
+    const [bookings, setBookings] = useState<BookingDTO[]>([]);
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState<'ALL' | 'ACTIVE' | 'COMPLETED' | 'CANCELLED'>('ALL');
 
@@ -34,13 +34,14 @@ export default function ClientBookingsPage() {
     const filteredBookings = bookings.filter((booking) => {
         if (filter === 'ALL') return true;
         if (filter === 'ACTIVE') {
-            return [
+            const activeStatuses: BookingStatus[] = [
                 BookingStatus.PENDING_PAYMENT,
                 BookingStatus.CONFIRMED,
                 BookingStatus.ON_ROUTE,
                 BookingStatus.ON_SITE,
                 BookingStatus.IN_PROGRESS,
-            ].includes(booking.status);
+            ];
+            return activeStatuses.includes(booking.status);
         }
         if (filter === 'COMPLETED') return booking.status === BookingStatus.COMPLETED;
         if (filter === 'CANCELLED') return booking.status === BookingStatus.CANCELLED;
