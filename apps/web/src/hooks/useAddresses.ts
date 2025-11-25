@@ -69,12 +69,7 @@ export function useAddresses() {
     };
 
     const setDefaultAddress = async (id: string) => {
-        // Assuming backend handles setting default via update or specific endpoint.
-        // If specific endpoint is needed, adjust here.
-        // Based on common patterns, updating isDefault to true is often enough.
-        // But let's check if there is a specific endpoint in the file listing.
-        // No specific 'default' endpoint seen in file listing, only [id]/route.ts.
-        // So likely PATCH with isDefault: true.
+        // Uses PATCH endpoint to update the isDefault flag for the given address.
         await updateAddress(id, { isDefault: true });
     };
 

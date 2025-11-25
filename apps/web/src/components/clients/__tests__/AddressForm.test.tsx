@@ -46,7 +46,7 @@ describe("AddressForm", () => {
 
         await waitFor(() => {
             expect(screen.getByText(/la dirección debe tener al menos 5 caracteres/i)).toBeInTheDocument();
-            expect(screen.getByText(/la ciudad es requerida/i)).toBeInTheDocument();
+            expect(screen.getByText(/la ciudad debe tener al menos 2 caracteres/i)).toBeInTheDocument();
         });
 
         expect(mockOnSubmit).not.toHaveBeenCalled();
@@ -65,7 +65,6 @@ describe("AddressForm", () => {
         if (form) fireEvent.submit(form);
 
         await waitFor(() => {
-            console.log("Mock calls:", mockOnSubmit.mock.calls);
             expect(mockOnSubmit).toHaveBeenCalledWith(expect.objectContaining({
                 addressLine1: "Calle Reforma 123",
             }));
