@@ -38,18 +38,21 @@ model User {
 }
 
 model ContractorProfile {
-  id                     String                     @id @default(uuid())
-  userId                 String                     @unique
+  id                     String                            @id @default(uuid())
+  userId                 String                            @unique
   businessName           String
   description            String
   specialties            String[]
-  verified               Boolean                    @default(false)
+  verified               Boolean                           @default(false)
   verificationDocuments  Json?
   stripeConnectAccountId String?
-  createdAt              DateTime                   @default(now())
-  updatedAt              DateTime                   @updatedAt
-  user                   User                       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt              DateTime                          @default(now())
+  updatedAt              DateTime                          @updatedAt
+  user                   User                              @relation(fields: [userId], references: [id], onDelete: Cascade)
   serviceLocation        ContractorServiceLocation?
+  weeklyRules            ContractorWeeklyRule[]
+  availabilityExceptions ContractorAvailabilityException[]
+  availabilityBlocks     ContractorAvailabilityBlock[]
 
   @@index([verified])
 }
@@ -97,7 +100,7 @@ model Service {
   description      String                  @db.VarChar(2000)
   basePrice        Decimal                 @db.Decimal(10, 2)
   currency         String                  @default("MXN") @db.VarChar(3)
-  durationMinutes  Int                     @db.SmallInt
+  durationMinutes  Int                     @db.SmallInt @default(60)
   visibilityStatus ServiceVisibilityStatus @default(DRAFT)
   lastPublishedAt  DateTime?
   locationLat      Decimal?                @db.Decimal(10, 8)
@@ -148,7 +151,7 @@ model Booking {
   clientId               String
   contractorId           String
   availabilityId         String                @unique
-  status                 BookingStatus         @default(PENDING_PAYMENT)
+  status                 BookingStatus         @default(PENDING_APPROVAL)
   scheduledDate          DateTime
   address                String
   notes                  String?
@@ -328,6 +331,7 @@ enum AvailabilityStatus {
 }
 
 enum BookingStatus {
+  PENDING_APPROVAL
   PENDING_PAYMENT
   CONFIRMED
   ON_ROUTE
@@ -444,4 +448,48 @@ model ServiceImage {
 
   @@index([serviceId, order])
   @@map("ServiceImage")
+}
+
+model ContractorWeeklyRule {
+  id                  String            @id @default(uuid())
+  contractorProfileId String
+  dayOfWeek           Int               @db.SmallInt
+  intervals           Json
+  enabled             Boolean           @default(true)
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+  contractorProfile   ContractorProfile @relation(fields: [contractorProfileId], references: [id], onDelete: Cascade)
+
+  @@index([contractorProfileId, dayOfWeek])
+  @@map("contractor_weekly_rules")
+}
+
+model ContractorAvailabilityException {
+  id                  String            @id @default(uuid())
+  contractorProfileId String
+  date                DateTime          @db.Date
+  intervals           Json
+  type                String
+  reason              String?
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+  contractorProfile   ContractorProfile @relation(fields: [contractorProfileId], references: [id], onDelete: Cascade)
+
+  @@unique([contractorProfileId, date])
+  @@index([contractorProfileId, date])
+  @@map("contractor_availability_exceptions")
+}
+
+model ContractorAvailabilityBlock {
+  id                  String            @id @default(uuid())
+  contractorProfileId String
+  startDateTime       DateTime
+  endDateTime         DateTime
+  reason              String?
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+  contractorProfile   ContractorProfile @relation(fields: [contractorProfileId], references: [id], onDelete: Cascade)
+
+  @@index([contractorProfileId, startDateTime, endDateTime])
+  @@map("contractor_availability_blocks")
 }

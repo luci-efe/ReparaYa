@@ -1,9 +1,11 @@
 /**
  * Timezone Utilities
  *
- * TODO: Implement full TZ conversion with date-fns-tz
- * Dependencies needed: npm install date-fns date-fns-tz
+ * Dependencies: date-fns, date-fns-tz
  */
+
+import { toZonedTime, fromZonedTime } from 'date-fns-tz';
+import { parse, format } from 'date-fns';
 
 /**
  * Convert local date/time in contractor's timezone to UTC
@@ -13,9 +15,10 @@
  * @param timezone - IANA timezone (e.g., "America/Mexico_City")
  * @returns Date object in UTC
  */
-export function convertToUTC(_dateStr: string, _timeStr: string, _timezone: string): Date {
-  // TODO: Implement using date-fns-tz zonedTimeToUtc
-  throw new Error('Not implemented: convertToUTC');
+export function convertToUTC(dateStr: string, timeStr: string, timezone: string): Date {
+  const localDateTimeStr = `${dateStr} ${timeStr}`;
+  const localDateTime = parse(localDateTimeStr, 'yyyy-MM-dd HH:mm', new Date());
+  return fromZonedTime(localDateTime, timezone);
 }
 
 /**
@@ -25,9 +28,12 @@ export function convertToUTC(_dateStr: string, _timeStr: string, _timezone: stri
  * @param timezone - IANA timezone
  * @returns Object with date and time strings in local timezone
  */
-export function convertFromUTC(_utcDate: Date, _timezone: string): { date: string; time: string } {
-  // TODO: Implement using date-fns-tz utcToZonedTime + format
-  throw new Error('Not implemented: convertFromUTC');
+export function convertFromUTC(utcDate: Date, timezone: string): { date: string; time: string } {
+  const zonedDate = toZonedTime(utcDate, timezone);
+  return {
+    date: format(zonedDate, 'yyyy-MM-dd'),
+    time: format(zonedDate, 'HH:mm'),
+  };
 }
 
 /**

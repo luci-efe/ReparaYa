@@ -1,7 +1,7 @@
 /**
  * Interval Utilities
  *
- * TODO: Implement full interval manipulation logic
+ * Provides functions for manipulating time intervals
  */
 
 import { TimeInterval } from '../types';
@@ -13,23 +13,38 @@ import { TimeInterval } from '../types';
  * @param b - Second interval
  * @returns true if intervals overlap, false otherwise
  */
-export function intervalsOverlap(_a: TimeInterval, _b: TimeInterval): boolean {
-  // TODO: Implement overlap detection
-  // Return true if a.startTime < b.endTime AND b.startTime < a.endTime
-  throw new Error('Not implemented: intervalsOverlap');
+export function intervalsOverlap(a: TimeInterval, b: TimeInterval): boolean {
+  return a.startTime < b.endTime && b.startTime < a.endTime;
 }
 
 /**
  * Subtract one interval from another
  *
- * @param base - Base interval
- * @param toSubtract - Interval to subtract
- * @returns Array of remaining intervals after subtraction
+ * Returns the remaining intervals after removing the toSubtract interval from base.
+ * Can return 0, 1, or 2 intervals depending on the overlap.
+ *
+ * @param base - Base interval to subtract from
+ * @param toSubtract - Interval to remove
+ * @returns Array of remaining intervals
  */
-export function subtractInterval(_base: TimeInterval, _toSubtract: TimeInterval): TimeInterval[] {
-  // TODO: Implement interval subtraction
-  // Return array of intervals (can be 0, 1, or 2 intervals)
-  throw new Error('Not implemented: subtractInterval');
+export function subtractInterval(base: TimeInterval, toSubtract: TimeInterval): TimeInterval[] {
+  if (!intervalsOverlap(base, toSubtract)) {
+    return [base];
+  }
+
+  const result: TimeInterval[] = [];
+
+  // Parte antes de la intersección
+  if (base.startTime < toSubtract.startTime) {
+    result.push({ startTime: base.startTime, endTime: toSubtract.startTime });
+  }
+
+  // Parte después de la intersección
+  if (base.endTime > toSubtract.endTime) {
+    result.push({ startTime: toSubtract.endTime, endTime: base.endTime });
+  }
+
+  return result;
 }
 
 /**
@@ -38,20 +53,8 @@ export function subtractInterval(_base: TimeInterval, _toSubtract: TimeInterval)
  * @param interval - Time interval
  * @returns Duration in minutes
  */
-export function calculateDurationMinutes(_interval: TimeInterval): number {
-  // TODO: Implement duration calculation
-  // Parse startTime and endTime, calculate difference in minutes
-  throw new Error('Not implemented: calculateDurationMinutes');
-}
-
-/**
- * Detect overlaps in an array of intervals
- *
- * @param intervals - Array of intervals to check
- * @returns true if any overlap detected, false otherwise
- */
-export function hasOverlaps(_intervals: TimeInterval[]): boolean {
-  // TODO: Implement overlap detection for array
-  // Sort by startTime, check adjacent intervals
-  throw new Error('Not implemented: hasOverlaps');
+export function calculateDurationMinutes(interval: TimeInterval): number {
+  const [startHour, startMin] = interval.startTime.split(':').map(Number);
+  const [endHour, endMin] = interval.endTime.split(':').map(Number);
+  return (endHour * 60 + endMin) - (startHour * 60 + startMin);
 }

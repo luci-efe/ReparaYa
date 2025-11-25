@@ -4,7 +4,7 @@ import { ContractorProfileNotFoundError } from '@/modules/contractors/errors';
 import { serviceService, ServiceNotFoundError } from '@/modules/services';
 import { redirect, notFound } from 'next/navigation';
 import { ServiceDetailClient } from '@/components/contractors/services/ServiceDetailClient';
-import { DashboardShell } from '@/components/contractors/DashboardShell';
+
 
 // Force dynamic rendering since this page uses authentication
 export const dynamic = 'force-dynamic';
@@ -67,32 +67,19 @@ export default async function ServiceDetailPage({
     throw error;
   }
 
-  // Prepare user data for DashboardShell
-  const userName = user.firstName
+  // Prepare user data (unused after layout refactor but kept for potential future use)
+  const _userName = user.firstName
     ? `${user.firstName}${user.lastName ? ' ' + user.lastName : ''}`
     : user.email;
 
-  // Render client component for interactivity wrapped in DashboardShell
+  // Render client component for interactivity
   return (
-    <DashboardShell
-      user={{
-        id: user.id,
-        name: userName,
-        email: user.email,
-        imageUrl: user.avatarUrl || undefined,
-      }}
-      _profile={{
-        verified: profile.verified,
-        businessName: profile.businessName || 'Mi Negocio',
-      }}
-    >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <ServiceDetailClient
-          service={service}
-          contractorId={user.id}
-          profileVerified={profile.verified}
-        />
-      </div>
-    </DashboardShell>
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <ServiceDetailClient
+        service={service}
+        contractorId={user.id}
+        profileVerified={profile.verified}
+      />
+    </div>
   );
 }

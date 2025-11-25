@@ -9,7 +9,33 @@
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type MockPrismaClient = any;
 
-// Helper para crear mocks de modelos con operaciones CRUD estándar
+// Enum exports matching Prisma schema (from dev branch)
+export enum BookingStatus {
+  PENDING_APPROVAL = 'PENDING_APPROVAL',
+  PENDING_PAYMENT = 'PENDING_PAYMENT',
+  CONFIRMED = 'CONFIRMED',
+  ON_ROUTE = 'ON_ROUTE',
+  ON_SITE = 'ON_SITE',
+  IN_PROGRESS = 'IN_PROGRESS',
+  COMPLETED = 'COMPLETED',
+  CANCELLED = 'CANCELLED',
+  DISPUTED = 'DISPUTED',
+}
+
+export enum PaymentType {
+  ANTICIPO = 'ANTICIPO',
+  LIQUIDACION = 'LIQUIDACION',
+  REEMBOLSO = 'REEMBOLSO',
+}
+
+export enum PaymentStatus {
+  PENDING = 'PENDING',
+  SUCCEEDED = 'SUCCEEDED',
+  FAILED = 'FAILED',
+  REFUNDED = 'REFUNDED',
+}
+
+// Helper para crear mocks de modelos con operaciones CRUD estándar (from feature branch)
 const createModelMock = () => ({
   findUnique: jest.fn(),
   findMany: jest.fn(),

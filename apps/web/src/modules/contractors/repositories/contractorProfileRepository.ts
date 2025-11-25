@@ -57,6 +57,21 @@ export const contractorProfileRepository = {
   },
 
   /**
+   * Buscar perfil de contratista por Clerk User ID
+   */
+  async findByClerkId(clerkUserId: string): Promise<ContractorProfileDTO | null> {
+    const profile = await prisma.contractorProfile.findFirst({
+      where: {
+        user: {
+          clerkUserId,
+        },
+      },
+    });
+
+    return profile as ContractorProfileDTO | null;
+  },
+
+  /**
    * Actualizar perfil de contratista
    */
   async update(
