@@ -3,7 +3,6 @@ import { ServiceForm } from '@/components/services/ServiceForm';
 import { notFound } from 'next/navigation';
 import { serviceService, ServiceNotFoundError } from '@/modules/services';
 import type { CreateServiceInput } from '@/modules/services/validators/service';
-import { DashboardShell } from '@/components/contractors/DashboardShell';
 import { contractorProfileRepository } from '@/modules/contractors/repositories/contractorProfileRepository';
 // Force dynamic rendering since this page uses authentication
 export const dynamic = 'force-dynamic';
@@ -59,28 +58,10 @@ export default async function EditServicePage({ params }: EditServicePageProps) 
     durationMinutes: service.durationMinutes,
   };
 
-  // Prepare user data for DashboardShell
-  const userName = user.firstName
-    ? `${user.firstName}${user.lastName ? ' ' + user.lastName : ''}`
-    : user.email;
-
   return (
-    <DashboardShell
-      user={{
-        id: user.id,
-        name: userName,
-        email: user.email,
-        imageUrl: user.avatarUrl || undefined,
-      }}
-      _profile={{
-        verified: profile.verified,
-        businessName: profile.businessName,
-      }}
-    >
-      <div className="max-w-3xl mx-auto">
-        <h1 className="text-2xl font-bold mb-6">Editar Servicio</h1>
-        <ServiceForm mode="edit" serviceId={params.id} defaultValues={defaultValues} />
-      </div>
-    </DashboardShell>
+    <div className="max-w-3xl mx-auto">
+      <h1 className="text-2xl font-bold mb-6">Editar Servicio</h1>
+      <ServiceForm mode="edit" serviceId={params.id} defaultValues={defaultValues} />
+    </div>
   );
 }
