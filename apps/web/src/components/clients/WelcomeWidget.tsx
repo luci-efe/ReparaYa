@@ -2,6 +2,7 @@
 
 import { Card, CardContent } from '@/components/ui/Card';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useAddresses } from '@/hooks/useAddresses';
 
 interface WelcomeWidgetProps {
@@ -30,10 +31,12 @@ export function WelcomeWidget({ user }: WelcomeWidgetProps) {
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
                     <div className="flex items-center gap-4">
                         {user.imageUrl ? (
-                            <img
+                            <Image
                                 src={user.imageUrl}
                                 alt={user.name}
-                                className="w-16 h-16 rounded-full border-4 border-white/20"
+                                width={64}
+                                height={64}
+                                className="rounded-full border-4 border-white/20"
                             />
                         ) : (
                             <div className="w-16 h-16 rounded-full bg-white/20 flex items-center justify-center text-2xl font-bold">

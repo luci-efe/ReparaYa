@@ -3,6 +3,21 @@ import { Card, CardContent } from '@/components/ui/Card';
 
 const tiles = [
     {
+        title: 'Buscar Servicios',
+        description: 'Encuentra profesionales calificados para tu hogar',
+        icon: (
+            <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+        ),
+        href: '/clients/search',
+        color: 'bg-gradient-to-br from-emerald-500 to-teal-600 text-white',
+        hoverColor: 'group-hover:shadow-lg',
+        span: 'md:col-span-3', // Full width
+        textColor: 'text-white',
+        descColor: 'text-emerald-50',
+    },
+    {
         title: 'Mis Reservas',
         description: 'Ver historial y estado',
         icon: (
@@ -13,18 +28,9 @@ const tiles = [
         href: '/clients/bookings',
         color: 'bg-indigo-50 text-indigo-600',
         hoverColor: 'group-hover:bg-indigo-100',
-    },
-    {
-        title: 'Buscar Servicios',
-        description: 'Encontrar profesionales',
-        icon: (
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-        ),
-        href: '/search', // Global search page
-        color: 'bg-emerald-50 text-emerald-600',
-        hoverColor: 'group-hover:bg-emerald-100',
+        span: 'md:col-span-1',
+        textColor: 'text-gray-900',
+        descColor: 'text-gray-500',
     },
     {
         title: 'Mensajes',
@@ -37,6 +43,24 @@ const tiles = [
         href: '/clients/messages',
         color: 'bg-amber-50 text-amber-600',
         hoverColor: 'group-hover:bg-amber-100',
+        span: 'md:col-span-1',
+        textColor: 'text-gray-900',
+        descColor: 'text-gray-500',
+    },
+    {
+        title: 'Mi Perfil',
+        description: 'Gestionar información personal',
+        icon: (
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            </svg>
+        ),
+        href: '/clients/profile',
+        color: 'bg-blue-50 text-blue-600',
+        hoverColor: 'group-hover:bg-blue-100',
+        span: 'md:col-span-1',
+        textColor: 'text-gray-900',
+        descColor: 'text-gray-500',
     },
 ];
 
@@ -44,17 +68,17 @@ export function ClientQuickAccessTiles() {
     return (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {tiles.map((tile) => (
-                <Link key={tile.title} href={tile.href} className="group block">
-                    <Card className="h-full transition-all duration-200 hover:shadow-md hover:-translate-y-1 border-gray-200">
-                        <CardContent className="p-6 flex items-center gap-4">
-                            <div className={`p-3 rounded-xl transition-colors ${tile.color} ${tile.hoverColor}`}>
+                <Link key={tile.title} href={tile.href} className={`group block ${tile.span}`}>
+                    <Card className={`h-full transition-all duration-200 hover:-translate-y-1 border-gray-200 ${tile.span === 'md:col-span-2' ? 'bg-gradient-to-br from-emerald-500 to-teal-600 border-none' : 'hover:shadow-md'}`}>
+                        <CardContent className="p-6 flex items-center gap-4 h-full">
+                            <div className={`p-3 rounded-xl transition-colors ${tile.span === 'md:col-span-2' ? 'bg-white/20 text-white' : `${tile.color} ${tile.hoverColor}`}`}>
                                 {tile.icon}
                             </div>
                             <div>
-                                <h3 className="font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">
+                                <h3 className={`font-semibold text-lg transition-colors ${tile.span === 'md:col-span-2' ? 'text-white' : 'text-gray-900 group-hover:text-blue-600'}`}>
                                     {tile.title}
                                 </h3>
-                                <p className="text-sm text-gray-500 mt-1">
+                                <p className={`text-sm mt-1 ${tile.span === 'md:col-span-2' ? 'text-emerald-50' : 'text-gray-500'}`}>
                                     {tile.description}
                                 </p>
                             </div>

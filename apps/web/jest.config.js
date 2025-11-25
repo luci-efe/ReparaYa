@@ -12,6 +12,8 @@ const customJestConfig = {
   // Component tests will override this in their files with @jest-environment jsdom
   testEnvironment: 'jest-environment-node',
   moduleNameMapper: {
+    // More specific patterns first
+    '^@/app/(.*)$': '<rootDir>/app/$1',
     '^@/(.*)$': '<rootDir>/src/$1',
   },
   collectCoverageFrom: [

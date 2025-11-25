@@ -62,12 +62,13 @@ describe('QuickAccessTiles', () => {
 
       // Assert
       const links = screen.getAllByRole('link');
-      expect(links).toHaveLength(3);
+      expect(links).toHaveLength(4);
 
       const hrefs = links.map((link) => link.getAttribute('href'));
       expect(hrefs).toContain('/contractors/services');
       expect(hrefs).toContain('/contractors/availability');
       expect(hrefs).toContain('/contractors/messages');
+      expect(hrefs).toContain('/contractors/bookings');
     });
 
     it('each tile should have "Acceder" call-to-action', () => {
@@ -76,7 +77,7 @@ describe('QuickAccessTiles', () => {
 
       // Assert
       const accederLinks = screen.getAllByText('Acceder');
-      expect(accederLinks).toHaveLength(3);
+      expect(accederLinks).toHaveLength(4);
     });
   });
 
@@ -139,12 +140,13 @@ describe('QuickAccessTiles', () => {
 
       // Assert
       const headings = screen.getAllByRole('heading', { level: 3 });
-      expect(headings).toHaveLength(3);
+      expect(headings).toHaveLength(4);
 
       const headingTexts = headings.map((h) => h.textContent);
       expect(headingTexts).toContain('Mis Servicios');
       expect(headingTexts).toContain('Disponibilidad');
       expect(headingTexts).toContain('Mensajes');
+      expect(headingTexts).toContain('Reservas');
     });
 
     it('links should be keyboard navigable', () => {
@@ -249,7 +251,7 @@ describe('QuickAccessTiles', () => {
 
       // Assert
       const cards = screen.getAllByTestId('card');
-      expect(cards).toHaveLength(3);
+      expect(cards).toHaveLength(4);
     });
 
     it('each tile should have icon, title, description, and CTA', () => {
@@ -312,7 +314,7 @@ describe('QuickAccessTiles', () => {
 
       // Assert
       const descriptions = container.querySelectorAll('p.text-sm.text-gray-600');
-      expect(descriptions.length).toBe(3);
+      expect(descriptions.length).toBe(4);
     });
 
     it('CTA text should have correct styling', () => {
@@ -424,7 +426,7 @@ describe('QuickAccessTiles', () => {
 
       // Assert - _container declared but not used, relying on screen queries instead
       const tiles = screen.getAllByRole('link');
-      expect(tiles).toHaveLength(3);
+      expect(tiles).toHaveLength(4);
 
       // All tiles should have the same structure
       tiles.forEach((tile) => {
