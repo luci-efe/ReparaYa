@@ -297,7 +297,39 @@ export function checkRateLimit(userId: string, limit = 10, windowMs = 60000): bo
 }
 ```
 
-For production, consider Redis-based rate limiting.
+**Important:** For deployments with multiple instances (Vercel, Kubernetes, etc.), a distributed store like Redis is REQUIRED. The in-memory implementation above is only suitable for development with a single instance. For production multi-replica deployments, use Redis with a sliding window algorithm:
+
+```typescript
+// Redis-based rate limiter (production)
+// Uses ZREMRANGEBYSCORE + ZCARD + ZADD for atomic sliding window
+const RATE_LIMIT_KEY = (userId: string) => `ratelimit:msg:${userId}`;
+
+export async function checkRateLimitRedis(
+  redis: Redis,
+  userId: string, 
+  limit = 10, 
+  windowMs = 60000
+): Promise<boolean> {
+  const key = RATE_LIMIT_KEY(userId);
+  const now = Date.now();
+  const windowStart = now - windowMs;
+
+  // Atomic operation via Lua script
+  const script = `
+    redis.call('ZREMRANGEBYSCORE', KEYS[1], 0, ARGV[1])
+    local count = redis.call('ZCARD', KEYS[1])
+    if count < tonumber(ARGV[2]) then
+      redis.call('ZADD', KEYS[1], ARGV[3], ARGV[3])
+      redis.call('EXPIRE', KEYS[1], ARGV[4])
+      return 1
+    end
+    return 0
+  `;
+  
+  const result = await redis.eval(script, 1, key, windowStart, limit, now, Math.ceil(windowMs / 1000));
+  return result === 1;
+}
+```
 
 ## Security Considerations
 

@@ -1,23 +1,29 @@
 # Proposal: Implement Bidirectional Rating System
 
-## Summary
+## Why
 
-Implement a complete bidirectional rating system where clients rate contractors AND contractors rate clients after a service is completed. The system uses double-blind visibility to prevent retaliation - neither party sees the other's rating until both have submitted or after a 7-day deadline expires.
+The current ReparaYa platform has database schema for client→contractor ratings but no implementation. Trust and accountability are critical for a service marketplace:
+- Clients need to evaluate contractor reliability and quality
+- Contractors need to identify problematic clients
+- Double-blind mechanism prevents retaliation ratings
 
-## Background
+## What Changes
 
-The current ReparaYa platform has database schema for client→contractor ratings but no implementation. The business requires:
-- Trust and safety through mutual accountability
-- Quality assurance for both service providers and clients
-- Fair, retaliation-free ratings through double-blind mechanism
+Implement a complete bidirectional rating system where clients rate contractors AND contractors rate clients after a service is completed. The system uses double-blind visibility - neither party sees the other's rating until both have submitted or after a 7-day deadline expires.
 
-## Goals
-
+### Key Components
 1. **Bidirectional Ratings**: Both clients and contractors can rate each other
 2. **Double-Blind Visibility**: Ratings hidden until both parties submit or deadline expires
 3. **Rating Statistics**: Aggregate ratings displayed on profiles and dashboards
 4. **Moderation Support**: Basic moderation for comments with inappropriate content
 5. **Seamless UX Integration**: Rating prompts integrated into existing booking flows
+
+## Impact
+
+- **Database**: New ClientRating and ContractorRating tables with migration
+- **API**: New rating submission and retrieval endpoints
+- **UI**: Rating prompts in booking flow, profile rating display
+- **Performance**: Cached rating statistics for dashboard queries
 
 ## Non-Goals
 
@@ -191,3 +197,20 @@ This proposal does not include timeline estimates. Implementation should be prio
 2. ~~Should visibility be double-blind?~~ **Answered: Yes**
 3. Should there be a minimum character count for comments? (Suggestion: No, optional comments)
 4. Should contractors be notified immediately when they receive a rating? (Suggestion: Yes, but content hidden until revealed)
+
+## Testing Plan
+
+| ID | Description | Type | Priority | Requirement |
+|----|-------------|------|----------|-------------|
+| TC-RF-RT-001-01 | Client can submit rating after booking COMPLETED | RF | High | rating-system |
+| TC-RF-RT-002-01 | Contractor can submit rating after booking COMPLETED | RF | High | rating-system |
+| TC-RF-RT-003-01 | Double-blind hides ratings until both submitted | RF | High | rating-visibility |
+| TC-RF-RT-004-01 | Ratings revealed after 7-day deadline | RF | High | rating-visibility |
+| TC-RF-RT-005-01 | Rating stats are aggregated correctly | RF | Medium | rating-statistics |
+| TC-RF-RT-006-01 | Rating appears on contractor profile | RF | Medium | rating-display |
+| TC-RF-RT-007-01 | Rating appears on client profile | RF | Medium | rating-display |
+| TC-BR-RT-008-01 | Stars must be between 1 and 5 | BR | High | rating-validation |
+| TC-BR-RT-009-01 | Comment limited to 500 characters | BR | Medium | rating-validation |
+| TC-RNF-RT-010-01 | Stats query response < 200ms p95 | RNF | Medium | rating-performance |
+
+**Coverage target:** ≥70% for rating module

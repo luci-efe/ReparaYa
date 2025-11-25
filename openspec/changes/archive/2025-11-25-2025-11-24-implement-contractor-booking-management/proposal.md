@@ -74,9 +74,20 @@ ON_SITE → (contractor marks) → COMPLETED
 
 ## Testing Plan
 
-See `tasks.md` for detailed test plan with cases:
-- TC-BK-001 to TC-BK-010: Contractor booking management tests
-- TC-BK-011 to TC-BK-018: Client booking management tests
-- TC-BK-019 to TC-BK-025: Booking module backend tests
+| ID | Description | Type | Priority | Requirement |
+|----|-------------|------|----------|-------------|
+| TC-RF-BK-001-01 | Contractor can view paginated bookings list | RF | High | contractor-bookings |
+| TC-RF-BK-002-01 | Contractor can filter bookings by status | RF | High | contractor-bookings |
+| TC-RF-BK-003-01 | Contractor can approve a pending booking | RF | High | contractor-bookings |
+| TC-RF-BK-004-01 | Contractor can advance booking to ON_ROUTE | RF | High | booking-module |
+| TC-RF-BK-005-01 | Contractor can advance booking to ON_SITE | RF | High | booking-module |
+| TC-RF-BK-006-01 | Contractor can advance booking to IN_PROGRESS | RF | High | booking-module |
+| TC-RF-BK-007-01 | Contractor can complete a booking | RF | High | booking-module |
+| TC-RF-BK-008-01 | Client can view their bookings list | RF | High | client-bookings |
+| TC-RF-BK-009-01 | Client can view booking detail with timeline | RF | High | client-bookings |
+| TC-RF-BK-010-01 | State history is recorded for each transition | RF | Medium | booking-module |
+| TC-RNF-BK-011-01 | Booking list loads within 2 seconds | RNF | Medium | contractor-bookings |
+
+See `tasks.md` for additional test cases TC-BK-011 to TC-BK-025.
 
 **Coverage target:** ≥70% for booking module

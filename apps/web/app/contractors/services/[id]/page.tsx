@@ -67,7 +67,7 @@ export default async function ServiceDetailPage({
     throw error;
   }
 
-  // Prepare user data for DashboardShell
+  // Prepare user data (unused after layout refactor but kept for potential future use)
   const _userName = user.firstName
     ? `${user.firstName}${user.lastName ? ' ' + user.lastName : ''}`
     : user.email;

@@ -53,15 +53,27 @@ The system SHALL implement a state machine for booking lifecycle management.
 - **THEN** the booking status SHALL be updated to CONFIRMED
 - **AND** a state history entry SHALL be created
 
-#### Scenario: Valid state transition - CONFIRMED to ON_SITE
-- **WHEN** `bookingService.advanceState(bookingId, 'ON_SITE', userId)` is called
+#### Scenario: Valid state transition - CONFIRMED to ON_ROUTE
+- **WHEN** `bookingService.advanceState(bookingId, 'ON_ROUTE', userId)` is called
 - **AND** the booking is in CONFIRMED status
+- **AND** the user is the contractor of the booking
+- **THEN** the booking status SHALL be updated to ON_ROUTE
+
+#### Scenario: Valid state transition - ON_ROUTE to ON_SITE
+- **WHEN** `bookingService.advanceState(bookingId, 'ON_SITE', userId)` is called
+- **AND** the booking is in ON_ROUTE status
 - **AND** the user is the contractor of the booking
 - **THEN** the booking status SHALL be updated to ON_SITE
 
-#### Scenario: Valid state transition - ON_SITE to COMPLETED
-- **WHEN** `bookingService.advanceState(bookingId, 'COMPLETED', userId)` is called
+#### Scenario: Valid state transition - ON_SITE to IN_PROGRESS
+- **WHEN** `bookingService.advanceState(bookingId, 'IN_PROGRESS', userId)` is called
 - **AND** the booking is in ON_SITE status
+- **AND** the user is the contractor of the booking
+- **THEN** the booking status SHALL be updated to IN_PROGRESS
+
+#### Scenario: Valid state transition - IN_PROGRESS to COMPLETED
+- **WHEN** `bookingService.advanceState(bookingId, 'COMPLETED', userId)` is called
+- **AND** the booking is in IN_PROGRESS status
 - **AND** the user is the contractor of the booking
 - **THEN** the booking status SHALL be updated to COMPLETED
 
