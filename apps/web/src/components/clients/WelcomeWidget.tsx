@@ -2,16 +2,18 @@
 
 import { Card, CardContent } from '@/components/ui/Card';
 import Link from 'next/link';
+import { useAddresses } from '@/hooks/useAddresses';
 
 interface WelcomeWidgetProps {
     user: {
         name: string;
         imageUrl?: string;
     };
-    addressCount: number;
 }
 
-export function WelcomeWidget({ user, addressCount }: WelcomeWidgetProps) {
+export function WelcomeWidget({ user }: WelcomeWidgetProps) {
+    const { addresses, isLoading } = useAddresses();
+    const addressCount = isLoading ? 0 : addresses.length;
     const getGreeting = () => {
         const hour = new Date().getHours();
         if (hour < 12) return 'Buenos días';

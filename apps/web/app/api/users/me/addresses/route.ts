@@ -5,6 +5,31 @@ import { addressService } from '@/modules/users';
 import { ZodError } from 'zod';
 
 /**
+ * GET /api/users/me/addresses
+ * Obtener todas las direcciones del usuario autenticado
+ */
+export async function GET() {
+  try {
+    const user = await requireAuth();
+    const addresses = await addressService.getByUserId(user.id);
+    return NextResponse.json(addresses);
+  } catch (error) {
+    if (error instanceof UnauthorizedError) {
+      return NextResponse.json(
+        { error: 'No autorizado' },
+        { status: 401 }
+      );
+    }
+
+    console.error('Error en GET /api/users/me/addresses:', error);
+    return NextResponse.json(
+      { error: 'Error del servidor' },
+      { status: 500 }
+    );
+  }
+}
+
+/**
  * POST /api/users/me/addresses
  * Crear nueva dirección para el usuario autenticado
  */

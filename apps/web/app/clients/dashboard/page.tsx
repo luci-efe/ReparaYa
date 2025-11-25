@@ -13,9 +13,6 @@ export default async function ClientDashboardPage() {
     // Verify authentication and role
     const user = await requireRole('CLIENT');
 
-    // TODO: Fetch user addresses count
-    const addressCount = 0;
-
     const userName = getUserDisplayName(user);
 
     return (
@@ -31,7 +28,6 @@ export default async function ClientDashboardPage() {
                 {/* 1. Welcome Widget */}
                 <WelcomeWidget
                     user={{ name: userName, imageUrl: user.avatarUrl || undefined }}
-                    addressCount={addressCount}
                 />
 
                 {/* 2. Quick Access Tiles */}
