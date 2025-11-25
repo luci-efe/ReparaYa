@@ -1,32 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
 import { BookingService } from '@/modules/booking/services/bookingService';
-import { prisma } from '@/lib/db';
 import { BookingStatus } from '@/modules/booking/types';
+import { requireRole, UnauthorizedError, ForbiddenError } from '@/modules/auth';
 
 const bookingService = new BookingService();
 
+// Pagination constants
+const DEFAULT_PAGE_SIZE = 10;
+const MAX_PAGE_SIZE = 100;
+
 export async function GET(req: NextRequest) {
     try {
-        const { userId } = await auth();
-
-        if (!userId) {
-            return NextResponse.json({ error: 'No autenticado' }, { status: 401 });
-        }
-
-        const user = await prisma.user.findUnique({
-            where: { clerkUserId: userId },
-        });
-
-        if (!user) {
-            return NextResponse.json({ error: 'Usuario no encontrado' }, { status: 404 });
-        }
+        // Verify user is authenticated and has CONTRACTOR role
+        const user = await requireRole('CONTRACTOR');
 
         // Parse query params
         const searchParams = req.nextUrl.searchParams;
         const statusParam = searchParams.get('status');
-        const page = Number(searchParams.get('page')) || 1;
-        const limit = Number(searchParams.get('limit')) || 10;
+        const page = Math.max(1, Number(searchParams.get('page')) || 1);
+        const limit = Math.min(MAX_PAGE_SIZE, Math.max(1, Number(searchParams.get('limit')) || DEFAULT_PAGE_SIZE));
 
         // Validate status values against BookingStatus enum
         const validStatuses = Object.values(BookingStatus) as string[];
@@ -51,6 +43,14 @@ export async function GET(req: NextRequest) {
 
         return NextResponse.json(result);
     } catch (error) {
+        // Handle authentication/authorization errors
+        if (error instanceof UnauthorizedError) {
+            return NextResponse.json({ error: 'No autenticado' }, { status: 401 });
+        }
+        if (error instanceof ForbiddenError) {
+            return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
+        }
+        
         console.error('Error fetching contractor bookings:', error);
         return NextResponse.json(
             { error: 'Error al obtener reservas del contratista' },

@@ -48,14 +48,26 @@ The system SHALL provide a page at `/contractors/bookings/[id]` for viewing and 
 - **WHEN** viewing a booking in PENDING_PAYMENT status
 - **THEN** a "Confirmar Reserva" button SHALL be displayed (for demo mode)
 
-#### Scenario: Contractor can advance to ON_SITE
+#### Scenario: Contractor can mark as on route
 - **WHEN** viewing a booking in CONFIRMED status
+- **AND** contractor clicks "En camino" button
+- **THEN** the booking status SHALL advance to ON_ROUTE
+- **AND** the UI SHALL update to reflect the new state
+
+#### Scenario: Contractor can advance to ON_SITE
+- **WHEN** viewing a booking in ON_ROUTE status
 - **AND** contractor clicks "Llegué al sitio" button
 - **THEN** the booking status SHALL advance to ON_SITE
 - **AND** the UI SHALL update to reflect the new state
 
-#### Scenario: Contractor can complete booking
+#### Scenario: Contractor can mark as in progress
 - **WHEN** viewing a booking in ON_SITE status
+- **AND** contractor clicks "Iniciar servicio" button
+- **THEN** the booking status SHALL advance to IN_PROGRESS
+- **AND** the UI SHALL update to reflect the new state
+
+#### Scenario: Contractor can complete booking
+- **WHEN** viewing a booking in IN_PROGRESS status
 - **AND** contractor clicks "Marcar como completado" button
 - **THEN** the booking status SHALL advance to COMPLETED
 - **AND** a success message SHALL be displayed

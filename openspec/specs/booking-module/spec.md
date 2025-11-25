@@ -1,7 +1,8 @@
 # booking-module Specification
 
 ## Purpose
-TBD - created by archiving change 2025-11-24-implement-contractor-booking-management. Update Purpose after archive.
+This specification defines the booking module's data contracts, repository operations, service behavior, and API endpoints for managing the complete booking lifecycle including state machine transitions, history tracking, and role-based access control.
+
 ## Requirements
 ### Requirement: Booking Types and DTOs
 
