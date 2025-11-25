@@ -112,3 +112,110 @@ Respuesta:
 - [ ] Sistema de retención (job cron)
 - [ ] Preparar para evolución a SSE/WebSocket
 - [ ] Tests de sanitización
+## Requirements
+### Requirement: Real-Time Message Delivery
+The system SHALL deliver messages in real-time using Supabase Realtime WebSocket subscriptions.
+
+**Previous:** MVP with HTTP polling
+**Updated:** Supabase Realtime with PostgreSQL LISTEN/NOTIFY
+
+#### Scenario: Message delivered in real-time
+**Given** a client and contractor are viewing the same booking chat
+**When** one party sends a message
+**Then** the message appears on both screens within 500ms
+
+#### Scenario: Subscription setup on chat load
+**Given** a user navigates to a booking chat
+**When** the chat component mounts
+**Then** a Supabase Realtime subscription is established for that booking's messages
+
+#### Scenario: Subscription cleanup
+**Given** a user is viewing a booking chat
+**When** they navigate away
+**Then** the Supabase Realtime subscription is cleaned up
+
+### Requirement: Messaging Time Window
+The system SHALL restrict messaging to confirmed bookings and MUST close the messaging window 2 hours after booking completion.
+
+#### Scenario: Messaging available for confirmed booking
+**Given** a booking with status CONFIRMED
+**When** a participant tries to send a message
+**Then** the message is sent successfully
+
+#### Scenario: Messaging available during service
+**Given** a booking with status ON_ROUTE, ON_SITE, or IN_PROGRESS
+**When** a participant tries to send a message
+**Then** the message is sent successfully
+
+#### Scenario: Messaging available within 2 hours of completion
+**Given** a booking with status COMPLETED
+**And** less than 2 hours have passed since completion
+**When** a participant tries to send a message
+**Then** the message is sent successfully
+
+#### Scenario: Messaging blocked after 2 hour window
+**Given** a booking with status COMPLETED
+**And** more than 2 hours have passed since completion
+**When** a participant tries to send a message
+**Then** the request is rejected with 403 and message "Messaging window expired"
+
+### Requirement: Conversation List
+The system SHALL display a list of conversations for users. Users MUST be able to view all their active conversations grouped by booking.
+
+#### Scenario: Client views conversation list
+**Given** a logged-in client with bookings that have messages
+**When** they navigate to /clients/messages
+**Then** they see a list of conversations with:
+  - Contractor name and avatar
+  - Service name
+  - Last message preview (truncated to 50 chars)
+  - Time since last message
+  - Unread indicator if new messages
+
+#### Scenario: Contractor views conversation list
+**Given** a logged-in contractor with bookings that have messages
+**When** they navigate to /contractors/messages
+**Then** they see a list of conversations with:
+  - Client name and avatar
+  - Service name
+  - Last message preview (truncated to 50 chars)
+  - Time since last message
+  - Unread indicator if new messages
+
+### Requirement: Dashboard Unread Count
+The dashboard SHALL display unread message count. Users MUST see their current unread message count for quick visibility.
+
+#### Scenario: Dashboard displays unread count
+**Given** a user with 3 unread messages
+**When** they view the dashboard
+**Then** the unread message counter shows "3"
+
+### Requirement: Chat Integration in Booking Detail
+Chat SHALL be accessible directly from booking detail pages. Users MUST be able to view and send messages from the booking context.
+
+#### Scenario: Access chat from booking detail
+**Given** a user viewing a booking detail page
+**When** they click the "Messages" tab
+**Then** the chat interface is displayed with history
+
+### Requirement: Message Pagination
+Messages SHALL be loaded with cursor-based pagination. The system MUST support efficient loading of large conversation histories.
+
+#### Scenario: Load initial messages
+**Given** a chat with 100 messages
+**When** the chat loads
+**Then** the most recent 50 messages are displayed
+
+#### Scenario: Load more messages
+**Given** a chat with loaded messages
+**When** the user scrolls to the top
+**Then** the next batch of 50 messages is loaded
+
+### Requirement: Optimistic UI Updates
+The UI SHALL implement optimistic updates for message sending. Messages MUST appear instantly in the sender's UI before server confirmation.
+
+#### Scenario: Instant message display
+**Given** a user sends a message
+**When** they press enter
+**Then** the message appears immediately in the list with a "sending" state
+
