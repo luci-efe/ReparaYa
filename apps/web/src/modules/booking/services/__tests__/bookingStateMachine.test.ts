@@ -31,9 +31,15 @@ describe('Booking State Machine', () => {
             expect(transitions).not.toContain(BookingStatus.COMPLETED);
         });
 
-        it('should return empty array for terminal states', () => {
-            expect(getValidTransitions(BookingStatus.COMPLETED)).toEqual([]);
+        it('should return empty array for truly terminal states', () => {
+            // CANCELLED is a terminal state with no further transitions
             expect(getValidTransitions(BookingStatus.CANCELLED)).toEqual([]);
+        });
+
+        it('should allow dispute from completed state', () => {
+            // COMPLETED can transition to DISPUTED for post-service disputes
+            const transitions = getValidTransitions(BookingStatus.COMPLETED);
+            expect(transitions).toContain(BookingStatus.DISPUTED);
         });
     });
 });
