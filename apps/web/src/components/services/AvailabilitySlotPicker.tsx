@@ -70,9 +70,9 @@ export function AvailabilitySlotPicker({ serviceId, onSelectSlot }: Availability
         const dateTimeStr = `${slot.date}T${slot.startTime}:00`;
         const date = new Date(dateTimeStr);
 
-        // We don't have a slot ID from the generator, so we use the composite key or just the time
-        // The parent component expects a slotId, but for generated slots we might need to handle this differently.
-        // For now, we'll pass the composite key as the ID.
+        // The slot generator does not provide a unique slot ID, but each slot is uniquely identified by its date and startTime.
+        // Therefore, we use the composite key `${slot.date}-${slot.startTime}` as the slot ID, which is guaranteed to be unique for each slot.
+        // This approach ensures compatibility with the parent component's expectations for a slotId.
         onSelectSlot(slotKey, date);
     };
 

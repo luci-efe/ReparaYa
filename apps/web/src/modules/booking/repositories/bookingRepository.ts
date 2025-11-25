@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/db';
-import { Booking, BookingStatus, Prisma } from '@prisma/client';
+import { Booking, BookingStatus } from '@prisma/client';
 import { CreateBookingDTO, UpdateBookingStatusDTO } from '../types';
 
 export class BookingRepository {
@@ -15,7 +15,7 @@ export class BookingRepository {
         contractorPayoutAmount: number;
         status?: BookingStatus;
     }): Promise<Booking> {
-        const initialStatus = data.status || (BookingStatus as any).PENDING_APPROVAL;
+        const initialStatus = data.status || BookingStatus.PENDING_APPROVAL;
         return prisma.booking.create({
             data: {
                 serviceId: data.serviceId,

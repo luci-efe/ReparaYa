@@ -12,7 +12,7 @@ interface BookingTimelineProps {
 }
 
 const stateLabels: Record<BookingStatus, string> = {
-    [BookingStatus.PENDING_APPROVAL as BookingStatus]: 'Esperando Confirmación',
+    [BookingStatus.PENDING_APPROVAL]: 'Esperando Confirmación',
     [BookingStatus.PENDING_PAYMENT]: 'Pendiente de Pago',
     [BookingStatus.CONFIRMED]: 'Confirmada',
     [BookingStatus.ON_ROUTE]: 'Profesional en Camino',

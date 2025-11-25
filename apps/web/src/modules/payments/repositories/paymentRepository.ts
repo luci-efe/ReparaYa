@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/db';
-import { Payment, PaymentStatus, PaymentType } from '@prisma/client';
+import { Payment, PaymentStatus, Prisma } from '@prisma/client';
 import { CreatePaymentDTO } from '../types';
 
 export class PaymentRepository {
@@ -23,7 +23,7 @@ export class PaymentRepository {
         });
     }
 
-    async updateStatus(id: string, status: PaymentStatus, metadata?: any): Promise<Payment> {
+    async updateStatus(id: string, status: PaymentStatus, metadata?: Prisma.InputJsonValue): Promise<Payment> {
         return prisma.payment.update({
             where: { id },
             data: {

@@ -9,13 +9,13 @@ interface BookingCardProps {
         id: string;
         scheduledDate: string | Date;
         status: BookingStatus;
-        service: {
+        service?: {
             title: string;
         };
-        contractor: {
+        contractor?: {
             firstName: string;
             lastName: string;
-            contractorProfile: {
+            contractorProfile?: {
                 businessName: string;
             } | null;
         };
@@ -30,8 +30,8 @@ interface BookingCardProps {
 export function BookingCard({ booking, role }: BookingCardProps) {
     const date = new Date(booking.scheduledDate);
     const otherPartyName = role === 'CLIENT'
-        ? (booking.contractor.contractorProfile?.businessName || `${booking.contractor.firstName} ${booking.contractor.lastName}`)
-        : `${booking.client?.firstName} ${booking.client?.lastName}`;
+        ? (booking.contractor?.contractorProfile?.businessName || `${booking.contractor?.firstName || ''} ${booking.contractor?.lastName || ''}`)
+        : `${booking.client?.firstName || ''} ${booking.client?.lastName || ''}`;
 
     const detailLink = role === 'CLIENT'
         ? `/clients/bookings/${booking.id}`
@@ -41,7 +41,7 @@ export function BookingCard({ booking, role }: BookingCardProps) {
         <div className="bg-white rounded-lg shadow-sm p-4 border border-gray-100 hover:shadow-md transition-shadow">
             <div className="flex justify-between items-start mb-3">
                 <div>
-                    <h3 className="font-semibold text-gray-900">{booking.service.title}</h3>
+                    <h3 className="font-semibold text-gray-900">{booking.service?.title || 'Servicio'}</h3>
                     <p className="text-sm text-gray-500">{otherPartyName}</p>
                 </div>
                 <BookingStatusBadge status={booking.status} />

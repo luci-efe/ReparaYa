@@ -1,28 +1,22 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
 import { BookingStatusBadge } from '@/components/booking/BookingStatusBadge';
 import { BookingTimeline } from '@/components/booking/BookingTimeline';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { BookingStatus } from '@/modules/booking/types';
+import { BookingStatus, BookingDTO } from '@/modules/booking/types';
 
 export default function ClientBookingDetailPage() {
     const params = useParams();
     const searchParams = useSearchParams();
-    const [booking, setBooking] = useState<any>(null);
+    const [booking, setBooking] = useState<BookingDTO | null>(null);
     const [loading, setLoading] = useState(true);
     const [simulatingPayment, setSimulatingPayment] = useState(false);
     const showSuccessMessage = searchParams.get('booking_created') === 'true';
 
-    useEffect(() => {
-        fetchBooking();
-        const interval = setInterval(fetchBooking, 10000); // Poll every 10s for updates
-        return () => clearInterval(interval);
-    }, [params.id]);
-
-    const fetchBooking = async () => {
+    const fetchBooking = useCallback(async () => {
         try {
             const res = await fetch(`/api/bookings/${params.id}`);
             if (res.ok) {
@@ -34,9 +28,16 @@ export default function ClientBookingDetailPage() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [params.id]);
+
+    useEffect(() => {
+        fetchBooking();
+        const interval = setInterval(fetchBooking, 10000); // Poll every 10s for updates
+        return () => clearInterval(interval);
+    }, [fetchBooking]);
 
     const handleSimulatePayment = async () => {
+        if (!booking) return;
         setSimulatingPayment(true);
         try {
             const res = await fetch('/api/payments/simulate', {
@@ -81,9 +82,9 @@ export default function ClientBookingDetailPage() {
                 <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden mb-6">
                     <div className="p-6 border-b border-gray-100 flex justify-between items-start">
                         <div>
-                            <h1 className="text-2xl font-bold text-gray-900 mb-2">{booking.service.title}</h1>
+                            <h1 className="text-2xl font-bold text-gray-900 mb-2">{booking.service?.title || 'Servicio'}</h1>
                             <p className="text-gray-500">
-                                Profesional: {booking.contractor.contractorProfile?.businessName || `${booking.contractor.firstName} ${booking.contractor.lastName}`}
+                                Profesional: {booking.contractor?.contractorProfile?.businessName || `${booking.contractor?.firstName || ''} ${booking.contractor?.lastName || ''}`}
                             </p>
                         </div>
                         <BookingStatusBadge status={booking.status} />
@@ -150,7 +151,7 @@ export default function ClientBookingDetailPage() {
 
                 <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-6">
                     <h3 className="text-lg font-semibold text-gray-900 mb-6">Historial de Estado</h3>
-                    <BookingTimeline history={booking.stateHistory} />
+                    <BookingTimeline history={booking.stateHistory || []} />
                 </div>
             </div>
         </div>

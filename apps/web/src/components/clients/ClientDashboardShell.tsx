@@ -14,7 +14,7 @@ interface ClientDashboardShellProps {
     };
 }
 
-export function ClientDashboardShell({ children, user }: ClientDashboardShellProps) {
+export function ClientDashboardShell({ children, user: _user }: ClientDashboardShellProps) {
     const [sidebarOpen, setSidebarOpen] = useState(false);
 
     return (
@@ -29,7 +29,6 @@ export function ClientDashboardShell({ children, user }: ClientDashboardShellPro
 
             {/* Topbar */}
             <ClientTopbar
-                user={user}
                 onMenuClick={() => setSidebarOpen(!sidebarOpen)}
             />
 

@@ -8,9 +8,27 @@ import { useAuth } from '@clerk/nextjs';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { BookingForm } from '../booking/BookingForm';
+import type { Decimal } from '@prisma/client/runtime/library';
+
+interface ServiceDetailData {
+    id: string;
+    title: string;
+    description: string;
+    basePrice: number | Decimal;
+    durationMinutes: number;
+    images: { s3Url: string }[];
+    contractor: {
+        firstName: string;
+        lastName: string;
+        contractorProfile: {
+            businessName: string;
+            description: string | null;
+        } | null;
+    };
+}
 
 interface ServiceDetailProps {
-    service: any; // Type this properly
+    service: ServiceDetailData;
 }
 
 export function ServiceDetail({ service }: ServiceDetailProps) {

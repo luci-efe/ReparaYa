@@ -2,10 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { BookingCard } from '@/components/booking/BookingCard';
-import { BookingStatus } from '@/modules/booking/types';
+import { BookingStatus, BookingDTO } from '@/modules/booking/types';
 
 export default function ContractorBookingsPage() {
-    const [bookings, setBookings] = useState<any[]>([]);
+    const [bookings, setBookings] = useState<BookingDTO[]>([]);
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState<'ALL' | 'PENDING' | 'ACTIVE' | 'COMPLETED'>('ALL');
 
@@ -36,12 +36,13 @@ export default function ContractorBookingsPage() {
         if (filter === 'ALL') return true;
         if (filter === 'PENDING') return booking.status === BookingStatus.PENDING_PAYMENT;
         if (filter === 'ACTIVE') {
-            return [
+            const activeStatuses: BookingStatus[] = [
                 BookingStatus.CONFIRMED,
                 BookingStatus.ON_ROUTE,
                 BookingStatus.ON_SITE,
                 BookingStatus.IN_PROGRESS,
-            ].includes(booking.status);
+            ];
+            return activeStatuses.includes(booking.status);
         }
         if (filter === 'COMPLETED') return booking.status === BookingStatus.COMPLETED;
         return true;

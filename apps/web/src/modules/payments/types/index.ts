@@ -1,4 +1,4 @@
-import { Payment, PaymentStatus, PaymentType } from '@prisma/client';
+import { PaymentStatus, PaymentType, Prisma } from '@prisma/client';
 
 export type { PaymentStatus, PaymentType };
 
@@ -9,7 +9,7 @@ export interface PaymentDTO {
     amount: number;
     currency: string;
     status: PaymentStatus;
-    metadata?: any;
+    metadata?: Prisma.JsonValue;
     createdAt: Date;
     updatedAt: Date;
 }
@@ -19,5 +19,5 @@ export interface CreatePaymentDTO {
     type: PaymentType;
     amount: number;
     currency?: string;
-    metadata?: any;
+    metadata?: Prisma.InputJsonValue;
 }

@@ -129,13 +129,15 @@ export class BookingService {
             throw new BookingNotFoundError(id);
         }
 
-        // Authorization: Only contractor can update status (for now)
-        // TODO: Allow client to cancel
-        if (booking.contractorId !== userId && data.status !== BookingStatus.CANCELLED) {
-            // Allow client to cancel if pending
-            if (booking.clientId === userId && data.status === BookingStatus.CANCELLED) {
-                // Client cancelling
-            } else {
+        // Authorization logic:
+        // - Contractor can update to any valid state
+        // - Client can only cancel
+        const isContractor = booking.contractorId === userId;
+        const isClient = booking.clientId === userId;
+        const isCancellation = data.status === BookingStatus.CANCELLED;
+
+        if (!isContractor) {
+            if (!(isClient && isCancellation)) {
                 throw new Error('Unauthorized');
             }
         }
@@ -172,7 +174,7 @@ export class BookingService {
 
     private calculatePricing(basePrice: number): BookingPricingDetails {
         const commissionRate = 0.10; // 10% commission
-        const taxRate = 0.16; // 16% VAT (if applicable, simplified here)
+        // Tax rate (16% VAT) can be applied when needed
 
         // Simplified logic:
         // Final Price = Base Price

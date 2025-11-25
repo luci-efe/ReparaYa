@@ -3,7 +3,7 @@ import { auth } from '@clerk/nextjs/server';
 import { addressRepository } from '@/modules/users/repositories/addressRepository';
 import { prisma } from '@/lib/db';
 
-export async function GET(req: NextRequest) {
+export async function GET(_req: NextRequest) {
     try {
         const { userId } = await auth();
 

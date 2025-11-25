@@ -1,12 +1,13 @@
 import Link from 'next/link';
 import Image from 'next/image';
+import type { Decimal } from '@prisma/client/runtime/library';
 
 interface ServiceCardProps {
     service: {
         id: string;
         title: string;
         description: string;
-        basePrice: number;
+        basePrice: number | Decimal;
         images: { s3Url: string }[];
         contractor: {
             firstName: string;
