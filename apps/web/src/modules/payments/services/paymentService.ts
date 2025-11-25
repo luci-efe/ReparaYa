@@ -5,8 +5,8 @@ import { Payment, PaymentStatus } from '@prisma/client';
 export class PaymentService {
     private repository: PaymentRepository;
 
-    constructor() {
-        this.repository = new PaymentRepository();
+    constructor(repository?: PaymentRepository) {
+        this.repository = repository || new PaymentRepository();
     }
 
     async simulatePayment(data: CreatePaymentDTO): Promise<Payment> {

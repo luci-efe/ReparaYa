@@ -1,12 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
+import { z } from 'zod';
 import { PaymentService } from '@/modules/payments/services/paymentService';
 import { BookingService } from '@/modules/booking/services/bookingService';
 import { prisma } from '@/lib/db';
-import { BookingStatus, PaymentType } from '@/modules/booking/types';
+import { BookingStatus } from '@/modules/booking/types';
+import { PaymentType } from '@prisma/client';
 
 const paymentService = new PaymentService();
 const bookingService = new BookingService();
+
+const simulatePaymentSchema = z.object({
+    bookingId: z.string().uuid(),
+    type: z.nativeEnum(PaymentType),
+    amount: z.number().positive(),
+});
 
 export async function POST(req: NextRequest) {
     try {
@@ -25,16 +33,32 @@ export async function POST(req: NextRequest) {
         }
 
         const body = await req.json();
-        const { bookingId, type, amount } = body;
+        
+        // Validate input with Zod
+        const validationResult = simulatePaymentSchema.safeParse(body);
+        if (!validationResult.success) {
+            return NextResponse.json({ error: 'Datos inválidos', details: validationResult.error.flatten() }, { status: 400 });
+        }
+        
+        const { bookingId, type, amount } = validationResult.data;
 
-        if (!bookingId || !type || !amount) {
-            return NextResponse.json({ error: 'Faltan datos requeridos' }, { status: 400 });
+        // Verify booking exists and user has access
+        const booking = await prisma.booking.findUnique({
+            where: { id: bookingId },
+        });
+
+        if (!booking) {
+            return NextResponse.json({ error: 'Reserva no encontrada' }, { status: 404 });
+        }
+
+        if (booking.clientId !== user.id && booking.contractorId !== user.id) {
+            return NextResponse.json({ error: 'No autorizado para simular pago en esta reserva' }, { status: 403 });
         }
 
         // Simulate payment
         const payment = await paymentService.simulatePayment({
             bookingId,
-            type: type as PaymentType,
+            type,
             amount,
             currency: 'MXN',
             metadata: { simulated: true, by: user.id }

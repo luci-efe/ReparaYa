@@ -3183,8 +3183,8 @@ npm run test:coverage
 
 #### 4.1.7 Búsqueda de Servicios (Service Search)
 
-**Referencia de spec:** `/openspec/changes/2025-11-24-service-search-booking-demo/specs/service-search/spec.md`
-**Propuesta relacionada:** `/openspec/changes/2025-11-24-service-search-booking-demo/proposal.md`
+**Referencia de spec:** `/openspec/changes/archive/2025-11-25-2025-11-24-service-search-booking-demo/specs/service-search/spec.md`
+**Propuesta relacionada:** `/openspec/changes/archive/2025-11-25-2025-11-24-service-search-booking-demo/proposal.md`
 
 **Criterios de aceptación generales:**
 - Cobertura de código ≥ 70% en módulo `src/modules/services` para nuevas funcionalidades
@@ -5671,8 +5671,8 @@ Los tests se implementarán en los siguientes archivos:
 
 #### 4.1.6 Búsqueda de Servicios, Flujo de Reserva y Demo de Simulación
 
-**Referencia de spec:** `/openspec/changes/2025-11-24-service-search-booking-demo/`
-**Propuesta relacionada:** `/openspec/changes/2025-11-24-service-search-booking-demo/proposal.md`
+**Referencia de spec:** `/openspec/changes/archive/2025-11-25-2025-11-24-service-search-booking-demo/`
+**Propuesta relacionada:** `/openspec/changes/archive/2025-11-25-2025-11-24-service-search-booking-demo/proposal.md`
 
 **Criterios de aceptación generales:**
 - Cobertura de código ≥ 70% en módulos `src/modules/booking` y `src/modules/payments`
@@ -6038,19 +6038,23 @@ Los tests se implementarán en los siguientes archivos:
 
 ---
 
-**Archivos de test a crear:**
+**Archivos de test:**
 
-**Tests unitarios:**
-- `src/modules/booking/__tests__/bookingService.test.ts`
-- `src/modules/booking/__tests__/bookingStateMachine.test.ts`
-- `src/modules/booking/__tests__/bookingRepository.test.ts`
-- `src/modules/booking/__tests__/demoSimulationService.test.ts`
-- `src/modules/payments/__tests__/paymentService.test.ts`
+**Tests unitarios (implementados):**
+- ✅ `apps/web/src/modules/booking/services/__tests__/bookingService.test.ts`
+- ✅ `apps/web/src/modules/booking/services/__tests__/bookingStateMachine.test.ts`
+- ✅ `apps/web/src/modules/payments/services/__tests__/paymentService.test.ts`
 
-**Tests de integración:**
-- `tests/integration/api/bookings.test.ts`
-- `tests/integration/api/services-slots.test.ts`
-- `tests/integration/api/payments-simulate.test.ts`
+**Tests unitarios (pendientes de implementar):**
+- `apps/web/src/modules/booking/repositories/__tests__/bookingRepository.test.ts`
+- `apps/web/src/modules/booking/services/__tests__/demoSimulationService.test.ts`
+
+**Tests de integración (implementados):**
+- ✅ `apps/web/tests/integration/booking/api.test.ts` (skip: requiere contractor visibility)
+
+**Tests de integración (pendientes de implementar):**
+- `apps/web/tests/integration/api/services-slots.test.ts`
+- `apps/web/tests/integration/api/payments-simulate.test.ts`
 
 **Mocks y fixtures:**
 - Mock de Prisma client para unit tests

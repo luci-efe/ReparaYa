@@ -4,6 +4,7 @@ import { canTransition, getValidTransitions } from '../bookingStateMachine';
 describe('Booking State Machine', () => {
     describe('canTransition', () => {
         it('should allow valid transitions', () => {
+            expect(canTransition(BookingStatus.PENDING_APPROVAL, BookingStatus.PENDING_PAYMENT)).toBe(true);
             expect(canTransition(BookingStatus.PENDING_PAYMENT, BookingStatus.CONFIRMED)).toBe(true);
             expect(canTransition(BookingStatus.CONFIRMED, BookingStatus.ON_ROUTE)).toBe(true);
             expect(canTransition(BookingStatus.ON_ROUTE, BookingStatus.ON_SITE)).toBe(true);
@@ -12,6 +13,7 @@ describe('Booking State Machine', () => {
         });
 
         it('should allow cancellation from appropriate states', () => {
+            expect(canTransition(BookingStatus.PENDING_APPROVAL, BookingStatus.CANCELLED)).toBe(true);
             expect(canTransition(BookingStatus.PENDING_PAYMENT, BookingStatus.CANCELLED)).toBe(true);
             expect(canTransition(BookingStatus.CONFIRMED, BookingStatus.CANCELLED)).toBe(true);
         });
@@ -24,11 +26,33 @@ describe('Booking State Machine', () => {
     });
 
     describe('getValidTransitions', () => {
+        it('should return correct next states for PENDING_APPROVAL', () => {
+            const transitions = getValidTransitions(BookingStatus.PENDING_APPROVAL);
+            expect(transitions).toContain(BookingStatus.PENDING_PAYMENT);
+            expect(transitions).toContain(BookingStatus.CANCELLED);
+        });
+
         it('should return correct next states for PENDING_PAYMENT', () => {
             const transitions = getValidTransitions(BookingStatus.PENDING_PAYMENT);
             expect(transitions).toContain(BookingStatus.CONFIRMED);
             expect(transitions).toContain(BookingStatus.CANCELLED);
             expect(transitions).not.toContain(BookingStatus.COMPLETED);
+        });
+
+        it('should return correct next states for CONFIRMED', () => {
+            const transitions = getValidTransitions(BookingStatus.CONFIRMED);
+            expect(transitions).toContain(BookingStatus.ON_ROUTE);
+            expect(transitions).toContain(BookingStatus.CANCELLED);
+        });
+
+        it('should return correct next states for ON_ROUTE', () => {
+            const transitions = getValidTransitions(BookingStatus.ON_ROUTE);
+            expect(transitions).toContain(BookingStatus.ON_SITE);
+        });
+
+        it('should return correct next states for IN_PROGRESS', () => {
+            const transitions = getValidTransitions(BookingStatus.IN_PROGRESS);
+            expect(transitions).toContain(BookingStatus.COMPLETED);
         });
 
         it('should return empty array for truly terminal states', () => {
