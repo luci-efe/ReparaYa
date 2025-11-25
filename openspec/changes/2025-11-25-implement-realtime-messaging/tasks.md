@@ -6,6 +6,9 @@
 - [ ] 0.2 Verify Supabase project has Realtime enabled
 - [ ] 0.3 Verify `Message` table exists in database with correct indexes
 - [ ] 0.4 Review existing Supabase client configuration in `src/lib/`
+- [ ] 0.5 Install `@tanstack/react-query` package
+- [ ] 0.6 Create `src/lib/query/QueryProvider.tsx` - Client component with QueryClientProvider
+- [ ] 0.7 Update `app/layout.tsx` to wrap children with QueryProvider
 
 ## 1. Backend - Messaging Module Core
 
@@ -105,36 +108,50 @@
 - [ ] 3.1.2 Verify Realtime is enabled for Message table in Supabase dashboard
 - [ ] 3.1.3 Document Supabase Realtime configuration in spec
 
-### 3.2 Client-Side Realtime
+### 3.2 Client-Side Realtime + Caching
 - [ ] 3.2.1 Create `src/lib/supabase/realtime.ts`:
   - Helper functions for subscribing to channels
   - Type-safe event handlers
-- [ ] 3.2.2 Create `src/hooks/useSupabaseMessages.ts`:
-  - Subscribe to booking channel for new messages
-  - Handle message insertion events
-  - Cleanup on unmount
-  - Error handling and reconnection
-- [ ] 3.2.3 Write tests for realtime hook (mock Supabase client)
+- [ ] 3.2.2 Create `src/hooks/useBookingMessages.ts`:
+  - Use `useInfiniteQuery` with cache key `['messages', bookingId]`
+  - Set `staleTime: Infinity` (rely on Realtime for updates)
+  - Implement `getNextPageParam` for cursor-based pagination
+  - Subscribe to Supabase Realtime `postgres_changes` for INSERT events
+  - On INSERT event: call `queryClient.setQueryData` to append new message
+  - Helper function `updateCacheWithNewMessage(oldData, newMessage)`
+  - Cleanup Supabase channel subscription on unmount
+  - Error handling and reconnection logic
+- [ ] 3.2.3 Create `src/hooks/useSendMessage.ts`:
+  - Use `useMutation` for POST /api/bookings/:id/messages
+  - `onMutate`: Inject optimistic message with temp ID and `isSending: true`
+  - `onError`: Rollback by removing optimistic message from cache
+  - `onSuccess`: Replace optimistic message with server-confirmed data
+  - Return `mutateAsync` for MessageInput to call
+- [ ] 3.2.4 Write tests for `useBookingMessages` (mock QueryClient + Supabase)
+- [ ] 3.2.5 Write tests for `useSendMessage` (optimistic update + rollback)
 
 ## 4. Frontend - Shared Messaging Components
 
 ### 4.1 Core Chat Components
 - [ ] 4.1.1 Create `src/components/shared/messaging/ChatContainer.tsx`:
-  - Main wrapper component
-  - Loading, error, empty states
+  - Main wrapper component using `useBookingMessages` hook
+  - Loading, error, empty states from query result
   - Scrollable message area
 - [ ] 4.1.2 Create `src/components/shared/messaging/MessageList.tsx`:
   - Virtualized scrolling for performance
   - Auto-scroll to bottom on new messages
-  - Load more on scroll up
+  - Load more on scroll up via `fetchNextPage` from `useInfiniteQuery`
+  - Handle `isSending` state: show opacity/spinner for optimistic messages
+  - Visual distinction for pending vs confirmed messages
 - [ ] 4.1.3 Create `src/components/shared/messaging/MessageBubble.tsx`:
   - Sent vs received styling
   - Timestamp display
   - Sender name (for contractor/client identification)
+  - `isSending` prop: reduced opacity + spinner icon when true
 - [ ] 4.1.4 Create `src/components/shared/messaging/MessageInput.tsx`:
   - Text input with character counter
-  - Send button (enabled when valid)
-  - Disabled state when window expired
+  - Send button triggers `useSendMessage.mutateAsync()` (not raw fetch)
+  - Disabled state when window expired or mutation is pending
 - [ ] 4.1.5 Create `src/components/shared/messaging/MessagingExpiredNotice.tsx`:
   - Display when 2-hour window has passed
   - Link to support/dispute if needed
@@ -253,8 +270,14 @@
 | TC-MSG-010 | Message pagination works correctly | Integración | RF-008 | Media |
 | TC-MSG-011 | Supabase subscription receives new messages | Integración | RF-008 | Alta |
 | TC-MSG-012 | Subscription cleanup on component unmount | Unitaria | RF-008 | Media |
-| TC-MSG-013 | Optimistic UI update on send | Unitaria | RF-008 | Media |
+| TC-MSG-013 | Optimistic UI update on send shows message immediately | Unitaria | RF-008 | Alta |
 | TC-MSG-014 | Reconnection on WebSocket disconnect | Integración | RF-008 | Media |
+| TC-MSG-031 | Optimistic message rollback on API error | Unitaria | RF-008 | Alta |
+| TC-MSG-032 | Cache key isolation per booking ID | Unitaria | RF-008 | Media |
+| TC-MSG-033 | Realtime INSERT updates cache without refetch | Integración | RF-008 | Alta |
+| TC-MSG-034 | Infinite scroll triggers fetchNextPage correctly | Unitaria | RF-008 | Media |
+| TC-MSG-035 | staleTime Infinity prevents auto-refetching | Unitaria | RF-008 | Media |
+| TC-MSG-036 | isSending visual state shows for optimistic messages | Unitaria | RF-008 | Media |
 | TC-MSG-015 | Message displayed within 500ms of sending | E2E | RNF-3.5.1 | Alta |
 | TC-MSG-016 | Only booking participants can send messages | Integración | RF-008 | Alta |
 | TC-MSG-017 | Non-participant returns 403 | Integración | RF-008 | Alta |
@@ -283,6 +306,10 @@
 - [ ] Autorización verifica participantes en todos los endpoints
 - [ ] CI/CD pasa sin errores
 - [ ] Dashboard metrics muestran conteo real de mensajes sin leer
+- [ ] Optimistic updates show message immediately (< 50ms perceived latency)
+- [ ] Cache rollback works correctly on send failure
+- [ ] Realtime events update cache without triggering API refetch
+- [ ] Infinite scroll loads older messages via cursor pagination
 
 ---
 
@@ -291,17 +318,28 @@
 **Recommended parallelization:**
 
 ```
-Week 1 - Backend Foundation (can be parallelized)
+Phase 0 - Prerequisites (required first)
+├── 0.1-0.4 Verify existing infrastructure
+└── 0.5-0.7 Install TanStack Query + QueryProvider setup
+
+Phase 1 - Backend Foundation (can be parallelized)
 ├── 1.1-1.3 Types, Sanitization, Repository
 ├── 1.4-1.5 Time Window, Message Service
 └── 2.1-2.2 API Routes
 
-Week 2 - Realtime + Frontend Foundation
-├── 3.1-3.2 Supabase Realtime Setup
-├── 4.1-4.3 Shared Components
+Phase 2 - Realtime + Caching Layer
+├── 3.1 Supabase RLS + Realtime config
+├── 3.2.1 Realtime helpers
+├── 3.2.2 useBookingMessages hook (Query + Realtime)
+├── 3.2.3 useSendMessage hook (Optimistic mutations)
+└── 3.2.4-3.2.5 Hook tests
+
+Phase 3 - Frontend Components
+├── 4.1 Core Chat Components (use hooks from Phase 2)
+├── 4.2-4.3 Conversation List + Utility Components
 └── 7.1-7.2 Unit + Integration Tests
 
-Week 3 - UI Integration + Polish
+Phase 4 - UI Integration + Polish
 ├── 5.1-5.2 Client Messages Page
 ├── 6.1-6.2 Contractor Messages Page
 ├── 7.3-7.4 Component + E2E Tests
@@ -309,7 +347,9 @@ Week 3 - UI Integration + Polish
 ```
 
 **Dependencies:**
-- Tasks 1.x and 2.x can run in parallel
-- Tasks 3.x requires backend to be complete
-- Tasks 4.x-6.x require realtime setup
+- Phase 0 must complete before Phase 2 (QueryProvider required for hooks)
+- Tasks 1.x and 2.x can run in parallel with Phase 0
+- Phase 2 requires backend API routes to be complete
+- Phase 3 requires Phase 2 hooks
+- Phase 4 requires Phase 3 components
 - Tasks 7.x and 8.x run throughout
