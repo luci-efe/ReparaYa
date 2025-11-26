@@ -1,14 +1,16 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+// import { Inter } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import "./globals.css";
 
-const inter = Inter({ subsets: ["latin"] });
+// const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "ReparaYa - Servicios de Reparación y Mantenimiento",
   description: "Conectamos clientes con contratistas de servicios de reparación y mantenimiento del hogar",
 };
+
+import QueryProvider from "@/lib/query/QueryProvider";
 
 export default function RootLayout({
   children,
@@ -30,7 +32,11 @@ export default function RootLayout({
       }}
     >
       <html lang="es">
-        <body className={inter.className}>{children}</body>
+        <body>
+          <QueryProvider>
+            {children}
+          </QueryProvider>
+        </body>
       </html>
     </ClerkProvider>
   );
