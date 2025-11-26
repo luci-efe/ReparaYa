@@ -47,7 +47,9 @@ async function main() {
   await prisma.adminAuditLog.deleteMany();
   await prisma.dispute.deleteMany();
   await prisma.serviceRatingStats.deleteMany();
-  await prisma.rating.deleteMany();
+  await prisma.clientRating.deleteMany();
+  await prisma.contractorRating.deleteMany();
+
   await prisma.message.deleteMany();
   await prisma.processedWebhookEvent.deleteMany();
   await prisma.payment.deleteMany();

@@ -2,6 +2,8 @@ import Link from 'next/link';
 import Image from 'next/image';
 import type { Decimal } from '@prisma/client/runtime/library';
 
+import { UserRatingBadge } from '@/components/ratings/UserRatingBadge';
+
 interface ServiceCardProps {
     service: {
         id: string;
@@ -16,13 +18,24 @@ interface ServiceCardProps {
             contractorProfile: {
                 businessName: string;
             } | null;
+            ratingStats: {
+                average: number | Decimal;
+                totalRatings: number;
+            } | null;
         };
+        ratingStats: {
+            average: number | Decimal;
+            totalRatings: number;
+        } | null;
     };
 }
 
 export function ServiceCard({ service }: ServiceCardProps) {
     const imageUrl = service.images[0]?.s3Url || '/placeholder-service.svg';
     const contractorName = service.contractor.contractorProfile?.businessName || `${service.contractor.firstName} ${service.contractor.lastName}`;
+
+    // Only show service-specific rating as requested
+    const displayStats = service.ratingStats;
 
     return (
         <div className="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow">
@@ -35,7 +48,16 @@ export function ServiceCard({ service }: ServiceCardProps) {
                 />
             </div>
             <div className="p-4">
-                <h3 className="text-lg font-semibold text-gray-900 mb-1">{service.title}</h3>
+                <div className="flex justify-between items-start mb-1">
+                    <h3 className="text-lg font-semibold text-gray-900">{service.title}</h3>
+                    {displayStats && (
+                        <UserRatingBadge
+                            average={Number(displayStats.average)}
+                            totalRatings={displayStats.totalRatings}
+                            size="sm"
+                        />
+                    )}
+                </div>
                 <p className="text-sm text-gray-500 mb-2 truncate">{service.description}</p>
 
                 <div className="flex items-center gap-2 mb-3">

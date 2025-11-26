@@ -7,6 +7,10 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Button, Input, Textarea, Checkbox, Card } from '@/components/ui';
 import { updateContractorProfileSchema, type UpdateContractorProfileInput } from '@/modules/contractors/validators';
 import type { ContractorProfileDTO } from '@/modules/contractors/types';
+import { RatingsList } from '@/components/ratings/RatingsList';
+import { UserRatingBadge } from '@/components/ratings/UserRatingBadge';
+import { useUserRatingStats } from '@/hooks/useUserRatingStats';
+import { RatingResponse } from '@/modules/ratings/types';
 
 // Especialidades disponibles
 const SPECIALTIES = [
@@ -29,6 +33,10 @@ export default function ContractorProfileEditPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [ratings, setRatings] = useState<RatingResponse[]>([]);
+  const [ratingsLoading, setRatingsLoading] = useState(true);
+
+  const { data: ratingStats } = useUserRatingStats();
 
   const {
     register,
@@ -78,6 +86,24 @@ export default function ContractorProfileEditPage() {
 
     fetchProfile();
   }, [router, reset]);
+
+  // Fetch ratings
+  useEffect(() => {
+    const fetchRatings = async () => {
+      try {
+        const res = await fetch('/api/contractors/me/ratings');
+        if (res.ok) {
+          const data = await res.json();
+          setRatings(data);
+        }
+      } catch (error) {
+        console.error('Error fetching ratings:', error);
+      } finally {
+        setRatingsLoading(false);
+      }
+    };
+    fetchRatings();
+  }, []);
 
   const onSubmit = async (data: UpdateContractorProfileInput) => {
     setIsSaving(true);
@@ -136,13 +162,24 @@ export default function ContractorProfileEditPage() {
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">
-            Mi Perfil de Contratista
-          </h1>
-          <p className="mt-2 text-gray-600">
-            Administra la información de tu negocio
-          </p>
+        <div className="mb-8 flex justify-between items-start">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">
+              Mi Perfil de Contratista
+            </h1>
+            <p className="mt-2 text-gray-600">
+              Administra la información de tu negocio
+            </p>
+          </div>
+          {ratingStats && (
+            <div className="flex flex-col items-end">
+              <UserRatingBadge
+                average={Number(ratingStats.average)}
+                totalRatings={ratingStats.totalRatings}
+                size="lg"
+              />
+            </div>
+          )}
         </div>
 
         {/* Estado de Verificación */}
@@ -292,6 +329,15 @@ export default function ContractorProfileEditPage() {
             )}
           </form>
         </Card>
+
+        {/* Reviews Section */}
+        <div className="mt-8">
+          <h2 className="text-xl font-bold text-gray-900 mb-4">Mis Reseñas</h2>
+          <RatingsList
+            ratings={ratings}
+            isLoading={ratingsLoading}
+          />
+        </div>
       </div>
     </div>
   );

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ServiceImageGallery } from './ServiceImageGallery';
 import { AvailabilitySlotPicker } from './AvailabilitySlotPicker';
 import { useRouter } from 'next/navigation';
@@ -9,6 +9,9 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { BookingForm } from '../booking/BookingForm';
 import type { Decimal } from '@prisma/client/runtime/library';
+import { UserRatingBadge } from '@/components/ratings/UserRatingBadge';
+import { RatingsList } from '@/components/ratings/RatingsList';
+import { RatingResponse } from '@/modules/ratings/types';
 
 interface ServiceDetailData {
     id: string;
@@ -18,13 +21,22 @@ interface ServiceDetailData {
     durationMinutes: number;
     images: { s3Url: string }[];
     contractor: {
+        id: string;
         firstName: string;
         lastName: string;
         contractorProfile: {
             businessName: string;
             description: string | null;
         } | null;
+        ratingStats: {
+            average: number | Decimal;
+            totalRatings: number;
+        } | null;
     };
+    ratingStats: {
+        average: number | Decimal;
+        totalRatings: number;
+    } | null;
 }
 
 interface ServiceDetailProps {
@@ -36,6 +48,28 @@ export function ServiceDetail({ service }: ServiceDetailProps) {
     const { isSignedIn } = useAuth();
     const [selectedSlot, setSelectedSlot] = useState<{ id: string; date: Date } | null>(null);
     const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
+    const [ratings, setRatings] = useState<RatingResponse[]>([]);
+    const [ratingsLoading, setRatingsLoading] = useState(true);
+
+
+    useEffect(() => {
+        const fetchRatings = async () => {
+            try {
+                const res = await fetch(`/api/services/${service.id}/ratings`);
+                if (res.ok) {
+                    const data = await res.json();
+                    setRatings(data.ratings || []);
+                }
+            } catch (error) {
+                console.error('Error fetching ratings:', error);
+            } finally {
+                setRatingsLoading(false);
+            }
+        };
+
+        fetchRatings();
+    }, [service.id]);
+
 
     const handleSlotSelect = (slotId: string, date: Date) => {
         setSelectedSlot({ id: slotId, date });
@@ -85,7 +119,31 @@ export function ServiceDetail({ service }: ServiceDetailProps) {
                 <ServiceImageGallery images={service.images} />
 
                 <div className="bg-white p-6 rounded-lg shadow-sm">
-                    <h1 className="text-3xl font-bold text-gray-900 mb-4">{service.title}</h1>
+                    <div className="flex justify-between items-start mb-4">
+                        <h1 className="text-3xl font-bold text-gray-900">{service.title}</h1>
+                        <div className="flex flex-col items-end gap-1">
+                            {service.ratingStats && (
+                                <div className="flex items-center gap-2">
+                                    <span className="text-xs text-gray-500">Servicio:</span>
+                                    <UserRatingBadge
+                                        average={Number(service.ratingStats.average)}
+                                        totalRatings={service.ratingStats.totalRatings}
+                                        size="lg"
+                                    />
+                                </div>
+                            )}
+                            {service.contractor.ratingStats && (
+                                <div className="flex items-center gap-2">
+                                    <span className="text-xs text-gray-500">Profesional:</span>
+                                    <UserRatingBadge
+                                        average={Number(service.contractor.ratingStats.average)}
+                                        totalRatings={service.contractor.ratingStats.totalRatings}
+                                        size="sm"
+                                    />
+                                </div>
+                            )}
+                        </div>
+                    </div>
 
                     <div className="flex items-center gap-4 mb-6">
                         <div className="flex items-center gap-2">
@@ -109,8 +167,8 @@ export function ServiceDetail({ service }: ServiceDetailProps) {
                 <div className="bg-white p-6 rounded-lg shadow-sm">
                     <h3 className="text-lg font-semibold text-gray-900 mb-4">Sobre el Profesional</h3>
                     <div className="flex items-center gap-4">
-                        <div className="h-16 w-16 rounded-full bg-gray-200 overflow-hidden relative">
-                            {/* Avatar */}
+                        <div className="h-16 w-16 rounded-full bg-gray-200 overflow-hidden relative flex items-center justify-center text-2xl font-bold text-gray-500">
+                            {service.contractor.firstName[0]}
                         </div>
                         <div>
                             <h4 className="font-medium text-lg">
@@ -122,6 +180,12 @@ export function ServiceDetail({ service }: ServiceDetailProps) {
                             </p>
                         </div>
                     </div>
+                </div>
+
+                {/* Ratings Section */}
+                <div className="bg-white p-6 rounded-lg shadow-sm">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Reseñas del Servicio</h3>
+                    <RatingsList ratings={ratings} isLoading={ratingsLoading} />
                 </div>
             </div>
 

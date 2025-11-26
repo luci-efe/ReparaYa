@@ -3537,15 +3537,15 @@ Las calificaciones son ocultas hasta que:
 
 | ID | Descripción | Tipo | Requisito | Prioridad | Estado |
 |----|-------------|------|-----------|-----------|--------|
-| TC-RF-009-01 | Cliente crea calificación válida para contratista | Integración | RF-009 | Alta | Pendiente |
-| TC-RF-009-02 | Contratista crea calificación válida para cliente | Integración | RF-009 | Alta | Pendiente |
-| TC-RF-009-03 | Rechazo de calificación duplicada | Integración | RF-009 | Alta | Pendiente |
-| TC-RF-009-04 | Visibilidad double-blind: rating oculto hasta ambos califiquen | Unitaria | RF-009 | Alta | Pendiente |
-| TC-RF-009-05 | Ratings revelados cuando ambos califican | Unitaria | RF-009 | Alta | Pendiente |
-| TC-RF-009-06 | Rating revelado por expiración de 7 días | Unitaria | RF-009 | Alta | Pendiente |
-| TC-RF-009-07 | Cálculo correcto de promedio de usuario | Unitaria | RF-009 | Media | Pendiente |
-| TC-RF-009-08 | Validación: stars debe ser 1-5 | Unitaria | RF-009 | Media | Pendiente |
-| TC-RF-009-09 | Solo cliente puede calificar al contratista | Integración | RF-009 | Alta | Pendiente |
+| TC-RF-009-01 | Cliente crea calificación válida para contratista | Integración | RF-009 | Alta | ✅ Aprobado |
+| TC-RF-009-02 | Contratista crea calificación válida para cliente | Integración | RF-009 | Alta | ✅ Aprobado |
+| TC-RF-009-03 | Rechazo de calificación duplicada | Integración | RF-009 | Alta | ✅ Aprobado |
+| TC-RF-009-04 | Visibilidad double-blind: rating oculto hasta ambos califiquen | Unitaria | RF-009 | Alta | ✅ Aprobado |
+| TC-RF-009-05 | Ratings revelados cuando ambos califican | Unitaria | RF-009 | Alta | ✅ Aprobado |
+| TC-RF-009-06 | Rating revelado por expiración de 7 días | Unitaria | RF-009 | Alta | ✅ Aprobado |
+| TC-RF-009-07 | Cálculo correcto de promedio de usuario | Unitaria | RF-009 | Media | ✅ Aprobado |
+| TC-RF-009-08 | Validación: stars debe ser 1-5 | Unitaria | RF-009 | Media | ✅ Aprobado |
+| TC-RF-009-09 | Solo cliente puede calificar al contratista | Integración | RF-009 | Alta | ✅ Aprobado |
 | TC-RF-009-10 | Modal de calificación funciona correctamente | E2E | RF-009 | Alta | Pendiente |
 
 ---
@@ -3569,7 +3569,7 @@ Las calificaciones son ocultas hasta que:
 - ✅ ClientRating insertado
 - ✅ Rating oculto para contratista (double-blind)
 
-**Estado:** Pendiente
+**Estado:** ✅ Aprobado
 
 ---
 
@@ -3590,7 +3590,7 @@ Las calificaciones son ocultas hasta que:
 - ✅ Antes: ratings ocultos
 - ✅ Después: ratings visibles para ambos
 
-**Estado:** Pendiente
+**Estado:** ✅ Aprobado
 
 ---
 
@@ -6315,4 +6315,70 @@ npm run test:coverage
 - ✅ Contractor override manual funciona
 - ✅ CI/CD pipeline verde
 - ✅ PR mergeado a dev
+
+#### 4.1.6 Sistema de Calificaciones (Ratings)
+
+**Referencia de spec:** `/openspec/specs/ratings/spec.md`
+**Propuesta relacionada:** `/openspec/changes/2025-11-25-bidirectional-ratings/proposal.md`
+
+**Criterios de aceptación generales:**
+- Cobertura de código ≥ 70% en módulo `src/modules/ratings`
+- Tests unitarios e integración automatizados
+- Sistema de visibilidad (doble ciego) funcionando correctamente
+
+**Casos de prueba:**
+
+| ID | Descripción | Tipo | Requisito | Prioridad | Estado |
+|----|-------------|------|-----------|-----------|--------|
+| TC-RATE-001 | Cliente puede calificar contratista tras completar servicio | E2E | RF-RAT-001 | Alta | PASS |
+| TC-RATE-002 | Contratista puede calificar cliente tras completar servicio | E2E | RF-RAT-002 | Alta | PASS |
+| TC-RATE-003 | Calificaciones ocultas hasta reciprocidad o 7 días | Integración | RF-RAT-003 | Alta | PASS |
+| TC-RATE-004 | Admin puede moderar calificaciones pendientes | Integración | RF-RAT-004 | Media | PASS |
+| TC-RATE-005 | Recálculo de stats al aprobar calificación | Unitaria | RF-RAT-005 | Alta | PASS |
+| TC-RATE-006 | Usuario no puede calificar dos veces | Unitaria | BR-RAT-001 | Media | PASS |
+| TC-RATE-007 | Usuario no puede calificar antes de completar servicio | Unitaria | BR-RAT-002 | Alta | PASS |
+
+**Procedimientos de prueba detallados:**
+
+##### TC-RATE-001: Cliente puede calificar contratista
+
+**Objetivo:** Validar flujo de calificación de cliente a contratista.
+
+**Precondiciones:**
+- Booking en estado COMPLETED
+- Cliente autenticado
+
+**Procedimiento:**
+1. Navegar a detalle de reserva
+2. Click en "Calificar Servicio"
+3. Llenar estrellas y comentario
+4. Enviar
+
+**Resultado esperado:**
+- ✅ Calificación guardada
+- ✅ Estado de moderación PENDING (si aplica) o APPROVED
+- ✅ UI muestra "Tu calificación ha sido enviada"
+
+**Estado:** PASS
+
+---
+
+##### TC-RATE-003: Calificaciones ocultas (Doble Ciego)
+
+**Objetivo:** Validar que las calificaciones no son visibles hasta que ambos califiquen.
+
+**Precondiciones:**
+- Booking completado
+- Cliente ha calificado, Contratista NO
+
+**Procedimiento:**
+1. Contratista ve detalle de reserva
+2. Verificar visibilidad de calificación del cliente
+
+**Resultado esperado:**
+- ✅ Contratista ve "Calificación oculta"
+- ✅ No se muestran estrellas ni comentario
+- ✅ Se invita al contratista a calificar para revelar
+
+**Estado:** PASS
 

@@ -14,7 +14,15 @@ interface ServiceData {
         contractorProfile: {
             businessName: string;
         } | null;
+        ratingStats: {
+            average: number | Decimal;
+            totalRatings: number;
+        } | null;
     };
+    ratingStats: {
+        average: number | Decimal;
+        totalRatings: number;
+    } | null;
 }
 
 interface ServiceGridProps {

@@ -43,12 +43,14 @@ export default async function SearchPage({
             contractor: {
                 include: {
                     contractorProfile: true,
+                    ratingStats: true,
                 },
             },
             images: {
                 orderBy: { order: 'asc' },
                 take: 1,
             },
+            ratingStats: true,
         },
         orderBy: { createdAt: 'desc' },
     });

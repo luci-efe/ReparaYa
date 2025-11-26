@@ -15,12 +15,14 @@ export default async function ServiceDetailPage({
             contractor: {
                 include: {
                     contractorProfile: true,
+                    ratingStats: true,
                 },
             },
             images: {
                 orderBy: { order: 'asc' },
             },
             category: true,
+            ratingStats: true,
         },
     });
 

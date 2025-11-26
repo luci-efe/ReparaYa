@@ -28,7 +28,7 @@ function getPlaceIndex(): string {
   return process.env.AWS_LOCATION_PLACE_INDEX || 'reparaya-places';
 }
 
-const GEOCODING_TIMEOUT = 5000; // 5 segundos
+const GEOCODING_TIMEOUT = 10000; // 10 segundos
 const MAX_RETRIES = 3;
 const MIN_RELEVANCE = 0.8;
 
@@ -92,10 +92,14 @@ export class GeocodingServiceUnavailableError extends Error {
 }
 
 /**
- * Sleep utility para retry con exponential backoff
+ * Sleep utility para retry con exponential backoff y jitter
+ * Ayuda a evitar llamadas concurrentes al reintentar
  */
-function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+function sleepWithJitter(baseMs: number, attempt: number): Promise<void> {
+  const exponentialDelay = baseMs * Math.pow(2, attempt - 1);
+  const jitter = Math.random() * exponentialDelay * 0.3; // 30% jitter
+  const delay = exponentialDelay + jitter;
+  return new Promise((resolve) => setTimeout(resolve, delay));
 }
 
 /**
@@ -140,8 +144,8 @@ function inferTimezone(latitude: number, longitude: number): string {
  * Geocodifica una dirección usando AWS Location Service
  *
  * Características:
- * - Timeout de 5 segundos
- * - Retry con exponential backoff (3 intentos)
+ * - Timeout de 10 segundos
+ * - Retry con exponential backoff y jitter (3 intentos)
  * - Valida relevance >= 0.8
  * - Si múltiples resultados, elige el de mayor relevance
  *
@@ -247,7 +251,7 @@ export async function geocodeAddress(address: AddressInput): Promise<GeocodingRe
         throw error;
       }
 
-      // Si es ThrottlingException de AWS, reintentar con backoff
+      // Si es ThrottlingException de AWS, reintentar con backoff y jitter
       if (
         error &&
         typeof error === 'object' &&
@@ -257,8 +261,8 @@ export async function geocodeAddress(address: AddressInput): Promise<GeocodingRe
         console.warn(`[Geocoding] ThrottlingException en intento ${attempt}/${MAX_RETRIES}. Reintentando...`);
 
         if (attempt < MAX_RETRIES) {
-          // Exponential backoff: 1s, 2s, 4s
-          await sleep(Math.pow(2, attempt - 1) * 1000);
+          // Exponential backoff con jitter: base de 1s
+          await sleepWithJitter(1000, attempt);
           continue;
         }
       }
@@ -267,7 +271,7 @@ export async function geocodeAddress(address: AddressInput): Promise<GeocodingRe
       console.error(`[Geocoding] Error en intento ${attempt}/${MAX_RETRIES}:`, error);
 
       if (attempt < MAX_RETRIES) {
-        await sleep(1000 * attempt);
+        await sleepWithJitter(1000, attempt);
         continue;
       }
     }

@@ -2,10 +2,12 @@
 
 import { Card } from '@/components/ui';
 import { useQuery } from '@tanstack/react-query';
+import { useUserRatingStats } from '@/hooks/useUserRatingStats';
+import { UserRatingBadge } from '@/components/ratings/UserRatingBadge';
 
 interface MetricCardProps {
   label: string;
-  value: string | number;
+  value: string | number | React.ReactNode;
   icon: React.ReactNode;
   color: string;
   bgColor: string;
@@ -20,7 +22,7 @@ function MetricCard({ label, value, icon, color, bgColor }: MetricCardProps) {
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-sm text-gray-600 truncate">{label}</p>
-          <p className="text-2xl font-bold text-gray-900 mt-1">{value}</p>
+          <div className="text-2xl font-bold text-gray-900 mt-1">{value}</div>
         </div>
       </div>
     </Card>
@@ -29,6 +31,8 @@ function MetricCard({ label, value, icon, color, bgColor }: MetricCardProps) {
 
 export function MetricsOverview() {
   // Placeholder data
+  const { data: ratingStats } = useUserRatingStats();
+
   const { data: unreadData } = useQuery({
     queryKey: ['unreadCount'],
     queryFn: async () => {
@@ -92,7 +96,13 @@ export function MetricsOverview() {
     },
     {
       label: 'Calificación Promedio',
-      value: 'N/A',
+      value: ratingStats ? (
+        <UserRatingBadge
+          average={Number(ratingStats.average)}
+          totalRatings={ratingStats.totalRatings}
+          size="lg"
+        />
+      ) : 'N/A',
       icon: (
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
           <path
