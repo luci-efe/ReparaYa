@@ -22,6 +22,25 @@ const globalForPrisma = globalThis as unknown as {
   cachedPrisma?: PrismaClient;
 };
 
+/**
+ * Configura la URL de conexión para compatibilidad con PgBouncer/poolers.
+ * Agrega los parámetros necesarios para desactivar prepared statements
+ * que causan el error "prepared statement 's0' already exists" en Vercel.
+ */
+function getDatasourceUrl(): string | undefined {
+  const baseUrl = process.env.DATABASE_URL;
+  if (!baseUrl) return undefined;
+
+  // Check if pgbouncer parameters are already present
+  if (baseUrl.includes("pgbouncer=true")) {
+    return baseUrl;
+  }
+
+  // Add PgBouncer parameters to disable prepared statements
+  const separator = baseUrl.includes("?") ? "&" : "?";
+  return `${baseUrl}${separator}pgbouncer=true&statement_cache_size=0`;
+}
+
 export const prisma =
   globalForPrisma.prisma ??
   new PrismaClient({
@@ -29,9 +48,8 @@ export const prisma =
       process.env.NODE_ENV === "development"
         ? ["query", "error", "warn"]
         : ["error"],
-    // Desactivar prepared statements para compatibilidad con PgBouncer/poolers
-    // Esto previene el error "prepared statement 's0' already exists" en Vercel
-    datasourceUrl: process.env.DATABASE_URL,
+    // Use configured URL with PgBouncer parameters for pooler compatibility
+    datasourceUrl: getDatasourceUrl(),
   });
 
 if (process.env.NODE_ENV !== "production") {
