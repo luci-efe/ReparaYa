@@ -1,19 +1,34 @@
-import DOMPurify from 'isomorphic-dompurify';
-
 export class SanitizationService {
     /**
      * Sanitizes text to remove HTML tags and prevent XSS.
-     * Uses DOMPurify for robust sanitization.
+     * Uses multiple layers of protection:
+     * 1. Removes all HTML tags
+     * 2. Decodes HTML entities to prevent encoded attacks
+     * 3. Validates resulting text for safety
      */
     sanitizeText(text: string): string {
-        // Use DOMPurify with strict config for text-only content
-        const cleanText = DOMPurify.sanitize(text, {
-            ALLOWED_TAGS: [], // No HTML tags allowed
-            ALLOWED_ATTR: [],
-            KEEP_CONTENT: true, // Preserve text content
-            FORBID_TAGS: ['style', 'script'], // Defense-in-depth
-            FORBID_ATTR: ['style', 'onerror', 'onload'], // Block event handlers
-        });
+        // 1. Decode HTML entities to catch encoded attacks
+        let cleanText = text
+            .replace(/&lt;/gi, '<')
+            .replace(/&gt;/gi, '>')
+            .replace(/&amp;/gi, '&')
+            .replace(/&quot;/gi, '"')
+            .replace(/&#39;/gi, "'")
+            .replace(/&#x27;/gi, "'")
+            .replace(/&#x2F;/gi, '/');
+
+        // 2. Strip all HTML tags (including malformed ones)
+        // This regex handles various tag formats including self-closing, malformed, and nested
+        cleanText = cleanText.replace(/<[^>]*>?/gm, '');
+        
+        // 3. Remove any remaining angle brackets that might have slipped through
+        cleanText = cleanText.replace(/[<>]/g, '');
+
+        // 4. Remove dangerous javascript: and data: URI schemes
+        cleanText = cleanText.replace(/javascript:/gi, '');
+        cleanText = cleanText.replace(/data:/gi, '');
+        cleanText = cleanText.replace(/vbscript:/gi, '');
+
         return cleanText.trim();
     }
 

@@ -3,10 +3,6 @@ import { POST, GET } from '../../../app/api/bookings/[id]/messages/route';
 import { prisma } from '@/lib/db';
 import { auth } from '@clerk/nextjs/server';
 
-jest.mock('isomorphic-dompurify', () => ({
-    sanitize: (text: string) => text,
-}));
-
 // Mock auth
 jest.mock('@clerk/nextjs/server', () => ({
     auth: jest.fn(),

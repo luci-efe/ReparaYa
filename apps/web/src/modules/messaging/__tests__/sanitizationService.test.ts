@@ -1,11 +1,3 @@
-// Mock isomorphic-dompurify before importing the service
-jest.mock('isomorphic-dompurify', () => ({
-    __esModule: true,
-    default: {
-        sanitize: (text: string) => text.replace(/<[^>]*>?/gm, ''),
-    },
-}));
-
 import { sanitizationService } from '../services/sanitizationService';
 
 describe('SanitizationService', () => {
@@ -20,6 +12,25 @@ describe('SanitizationService', () => {
             const input = '  Hello World  ';
             const expected = 'Hello World';
             expect(sanitizationService.sanitizeText(input)).toBe(expected);
+        });
+
+        it('should handle encoded HTML entities', () => {
+            const input = '&lt;script&gt;alert("xss")&lt;/script&gt;';
+            const result = sanitizationService.sanitizeText(input);
+            expect(result).not.toContain('<');
+            expect(result).not.toContain('>');
+        });
+
+        it('should remove javascript: URIs', () => {
+            const input = 'Click javascript:alert(1)';
+            const result = sanitizationService.sanitizeText(input);
+            expect(result).not.toContain('javascript:');
+        });
+
+        it('should remove data: URIs', () => {
+            const input = 'Image data:image/png;base64,test';
+            const result = sanitizationService.sanitizeText(input);
+            expect(result).not.toContain('data:');
         });
     });
 
