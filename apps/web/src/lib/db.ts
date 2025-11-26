@@ -31,14 +31,28 @@ function getDatasourceUrl(): string | undefined {
   const baseUrl = process.env.DATABASE_URL;
   if (!baseUrl) return undefined;
 
-  // Check if pgbouncer parameters are already present
-  if (baseUrl.includes("pgbouncer=true")) {
-    return baseUrl;
-  }
+  try {
+    const url = new URL(baseUrl);
 
-  // Add PgBouncer parameters to disable prepared statements
-  const separator = baseUrl.includes("?") ? "&" : "?";
-  return `${baseUrl}${separator}pgbouncer=true&statement_cache_size=0`;
+    // Check if pgbouncer parameter is already present (any value)
+    if (url.searchParams.has("pgbouncer")) {
+      return baseUrl;
+    }
+
+    // Add PgBouncer parameters to disable prepared statements
+    url.searchParams.set("pgbouncer", "true");
+    url.searchParams.set("statement_cache_size", "0");
+
+    return url.toString();
+  } catch {
+    // If URL parsing fails, fall back to string manipulation
+    // This handles edge cases like URLs with special characters
+    if (baseUrl.toLowerCase().includes("pgbouncer=")) {
+      return baseUrl;
+    }
+    const separator = baseUrl.includes("?") ? "&" : "?";
+    return `${baseUrl}${separator}pgbouncer=true&statement_cache_size=0`;
+  }
 }
 
 export const prisma =
