@@ -96,8 +96,9 @@ export class GeocodingServiceUnavailableError extends Error {
  * Ayuda a evitar llamadas concurrentes al reintentar
  */
 function sleepWithJitter(baseMs: number, attempt: number): Promise<void> {
-  const jitter = Math.random() * baseMs;
-  const delay = baseMs * Math.pow(2, attempt - 1) + jitter;
+  const exponentialDelay = baseMs * Math.pow(2, attempt - 1);
+  const jitter = Math.random() * exponentialDelay * 0.3; // 30% jitter
+  const delay = exponentialDelay + jitter;
   return new Promise((resolve) => setTimeout(resolve, delay));
 }
 
