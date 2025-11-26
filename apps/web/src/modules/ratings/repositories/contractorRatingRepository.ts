@@ -12,6 +12,16 @@ export const contractorRatingRepository = {
                 stars: data.stars,
                 comment: data.comment,
             },
+            include: {
+                contractor: {
+                    select: {
+                        id: true,
+                        firstName: true,
+                        lastName: true,
+                        avatarUrl: true,
+                    },
+                },
+            },
         });
     },
 

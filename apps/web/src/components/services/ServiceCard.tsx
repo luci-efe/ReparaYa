@@ -23,13 +23,19 @@ interface ServiceCardProps {
                 totalRatings: number;
             } | null;
         };
+        ratingStats: {
+            average: number | Decimal;
+            totalRatings: number;
+        } | null;
     };
 }
 
 export function ServiceCard({ service }: ServiceCardProps) {
     const imageUrl = service.images[0]?.s3Url || '/placeholder-service.svg';
     const contractorName = service.contractor.contractorProfile?.businessName || `${service.contractor.firstName} ${service.contractor.lastName}`;
-    const ratingStats = service.contractor.ratingStats;
+
+    // Only show service-specific rating as requested
+    const displayStats = service.ratingStats;
 
     return (
         <div className="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow">
@@ -44,10 +50,10 @@ export function ServiceCard({ service }: ServiceCardProps) {
             <div className="p-4">
                 <div className="flex justify-between items-start mb-1">
                     <h3 className="text-lg font-semibold text-gray-900">{service.title}</h3>
-                    {ratingStats && (
+                    {displayStats && (
                         <UserRatingBadge
-                            average={Number(ratingStats.average)}
-                            totalRatings={ratingStats.totalRatings}
+                            average={Number(displayStats.average)}
+                            totalRatings={displayStats.totalRatings}
                             size="sm"
                         />
                     )}

@@ -5,7 +5,7 @@ import { useAddresses } from '@/hooks/useAddresses';
 
 interface MetricCardProps {
     title: string;
-    value: string | number;
+    value: string | number | React.ReactNode;
     icon: React.ReactNode;
     trend?: string;
     trendUp?: boolean;
@@ -18,7 +18,7 @@ function MetricCard({ title, value, icon, trend, trendUp }: MetricCardProps) {
                 <div className="flex items-center justify-between">
                     <div>
                         <p className="text-sm font-medium text-gray-500">{title}</p>
-                        <p className="text-2xl font-bold mt-2 text-gray-900">{value}</p>
+                        <div className="text-2xl font-bold mt-2 text-gray-900">{value}</div>
                         {trend && (
                             <p className={`text-xs mt-1 font-medium ${trendUp ? 'text-green-600' : 'text-red-600'}`}>
                                 {trend}

@@ -22,14 +22,22 @@ interface ServiceDetailData {
     durationMinutes: number;
     images: { s3Url: string }[];
     contractor: {
-        id: string; // Added ID for stats
+        id: string;
         firstName: string;
         lastName: string;
         contractorProfile: {
             businessName: string;
             description: string | null;
         } | null;
+        ratingStats: {
+            average: number | Decimal;
+            totalRatings: number;
+        } | null;
     };
+    ratingStats: {
+        average: number | Decimal;
+        totalRatings: number;
+    } | null;
 }
 
 interface ServiceDetailProps {
@@ -44,49 +52,14 @@ export function ServiceDetail({ service }: ServiceDetailProps) {
     const [ratings, setRatings] = useState<RatingResponse[]>([]);
     const [ratingsLoading, setRatingsLoading] = useState(true);
 
-    // We use contractor stats for now as service stats are not yet implemented in backend
-    // Or we could implement service stats. For now, let's use contractor stats as a proxy or just hide if not available.
-    // Actually, the requirement says "Contractor profile and service detail pages to display aggregated rating information".
-    // Displaying contractor's overall rating on service page is common.
-    // But wait, `useUserRatingStats` takes a userId. `service.contractor.id` is the internal ID.
-    // The hook expects Clerk ID? No, I checked `useUserRatingStats.ts` and it uses `useUser` from Clerk to get CURRENT user stats.
-    // I need a hook to get ANY user stats.
-    // I should create `useContractorRatingStats` or modify `useUserRatingStats` to accept an ID.
-    // The current `useUserRatingStats` implementation:
-    /*
-    export function useUserRatingStats() {
-        const { user } = useUser();
-        const userId = user?.id;
-        return useQuery({ ... queryKey: ['userRatingStats', userId] ... fetch('/api/users/me/rating-stats') ... });
-    }
-    */
-    // It fetches "me". I need to fetch "other".
-    // I created `GET /api/users/[id]/rating-stats`.
-    // So I should create a new hook `usePublicRatingStats(userId)` or similar.
-    // Or just fetch it in useEffect for now to save time.
-
-    const [stats, setStats] = useState<{ average: number; totalRatings: number } | null>(null);
 
     useEffect(() => {
-        const fetchStats = async () => {
-            try {
-                // Assuming service.contractor.id is the internal ID
-                const res = await fetch(`/api/users/${service.contractor.id}/rating-stats`);
-                if (res.ok) {
-                    const data = await res.json();
-                    setStats(data);
-                }
-            } catch (error) {
-                console.error('Error fetching stats:', error);
-            }
-        };
-
         const fetchRatings = async () => {
             try {
                 const res = await fetch(`/api/services/${service.id}/ratings`);
                 if (res.ok) {
                     const data = await res.json();
-                    setRatings(data);
+                    setRatings(data.ratings || []);
                 }
             } catch (error) {
                 console.error('Error fetching ratings:', error);
@@ -95,11 +68,8 @@ export function ServiceDetail({ service }: ServiceDetailProps) {
             }
         };
 
-        if (service.contractor.id) {
-            fetchStats();
-        }
         fetchRatings();
-    }, [service.id, service.contractor.id]);
+    }, [service.id]);
 
 
     const handleSlotSelect = (slotId: string, date: Date) => {
@@ -152,13 +122,28 @@ export function ServiceDetail({ service }: ServiceDetailProps) {
                 <div className="bg-white p-6 rounded-lg shadow-sm">
                     <div className="flex justify-between items-start mb-4">
                         <h1 className="text-3xl font-bold text-gray-900">{service.title}</h1>
-                        {stats && (
-                            <UserRatingBadge
-                                average={stats.average}
-                                totalRatings={stats.totalRatings}
-                                size="lg"
-                            />
-                        )}
+                        <div className="flex flex-col items-end gap-1">
+                            {service.ratingStats && (
+                                <div className="flex items-center gap-2">
+                                    <span className="text-xs text-gray-500">Servicio:</span>
+                                    <UserRatingBadge
+                                        average={Number(service.ratingStats.average)}
+                                        totalRatings={service.ratingStats.totalRatings}
+                                        size="lg"
+                                    />
+                                </div>
+                            )}
+                            {service.contractor.ratingStats && (
+                                <div className="flex items-center gap-2">
+                                    <span className="text-xs text-gray-500">Profesional:</span>
+                                    <UserRatingBadge
+                                        average={Number(service.contractor.ratingStats.average)}
+                                        totalRatings={service.contractor.ratingStats.totalRatings}
+                                        size="sm"
+                                    />
+                                </div>
+                            )}
+                        </div>
                     </div>
 
                     <div className="flex items-center gap-4 mb-6">

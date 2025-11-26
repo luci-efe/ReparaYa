@@ -20,6 +20,11 @@ export const RatingsList: React.FC<RatingsListProps> = ({ ratings, isLoading, em
         );
     }
 
+    if (!Array.isArray(ratings)) {
+        console.error('RatingsList received non-array ratings:', ratings);
+        return null;
+    }
+
     if (ratings.length === 0) {
         return (
             <div className="py-8 text-center text-gray-500">

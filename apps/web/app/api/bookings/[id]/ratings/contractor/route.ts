@@ -36,7 +36,10 @@ export async function POST(
             validatedData
         );
 
-        return NextResponse.json(rating);
+        return NextResponse.json({
+            ...rating,
+            author: rating.contractor,
+        });
     } catch (error) {
         console.error('Error creating contractor rating:', error);
         if (error instanceof z.ZodError) {

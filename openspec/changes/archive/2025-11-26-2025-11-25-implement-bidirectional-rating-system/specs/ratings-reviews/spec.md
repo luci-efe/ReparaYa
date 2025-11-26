@@ -1,6 +1,6 @@
 # Spec Delta: Calificaciones y Resenas (Ratings & Reviews)
 
-## MODIFIED Requirements
+## ADDED Requirements
 
 ### Requirement: RF-009-BIDIRECTIONAL - Sistema de Calificaciones Bidireccional
 

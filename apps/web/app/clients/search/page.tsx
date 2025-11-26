@@ -50,6 +50,7 @@ export default async function SearchPage({
                 orderBy: { order: 'asc' },
                 take: 1,
             },
+            ratingStats: true,
         },
         orderBy: { createdAt: 'desc' },
     });

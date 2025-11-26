@@ -19,6 +19,10 @@ interface ServiceData {
             totalRatings: number;
         } | null;
     };
+    ratingStats: {
+        average: number | Decimal;
+        totalRatings: number;
+    } | null;
 }
 
 interface ServiceGridProps {

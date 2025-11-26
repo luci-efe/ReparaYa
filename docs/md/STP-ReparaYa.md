@@ -3537,15 +3537,15 @@ Las calificaciones son ocultas hasta que:
 
 | ID | Descripción | Tipo | Requisito | Prioridad | Estado |
 |----|-------------|------|-----------|-----------|--------|
-| TC-RF-009-01 | Cliente crea calificación válida para contratista | Integración | RF-009 | Alta | Pendiente |
-| TC-RF-009-02 | Contratista crea calificación válida para cliente | Integración | RF-009 | Alta | Pendiente |
-| TC-RF-009-03 | Rechazo de calificación duplicada | Integración | RF-009 | Alta | Pendiente |
-| TC-RF-009-04 | Visibilidad double-blind: rating oculto hasta ambos califiquen | Unitaria | RF-009 | Alta | Pendiente |
-| TC-RF-009-05 | Ratings revelados cuando ambos califican | Unitaria | RF-009 | Alta | Pendiente |
-| TC-RF-009-06 | Rating revelado por expiración de 7 días | Unitaria | RF-009 | Alta | Pendiente |
-| TC-RF-009-07 | Cálculo correcto de promedio de usuario | Unitaria | RF-009 | Media | Pendiente |
-| TC-RF-009-08 | Validación: stars debe ser 1-5 | Unitaria | RF-009 | Media | Pendiente |
-| TC-RF-009-09 | Solo cliente puede calificar al contratista | Integración | RF-009 | Alta | Pendiente |
+| TC-RF-009-01 | Cliente crea calificación válida para contratista | Integración | RF-009 | Alta | ✅ Aprobado |
+| TC-RF-009-02 | Contratista crea calificación válida para cliente | Integración | RF-009 | Alta | ✅ Aprobado |
+| TC-RF-009-03 | Rechazo de calificación duplicada | Integración | RF-009 | Alta | ✅ Aprobado |
+| TC-RF-009-04 | Visibilidad double-blind: rating oculto hasta ambos califiquen | Unitaria | RF-009 | Alta | ✅ Aprobado |
+| TC-RF-009-05 | Ratings revelados cuando ambos califican | Unitaria | RF-009 | Alta | ✅ Aprobado |
+| TC-RF-009-06 | Rating revelado por expiración de 7 días | Unitaria | RF-009 | Alta | ✅ Aprobado |
+| TC-RF-009-07 | Cálculo correcto de promedio de usuario | Unitaria | RF-009 | Media | ✅ Aprobado |
+| TC-RF-009-08 | Validación: stars debe ser 1-5 | Unitaria | RF-009 | Media | ✅ Aprobado |
+| TC-RF-009-09 | Solo cliente puede calificar al contratista | Integración | RF-009 | Alta | ✅ Aprobado |
 | TC-RF-009-10 | Modal de calificación funciona correctamente | E2E | RF-009 | Alta | Pendiente |
 
 ---
@@ -3569,7 +3569,7 @@ Las calificaciones son ocultas hasta que:
 - ✅ ClientRating insertado
 - ✅ Rating oculto para contratista (double-blind)
 
-**Estado:** Pendiente
+**Estado:** ✅ Aprobado
 
 ---
 
@@ -3590,7 +3590,7 @@ Las calificaciones son ocultas hasta que:
 - ✅ Antes: ratings ocultos
 - ✅ Después: ratings visibles para ambos
 
-**Estado:** Pendiente
+**Estado:** ✅ Aprobado
 
 ---
 

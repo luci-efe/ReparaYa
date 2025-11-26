@@ -11,9 +11,14 @@ export async function GET(
         const page = parseInt(searchParams.get('page') || '1');
         const limit = parseInt(searchParams.get('limit') || '10');
 
-        const ratings = await clientRatingService.getForService(serviceId, page, limit);
+        const { ratings: rawRatings, total } = await clientRatingService.getForService(serviceId, page, limit);
 
-        return NextResponse.json(ratings);
+        const ratings = rawRatings.map(r => ({
+            ...r,
+            author: r.client,
+        }));
+
+        return NextResponse.json({ ratings, total });
     } catch (error) {
         console.error('Error fetching service ratings:', error);
         return NextResponse.json(

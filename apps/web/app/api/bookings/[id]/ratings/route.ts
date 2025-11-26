@@ -51,8 +51,12 @@ export async function GET(
         const formatRating = (rating: any, type: 'CLIENT' | 'CONTRACTOR') => {
             if (!rating) return null;
 
-            // If hidden, return limited data
-            if (!canSee) {
+            // Check if user is the author of this rating
+            const isAuthor = (type === 'CLIENT' && user.id === rating.clientId) ||
+                (type === 'CONTRACTOR' && user.id === rating.contractorId);
+
+            // If hidden and not author, return limited data
+            if (!canSee && !isAuthor) {
                 return {
                     id: rating.id,
                     isHidden: true,

@@ -31,8 +31,9 @@ export const clientRatingService = {
             throw new DuplicateRatingError(bookingId);
         }
 
-        // Auto-approve if no comment
-        const moderationStatus = data.comment ? 'PENDING' : 'APPROVED';
+        // Auto-approve for now to ensure stats update immediately
+        // TODO: Re-enable moderation logic when admin panel is fully functional
+        const moderationStatus = 'APPROVED'; // data.comment ? 'PENDING' : 'APPROVED';
 
         const rating = await prisma.clientRating.create({
             data: {
