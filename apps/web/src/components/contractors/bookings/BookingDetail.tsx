@@ -7,6 +7,9 @@ import { BookingStateActions } from './BookingStateActions';
 import { BookingTimeline } from './BookingTimeline';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { RatingModal } from '@/components/ratings/RatingModal';
+import { RatingCard } from '@/components/ratings/RatingCard';
+import { RatingResponse } from '@/modules/ratings/types';
 
 import { BookingChat } from '@/components/clients/bookings/BookingChat';
 
@@ -18,6 +21,9 @@ export function BookingDetail({ bookingId }: BookingDetailProps) {
     const [booking, setBooking] = useState<BookingDTO | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [ratings, setRatings] = useState<{ clientRating: RatingResponse | null; contractorRating: RatingResponse | null }>({ clientRating: null, contractorRating: null });
+    const [isRatingModalOpen, setIsRatingModalOpen] = useState(false);
+    const [isSubmittingRating, setIsSubmittingRating] = useState(false);
 
     const fetchBooking = useCallback(async () => {
         try {
@@ -34,9 +40,51 @@ export function BookingDetail({ bookingId }: BookingDetailProps) {
         }
     }, [bookingId]);
 
+    const fetchRatings = useCallback(async () => {
+        try {
+            const res = await fetch(`/api/bookings/${bookingId}/ratings`);
+            if (res.ok) {
+                const data = await res.json();
+                setRatings(data);
+            }
+        } catch (error) {
+            console.error('Error fetching ratings:', error);
+        }
+    }, [bookingId]);
+
     useEffect(() => {
         fetchBooking();
-    }, [bookingId, fetchBooking]);
+        fetchRatings();
+    }, [bookingId, fetchBooking, fetchRatings]);
+
+    const handleRateClient = async (data: { stars: number; comment: string }) => {
+        setIsSubmittingRating(true);
+        try {
+            const res = await fetch(`/api/bookings/${bookingId}/ratings/contractor`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    bookingId,
+                    contractorId: booking?.contractorId, // Assuming contractor ID is available
+                    stars: data.stars,
+                    comment: data.comment,
+                }),
+            });
+
+            if (!res.ok) {
+                const errorData = await res.json();
+                throw new Error(errorData.error || 'Error al enviar la calificación');
+            }
+
+            await fetchRatings();
+            setIsRatingModalOpen(false);
+        } catch (error) {
+            console.error('Error submitting rating:', error);
+            alert(error instanceof Error ? error.message : 'Error al enviar la calificación');
+        } finally {
+            setIsSubmittingRating(false);
+        }
+    };
 
     const [activeTab, setActiveTab] = useState<'details' | 'chat'>('details');
 
@@ -122,6 +170,50 @@ export function BookingDetail({ bookingId }: BookingDetailProps) {
                             </div>
                         </div>
 
+                        {/* Ratings Section */}
+                        {booking.status === 'COMPLETED' && (
+                            <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-100">
+                                <h3 className="text-lg font-semibold mb-4">Calificaciones</h3>
+
+                                {ratings.contractorRating ? (
+                                    <div className="mb-6">
+                                        <h4 className="text-sm font-medium text-gray-700 mb-2">Tu calificación al cliente:</h4>
+                                        <RatingCard
+                                            rating={ratings.contractorRating}
+                                            authorName="Tú"
+                                            role="CONTRACTOR"
+                                        />
+                                    </div>
+                                ) : (
+                                    <div className="mb-6">
+                                        <p className="text-gray-600 mb-3">¿Cómo fue tu experiencia con el cliente? Califícalo.</p>
+                                        <button
+                                            onClick={() => setIsRatingModalOpen(true)}
+                                            className="px-4 py-2 bg-yellow-400 text-white font-medium rounded-md hover:bg-yellow-500 transition-colors"
+                                        >
+                                            Calificar Cliente
+                                        </button>
+                                    </div>
+                                )}
+
+                                {ratings.clientRating && !('isHidden' in ratings.clientRating) && (
+                                    <div>
+                                        <h4 className="text-sm font-medium text-gray-700 mb-2">Calificación del cliente:</h4>
+                                        <RatingCard
+                                            rating={ratings.clientRating}
+                                            authorName={booking.client?.firstName || 'Cliente'}
+                                            role="CLIENT"
+                                        />
+                                    </div>
+                                )}
+                                {ratings.clientRating && 'isHidden' in ratings.clientRating && (
+                                    <div className="p-4 bg-gray-50 rounded-md text-center text-gray-500 italic">
+                                        El cliente te ha calificado. Su calificación será visible cuando tú también lo califiques o pasen 7 días.
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
                         {/* Client Info */}
                         <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-100">
                             <h3 className="text-lg font-semibold mb-4">Información del Cliente</h3>
@@ -181,6 +273,14 @@ export function BookingDetail({ bookingId }: BookingDetailProps) {
                     <BookingChat booking={booking} />
                 </div>
             )}
+
+            <RatingModal
+                isOpen={isRatingModalOpen}
+                onClose={() => setIsRatingModalOpen(false)}
+                onSubmit={handleRateClient}
+                isLoading={isSubmittingRating}
+                title="Calificar Cliente"
+            />
         </div>
     );
 }

@@ -43,6 +43,7 @@ export default async function SearchPage({
             contractor: {
                 include: {
                     contractorProfile: true,
+                    ratingStats: true,
                 },
             },
             images: {

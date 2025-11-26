@@ -9,28 +9,33 @@ datasource db {
 }
 
 model User {
-  id                  String                @id @default(uuid())
-  clerkUserId         String                @unique
-  email               String                @unique
-  firstName           String
-  lastName            String
-  phone               String?
-  avatarUrl           String?
-  role                UserRole              @default(CLIENT)
-  status              UserStatus            @default(ACTIVE)
-  createdAt           DateTime              @default(now())
-  updatedAt           DateTime              @updatedAt
-  addresses           Address[]
-  adminAuditLogs      AdminAuditLog[]
-  clientBookings      Booking[]             @relation("ClientBookings")
-  contractorBookings  Booking[]             @relation("ContractorBookings")
-  bookingStateChanges BookingStateHistory[]
-  contractorProfile   ContractorProfile?
-  disputesOpened      Dispute[]             @relation("DisputeOpenedBy")
-  disputesResolved    Dispute[]             @relation("DisputeResolvedBy")
-  messagesSent        Message[]
-  ratings             Rating[]
-  services            Service[]
+  id                     String                @id @default(uuid())
+  clerkUserId            String                @unique
+  email                  String                @unique
+  firstName              String
+  lastName               String
+  phone                  String?
+  avatarUrl              String?
+  role                   UserRole              @default(CLIENT)
+  status                 UserStatus            @default(ACTIVE)
+  createdAt              DateTime              @default(now())
+  updatedAt              DateTime              @updatedAt
+  addresses              Address[]
+  adminAuditLogs         AdminAuditLog[]
+  clientBookings         Booking[]             @relation("ClientBookings")
+  contractorBookings     Booking[]             @relation("ContractorBookings")
+  bookingStateChanges    BookingStateHistory[]
+  contractorProfile      ContractorProfile?
+  disputesOpened         Dispute[]             @relation("DisputeOpenedBy")
+  disputesResolved       Dispute[]             @relation("DisputeResolvedBy")
+  messagesSent           Message[]
+  // Ratings relations
+  clientGivenRatings     ClientRating[]        @relation("ClientGivenRatings")
+  contractorRatings      ClientRating[]        @relation("ContractorRatings")
+  contractorGivenRatings ContractorRating[]    @relation("ContractorGivenRatings")
+  clientReceivedRatings  ContractorRating[]    @relation("ClientReceivedRatings")
+  ratingStats            UserRatingStats?
+  services               Service[]
 
   @@index([clerkUserId])
   @@index([email])
@@ -100,7 +105,7 @@ model Service {
   description      String                  @db.VarChar(2000)
   basePrice        Decimal                 @db.Decimal(10, 2)
   currency         String                  @default("MXN") @db.VarChar(3)
-  durationMinutes  Int                     @db.SmallInt @default(60)
+  durationMinutes  Int                     @default(60) @db.SmallInt
   visibilityStatus ServiceVisibilityStatus @default(DRAFT)
   lastPublishedAt  DateTime?
   locationLat      Decimal?                @db.Decimal(10, 8)
@@ -112,7 +117,7 @@ model Service {
   updatedAt        DateTime                @updatedAt
   availabilities   Availability[]
   bookings         Booking[]
-  ratings          Rating[]
+  ratings          ClientRating[]
   category         ServiceCategory         @relation(fields: [categoryId], references: [id], onDelete: Restrict)
   contractor       User                    @relation(fields: [contractorId], references: [id], onDelete: Cascade)
   ratingStats      ServiceRatingStats?
@@ -171,7 +176,9 @@ model Booking {
   dispute                Dispute?
   messages               Message[]
   payments               Payment[]
-  rating                 Rating?
+  clientRating           ClientRating?         @relation("ClientRatingBooking")
+  contractorRating       ContractorRating?     @relation("ContractorRatingBooking")
+  completedAt            DateTime?
 
   @@index([clientId, status])
   @@index([contractorId, status])
@@ -232,25 +239,6 @@ model Message {
   sender    User     @relation(fields: [senderId], references: [id])
 
   @@index([bookingId, createdAt])
-}
-
-model Rating {
-  id               String           @id @default(uuid())
-  bookingId        String           @unique
-  serviceId        String
-  clientId         String
-  stars            Int
-  comment          String?          @db.VarChar(500)
-  moderationStatus ModerationStatus @default(PENDING)
-  moderationNotes  String?
-  createdAt        DateTime         @default(now())
-  updatedAt        DateTime         @updatedAt
-  booking          Booking          @relation(fields: [bookingId], references: [id], onDelete: Cascade)
-  client           User             @relation(fields: [clientId], references: [id])
-  service          Service          @relation(fields: [serviceId], references: [id])
-
-  @@index([serviceId, moderationStatus])
-  @@index([moderationStatus])
 }
 
 model ServiceRatingStats {
@@ -492,4 +480,54 @@ model ContractorAvailabilityBlock {
 
   @@index([contractorProfileId, startDateTime, endDateTime])
   @@map("contractor_availability_blocks")
+}
+
+model ClientRating {
+  id               String           @id @default(uuid())
+  bookingId        String           @unique
+  serviceId        String
+  contractorId     String
+  clientId         String
+  stars            Int
+  comment          String?          @db.VarChar(500)
+  moderationStatus ModerationStatus @default(PENDING)
+  moderationNotes  String?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  booking    Booking @relation("ClientRatingBooking", fields: [bookingId], references: [id], onDelete: Cascade)
+  contractor User    @relation("ContractorRatings", fields: [contractorId], references: [id])
+  client     User    @relation("ClientGivenRatings", fields: [clientId], references: [id])
+  service    Service @relation(fields: [serviceId], references: [id])
+
+  @@index([contractorId])
+  @@index([serviceId])
+}
+
+model ContractorRating {
+  id               String           @id @default(uuid())
+  bookingId        String           @unique
+  contractorId     String
+  clientId         String
+  stars            Int
+  comment          String?          @db.VarChar(500)
+  moderationStatus ModerationStatus @default(PENDING)
+  moderationNotes  String?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  booking    Booking @relation("ContractorRatingBooking", fields: [bookingId], references: [id], onDelete: Cascade)
+  contractor User    @relation("ContractorGivenRatings", fields: [contractorId], references: [id])
+  client     User    @relation("ClientReceivedRatings", fields: [clientId], references: [id])
+
+  @@index([clientId])
+}
+
+model UserRatingStats {
+  userId       String   @id
+  role         UserRole
+  average      Decimal  @db.Decimal(3, 2)
+  totalRatings Int      @default(0)
+  updatedAt    DateTime @updatedAt
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

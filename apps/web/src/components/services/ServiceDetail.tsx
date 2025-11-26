@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ServiceImageGallery } from './ServiceImageGallery';
 import { AvailabilitySlotPicker } from './AvailabilitySlotPicker';
 import { useRouter } from 'next/navigation';
@@ -9,6 +9,10 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { BookingForm } from '../booking/BookingForm';
 import type { Decimal } from '@prisma/client/runtime/library';
+import { UserRatingBadge } from '@/components/ratings/UserRatingBadge';
+import { RatingsList } from '@/components/ratings/RatingsList';
+import { RatingResponse } from '@/modules/ratings/types';
+import { useUserRatingStats } from '@/hooks/useUserRatingStats';
 
 interface ServiceDetailData {
     id: string;
@@ -18,6 +22,7 @@ interface ServiceDetailData {
     durationMinutes: number;
     images: { s3Url: string }[];
     contractor: {
+        id: string; // Added ID for stats
         firstName: string;
         lastName: string;
         contractorProfile: {
@@ -36,6 +41,66 @@ export function ServiceDetail({ service }: ServiceDetailProps) {
     const { isSignedIn } = useAuth();
     const [selectedSlot, setSelectedSlot] = useState<{ id: string; date: Date } | null>(null);
     const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
+    const [ratings, setRatings] = useState<RatingResponse[]>([]);
+    const [ratingsLoading, setRatingsLoading] = useState(true);
+
+    // We use contractor stats for now as service stats are not yet implemented in backend
+    // Or we could implement service stats. For now, let's use contractor stats as a proxy or just hide if not available.
+    // Actually, the requirement says "Contractor profile and service detail pages to display aggregated rating information".
+    // Displaying contractor's overall rating on service page is common.
+    // But wait, `useUserRatingStats` takes a userId. `service.contractor.id` is the internal ID.
+    // The hook expects Clerk ID? No, I checked `useUserRatingStats.ts` and it uses `useUser` from Clerk to get CURRENT user stats.
+    // I need a hook to get ANY user stats.
+    // I should create `useContractorRatingStats` or modify `useUserRatingStats` to accept an ID.
+    // The current `useUserRatingStats` implementation:
+    /*
+    export function useUserRatingStats() {
+        const { user } = useUser();
+        const userId = user?.id;
+        return useQuery({ ... queryKey: ['userRatingStats', userId] ... fetch('/api/users/me/rating-stats') ... });
+    }
+    */
+    // It fetches "me". I need to fetch "other".
+    // I created `GET /api/users/[id]/rating-stats`.
+    // So I should create a new hook `usePublicRatingStats(userId)` or similar.
+    // Or just fetch it in useEffect for now to save time.
+
+    const [stats, setStats] = useState<{ average: number; totalRatings: number } | null>(null);
+
+    useEffect(() => {
+        const fetchStats = async () => {
+            try {
+                // Assuming service.contractor.id is the internal ID
+                const res = await fetch(`/api/users/${service.contractor.id}/rating-stats`);
+                if (res.ok) {
+                    const data = await res.json();
+                    setStats(data);
+                }
+            } catch (error) {
+                console.error('Error fetching stats:', error);
+            }
+        };
+
+        const fetchRatings = async () => {
+            try {
+                const res = await fetch(`/api/services/${service.id}/ratings`);
+                if (res.ok) {
+                    const data = await res.json();
+                    setRatings(data);
+                }
+            } catch (error) {
+                console.error('Error fetching ratings:', error);
+            } finally {
+                setRatingsLoading(false);
+            }
+        };
+
+        if (service.contractor.id) {
+            fetchStats();
+        }
+        fetchRatings();
+    }, [service.id, service.contractor.id]);
+
 
     const handleSlotSelect = (slotId: string, date: Date) => {
         setSelectedSlot({ id: slotId, date });
@@ -85,7 +150,16 @@ export function ServiceDetail({ service }: ServiceDetailProps) {
                 <ServiceImageGallery images={service.images} />
 
                 <div className="bg-white p-6 rounded-lg shadow-sm">
-                    <h1 className="text-3xl font-bold text-gray-900 mb-4">{service.title}</h1>
+                    <div className="flex justify-between items-start mb-4">
+                        <h1 className="text-3xl font-bold text-gray-900">{service.title}</h1>
+                        {stats && (
+                            <UserRatingBadge
+                                average={stats.average}
+                                totalRatings={stats.totalRatings}
+                                size="lg"
+                            />
+                        )}
+                    </div>
 
                     <div className="flex items-center gap-4 mb-6">
                         <div className="flex items-center gap-2">
@@ -109,8 +183,8 @@ export function ServiceDetail({ service }: ServiceDetailProps) {
                 <div className="bg-white p-6 rounded-lg shadow-sm">
                     <h3 className="text-lg font-semibold text-gray-900 mb-4">Sobre el Profesional</h3>
                     <div className="flex items-center gap-4">
-                        <div className="h-16 w-16 rounded-full bg-gray-200 overflow-hidden relative">
-                            {/* Avatar */}
+                        <div className="h-16 w-16 rounded-full bg-gray-200 overflow-hidden relative flex items-center justify-center text-2xl font-bold text-gray-500">
+                            {service.contractor.firstName[0]}
                         </div>
                         <div>
                             <h4 className="font-medium text-lg">
@@ -122,6 +196,12 @@ export function ServiceDetail({ service }: ServiceDetailProps) {
                             </p>
                         </div>
                     </div>
+                </div>
+
+                {/* Ratings Section */}
+                <div className="bg-white p-6 rounded-lg shadow-sm">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Reseñas del Servicio</h3>
+                    <RatingsList ratings={ratings} isLoading={ratingsLoading} />
                 </div>
             </div>
 

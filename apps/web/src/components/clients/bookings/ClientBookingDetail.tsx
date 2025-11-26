@@ -7,6 +7,9 @@ import { BookingTimeline } from '@/components/contractors/bookings/BookingTimeli
 import { PaymentSection } from './PaymentSection';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { RatingModal } from '@/components/ratings/RatingModal';
+import { RatingCard } from '@/components/ratings/RatingCard';
+import { RatingResponse } from '@/modules/ratings/types';
 
 import { BookingChat } from './BookingChat';
 
@@ -18,6 +21,9 @@ export function ClientBookingDetail({ bookingId }: ClientBookingDetailProps) {
     const [booking, setBooking] = useState<BookingDTO | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [ratings, setRatings] = useState<{ clientRating: RatingResponse | null; contractorRating: RatingResponse | null }>({ clientRating: null, contractorRating: null });
+    const [isRatingModalOpen, setIsRatingModalOpen] = useState(false);
+    const [isSubmittingRating, setIsSubmittingRating] = useState(false);
 
     const fetchBooking = useCallback(async () => {
         try {
@@ -34,9 +40,22 @@ export function ClientBookingDetail({ bookingId }: ClientBookingDetailProps) {
         }
     }, [bookingId]);
 
+    const fetchRatings = useCallback(async () => {
+        try {
+            const res = await fetch(`/api/bookings/${bookingId}/ratings`);
+            if (res.ok) {
+                const data = await res.json();
+                setRatings(data);
+            }
+        } catch (error) {
+            console.error('Error fetching ratings:', error);
+        }
+    }, [bookingId]);
+
     useEffect(() => {
         fetchBooking();
-    }, [bookingId, fetchBooking]);
+        fetchRatings();
+    }, [bookingId, fetchBooking, fetchRatings]);
 
     // Demo Auto-Advance Logic
     useEffect(() => {
@@ -92,6 +111,36 @@ export function ClientBookingDetail({ bookingId }: ClientBookingDetailProps) {
             clearTimeout(innerTimeout);
         };
     }, [booking, fetchBooking]);
+
+    const handleRateService = async (data: { stars: number; comment: string }) => {
+        setIsSubmittingRating(true);
+        try {
+            const res = await fetch(`/api/bookings/${bookingId}/ratings/client`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    bookingId,
+                    serviceId: booking?.service?.id, // Assuming service ID is available in booking
+                    contractorId: booking?.contractor?.id, // Assuming contractor ID is available
+                    stars: data.stars,
+                    comment: data.comment,
+                }),
+            });
+
+            if (!res.ok) {
+                const errorData = await res.json();
+                throw new Error(errorData.error || 'Error al enviar la calificación');
+            }
+
+            await fetchRatings();
+            setIsRatingModalOpen(false);
+        } catch (error) {
+            console.error('Error submitting rating:', error);
+            alert(error instanceof Error ? error.message : 'Error al enviar la calificación');
+        } finally {
+            setIsSubmittingRating(false);
+        }
+    };
 
     const [activeTab, setActiveTab] = useState<'details' | 'chat'>('details');
 
@@ -179,6 +228,50 @@ export function ClientBookingDetail({ bookingId }: ClientBookingDetailProps) {
                             )}
                         </div>
 
+                        {/* Ratings Section */}
+                        {booking.status === 'COMPLETED' && (
+                            <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-100">
+                                <h3 className="text-lg font-semibold mb-4">Calificaciones</h3>
+
+                                {ratings.clientRating && !('isHidden' in ratings.clientRating) ? (
+                                    <div className="mb-6">
+                                        <h4 className="text-sm font-medium text-gray-700 mb-2">Tu calificación al profesional:</h4>
+                                        <RatingCard
+                                            rating={ratings.clientRating}
+                                            authorName="Tú"
+                                            role="CLIENT"
+                                        />
+                                    </div>
+                                ) : (
+                                    <div className="mb-6">
+                                        <p className="text-gray-600 mb-3">¿Cómo estuvo el servicio? Califica al profesional.</p>
+                                        <button
+                                            onClick={() => setIsRatingModalOpen(true)}
+                                            className="px-4 py-2 bg-yellow-400 text-white font-medium rounded-md hover:bg-yellow-500 transition-colors"
+                                        >
+                                            Calificar Servicio
+                                        </button>
+                                    </div>
+                                )}
+
+                                {ratings.contractorRating && !('isHidden' in ratings.contractorRating) && (
+                                    <div>
+                                        <h4 className="text-sm font-medium text-gray-700 mb-2">Calificación del profesional:</h4>
+                                        <RatingCard
+                                            rating={ratings.contractorRating}
+                                            authorName={booking.contractor?.firstName || 'Profesional'}
+                                            role="CONTRACTOR"
+                                        />
+                                    </div>
+                                )}
+                                {ratings.contractorRating && 'isHidden' in ratings.contractorRating && (
+                                    <div className="p-4 bg-gray-50 rounded-md text-center text-gray-500 italic">
+                                        El profesional te ha calificado. Tu calificación será visible cuando tú también lo califiques o pasen 7 días.
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
                         {/* Contractor Info */}
                         <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-100">
                             <h3 className="text-lg font-semibold mb-4">Información del Profesional</h3>
@@ -219,6 +312,14 @@ export function ClientBookingDetail({ bookingId }: ClientBookingDetailProps) {
                     <BookingChat booking={booking} />
                 </div>
             )}
+
+            <RatingModal
+                isOpen={isRatingModalOpen}
+                onClose={() => setIsRatingModalOpen(false)}
+                onSubmit={handleRateService}
+                isLoading={isSubmittingRating}
+                title="Calificar Servicio"
+            />
         </div>
     );
 }
