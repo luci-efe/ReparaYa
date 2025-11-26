@@ -110,7 +110,8 @@ describe('MetricsOverview', () => {
 
       // Assert
       const labels = _container.querySelectorAll('p.text-sm.text-gray-600');
-      const values = _container.querySelectorAll('p.text-2xl.font-bold.text-gray-900');
+      // Value element changed from <p> to <div> to support React.ReactNode values (like UserRatingBadge)
+      const values = _container.querySelectorAll('div.text-2xl.font-bold.text-gray-900');
 
       expect(labels).toHaveLength(4);
       expect(values).toHaveLength(4);
@@ -133,7 +134,8 @@ describe('MetricsOverview', () => {
       const { container: _container } = render(<MetricsOverview />, { wrapper: createWrapper() });
 
       // Assert
-      const values = _container.querySelectorAll('p.text-2xl.font-bold.text-gray-900');
+      // Value element changed from <p> to <div> to support React.ReactNode values (like UserRatingBadge)
+      const values = _container.querySelectorAll('div.text-2xl.font-bold.text-gray-900');
       expect(values).toHaveLength(4);
     });
 
