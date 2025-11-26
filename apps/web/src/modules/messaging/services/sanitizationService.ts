@@ -11,6 +11,8 @@ export class SanitizationService {
             ALLOWED_TAGS: [], // No HTML tags allowed
             ALLOWED_ATTR: [],
             KEEP_CONTENT: true, // Preserve text content
+            FORBID_TAGS: ['style', 'script'], // Defense-in-depth
+            FORBID_ATTR: ['style', 'onerror', 'onload'], // Block event handlers
         });
         return cleanText.trim();
     }
