@@ -1,8 +1,8 @@
 import { messageRepository } from '../repositories/messageRepository';
-import { prisma } from '../../../lib/db';
+import { prisma } from '@/lib/db';
 
 // Mock prisma
-jest.mock('../../../lib/db', () => ({
+jest.mock('@/lib/db', () => ({
     prisma: {
         message: {
             create: jest.fn(),

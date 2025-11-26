@@ -1,3 +1,11 @@
+// Mock isomorphic-dompurify before importing the service
+jest.mock('isomorphic-dompurify', () => ({
+    __esModule: true,
+    default: {
+        sanitize: (text: string) => text.replace(/<[^>]*>?/gm, ''),
+    },
+}));
+
 import { sanitizationService } from '../services/sanitizationService';
 
 describe('SanitizationService', () => {

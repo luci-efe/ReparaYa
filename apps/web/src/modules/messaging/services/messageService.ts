@@ -13,6 +13,7 @@ import {
     UnauthorizedMessageAccessError,
     MessageNotFoundError,
     RateLimitExceededError,
+    InvalidLinkError,
 } from '../errors';
 
 export class MessageService {
@@ -20,14 +21,14 @@ export class MessageService {
         // 1. Validate input
         const validatedData = createMessageSchema.parse(data);
 
-        // 2. Check rate limit (Simple implementation: 10 msgs/min)
+        // 2. Check rate limit (Simple implementation: 10 msgs/min per user per booking)
         // In a real app, use Redis or a proper rate limiter.
-        // Here we can check the last 10 messages from this user in this booking.
-        // For MVP/Prototype, we might skip strict rate limiting or do a simple DB check.
-        // Let's do a simple DB check.
+        // Here we check the last 10 messages from this user in this booking.
+        // For MVP/Prototype, we do a simple DB check.
         const recentMessages = await prisma.message.count({
             where: {
                 senderId: userId,
+                bookingId: validatedData.bookingId,
                 createdAt: {
                     gte: new Date(Date.now() - 60 * 1000), // Last minute
                 },
@@ -57,7 +58,7 @@ export class MessageService {
         // 5. Sanitize content
         const sanitizedText = sanitizationService.sanitizeText(validatedData.text);
         if (!sanitizationService.validateLinks(sanitizedText)) {
-            throw new Error('El mensaje contiene enlaces no permitidos. Solo se permiten enlaces https://');
+            throw new InvalidLinkError();
         }
 
         // 6. Create message

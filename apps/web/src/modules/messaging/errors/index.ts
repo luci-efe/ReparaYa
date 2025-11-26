@@ -32,3 +32,10 @@ export class MessageTooLongError extends Error {
         this.name = 'MessageTooLongError';
     }
 }
+
+export class InvalidLinkError extends Error {
+    constructor(message = 'El mensaje contiene enlaces no permitidos. Solo se permiten enlaces https://') {
+        super(message);
+        this.name = 'InvalidLinkError';
+    }
+}

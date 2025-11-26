@@ -1,11 +1,17 @@
+import DOMPurify from 'isomorphic-dompurify';
+
 export class SanitizationService {
     /**
      * Sanitizes text to remove HTML tags and prevent XSS.
-     * Also validates that only https links are allowed.
+     * Uses DOMPurify for robust sanitization.
      */
     sanitizeText(text: string): string {
-        // 1. Strip HTML tags using regex
-        const cleanText = text.replace(/<[^>]*>?/gm, '');
+        // Use DOMPurify with strict config for text-only content
+        const cleanText = DOMPurify.sanitize(text, {
+            ALLOWED_TAGS: [], // No HTML tags allowed
+            ALLOWED_ATTR: [],
+            KEEP_CONTENT: true, // Preserve text content
+        });
         return cleanText.trim();
     }
 
