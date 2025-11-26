@@ -10,6 +10,8 @@ export const metadata: Metadata = {
   description: "Conectamos clientes con contratistas de servicios de reparación y mantenimiento del hogar",
 };
 
+import QueryProvider from "@/lib/query/QueryProvider";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -30,7 +32,11 @@ export default function RootLayout({
       }}
     >
       <html lang="es">
-        <body>{children}</body>
+        <body>
+          <QueryProvider>
+            {children}
+          </QueryProvider>
+        </body>
       </html>
     </ClerkProvider>
   );

@@ -2,31 +2,46 @@
 
 ## Overview
 
-This document describes the technical architecture for implementing real-time messaging between clients and contractors within booking contexts using Supabase Realtime.
+This document describes the technical architecture for implementing real-time messaging between clients and contractors within booking contexts using Supabase Realtime and TanStack Query for client-side state management.
 
 ## System Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                         Client Browser                          │
-├─────────────────────────────────────────────────────────────────┤
-│  React Components                                               │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────────┐ │
-│  │ ChatContainer│  │MessageInput │  │  useSupabaseMessages   │ │
-│  │             │  │             │  │  (Custom Hook)          │ │
-│  └──────┬──────┘  └──────┬──────┘  └───────────┬─────────────┘ │
-│         │                │                     │               │
-│         │                │                     │               │
-│         ▼                ▼                     ▼               │
-│  ┌─────────────────────────────────────────────────────────┐   │
-│  │              Supabase JavaScript Client                 │   │
-│  │  ┌─────────────────┐  ┌────────────────────────────┐   │   │
-│  │  │  REST Client    │  │  Realtime Client           │   │   │
-│  │  │  (Send Message) │  │  (Subscribe to Channel)    │   │   │
-│  │  └────────┬────────┘  └─────────────┬──────────────┘   │   │
-│  └───────────┼─────────────────────────┼──────────────────┘   │
-│              │                         │                       │
-└──────────────┼─────────────────────────┼───────────────────────┘
+┌─────────────────────────────────────────────────────────────────────┐
+│                           Client Browser                             │
+├─────────────────────────────────────────────────────────────────────┤
+│  React Components                                                    │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────────────┐  │
+│  │ ChatContainer│  │MessageInput │  │       Custom Hooks          │  │
+│  │             │  │             │  │  ┌─────────────────────────┐│  │
+│  └──────┬──────┘  └──────┬──────┘  │  │ useBookingMessages     ││  │
+│         │                │         │  │ useSendMessage          ││  │
+│         │                │         │  └─────────────────────────┘│  │
+│         └────────┬───────┘         └───────────┬─────────────────┘  │
+│                  │                             │                     │
+│                  ▼                             ▼                     │
+│  ┌─────────────────────────────────────────────────────────────┐    │
+│  │                    TanStack Query Layer                     │    │
+│  │  ┌─────────────────────────────────────────────────────┐   │    │
+│  │  │              QueryClient (QueryProvider)            │   │    │
+│  │  │  • Cache: ['messages', bookingId]                   │   │    │
+│  │  │  • staleTime: Infinity                              │   │    │
+│  │  │  • useInfiniteQuery (fetch + pagination)            │   │    │
+│  │  │  • useMutation (optimistic updates)                 │   │    │
+│  │  └─────────────────────────────────────────────────────┘   │    │
+│  └──────────────────────────┬──────────────────────────────────┘    │
+│                             │                                       │
+│                             ▼                                       │
+│  ┌─────────────────────────────────────────────────────────────┐    │
+│  │              Supabase JavaScript Client                     │    │
+│  │  ┌─────────────────┐  ┌────────────────────────────────┐   │    │
+│  │  │  REST (unused)  │  │  Realtime Client               │   │    │
+│  │  │  for messages   │  │  (Subscribe to Channel)        │   │    │
+│  │  │                 │  │  → Updates cache on INSERT     │   │    │
+│  │  └─────────────────┘  └─────────────┬──────────────────┘   │    │
+│  └─────────────────────────────────────┼──────────────────────┘    │
+│                                        │                            │
+└────────────────────────────────────────┼────────────────────────────┘
                │ HTTPS                   │ WebSocket
                ▼                         ▼
 ┌──────────────────────────────────────────────────────────────────┐
@@ -110,9 +125,9 @@ This document describes the technical architecture for implementing real-time me
    │  b. Broadcasts to channel "booking:{bookingId}"
    │
 6. Recipient's browser:
-   │  a. useSupabaseMessages hook receives event
-   │  b. Updates local state with new message
-   │  c. MessageList re-renders with new message
+   │  a. useBookingMessages hook receives Realtime event
+   │  b. Calls queryClient.setQueryData to update cache
+   │  c. MessageList re-renders with new message (no refetch)
    │
 7. (Optional) Notification service:
       a. Checks if recipient is offline
@@ -124,14 +139,16 @@ This document describes the technical architecture for implementing real-time me
 ```
 1. User navigates to chat/booking detail
    │
-2. Component mounts, triggers useSupabaseMessages hook
+2. Component mounts, triggers useBookingMessages hook
    │
 3. Hook:
-   │  a. Fetches existing messages via GET /api/bookings/:id/messages
-   │  b. Sets up Supabase Realtime subscription
-   │  c. Returns messages + loading/error state
+   │  a. useInfiniteQuery checks cache for ['messages', bookingId]
+   │  b. If no cache: Fetches via GET /api/bookings/:id/messages
+   │  c. If cached (staleTime: Infinity): Returns cached data immediately
+   │  d. Sets up Supabase Realtime subscription for new messages
+   │  e. Returns { data, fetchNextPage, isLoading, error }
    │
-4. ChatContainer renders MessageList with messages
+4. ChatContainer renders MessageList with messages from query data
 ```
 
 ## Supabase Realtime Implementation
@@ -208,6 +225,287 @@ Since the project uses Clerk for auth but Supabase for the database, we need to 
 - More complex setup, better for pure Supabase apps
 
 We recommend **Option 1** for simplicity with existing architecture.
+
+## TanStack Query Caching Layer
+
+### Overview
+
+TanStack Query acts as a bridge between the Backend API and the Frontend UI, providing:
+- Instant feedback via optimistic updates
+- Prevention of unnecessary network requests
+- Seamless integration with Supabase Realtime events
+
+### Global Configuration
+
+```typescript
+// src/lib/query/QueryProvider.tsx
+'use client';
+
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { useState, type ReactNode } from 'react';
+
+export function QueryProvider({ children }: { children: ReactNode }) {
+  const [queryClient] = useState(
+    () =>
+      new QueryClient({
+        defaultOptions: {
+          queries: {
+            staleTime: 60 * 1000, // 1 minute default
+            refetchOnWindowFocus: false,
+          },
+        },
+      })
+  );
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      {children}
+    </QueryClientProvider>
+  );
+}
+```
+
+### Message Fetching with Infinite Query
+
+```typescript
+// src/hooks/useBookingMessages.ts
+import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
+import { useEffect } from 'react';
+import { createClient } from '@/lib/supabase/client';
+
+interface MessagePage {
+  messages: Message[];
+  nextCursor: string | null;
+  hasMore: boolean;
+}
+
+export function useBookingMessages(bookingId: string) {
+  const queryClient = useQueryClient();
+  const queryKey = ['messages', bookingId];
+  const supabase = createClient();
+
+  // 1. FETCH: Infinite scroll support
+  const query = useInfiniteQuery({
+    queryKey,
+    queryFn: async ({ pageParam }): Promise<MessagePage> => {
+      const params = new URLSearchParams({ limit: '50' });
+      if (pageParam) params.set('cursor', pageParam);
+
+      const response = await fetch(
+        `/api/bookings/${bookingId}/messages?${params}`
+      );
+      if (!response.ok) throw new Error('Failed to fetch messages');
+      return response.json();
+    },
+    getNextPageParam: (lastPage) => lastPage.nextCursor,
+    staleTime: Infinity, // Only update via Realtime or manual invalidation
+    initialPageParam: undefined as string | undefined,
+  });
+
+  // 2. REALTIME: Push new messages to cache
+  useEffect(() => {
+    const channel = supabase
+      .channel(`booking-${bookingId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'Message',
+          filter: `bookingId=eq.${bookingId}`,
+        },
+        (payload) => {
+          queryClient.setQueryData(queryKey, (oldData: InfiniteData<MessagePage> | undefined) => {
+            if (!oldData) return oldData;
+            return updateCacheWithNewMessage(oldData, payload.new as Message);
+          });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [bookingId, queryClient, supabase]);
+
+  return query;
+}
+
+// Helper to append new message to latest page
+function updateCacheWithNewMessage(
+  oldData: InfiniteData<MessagePage>,
+  newMessage: Message
+): InfiniteData<MessagePage> {
+  const newPages = [...oldData.pages];
+  const lastPageIndex = newPages.length - 1;
+
+  // Check if message already exists (deduplication)
+  const messageExists = newPages.some(page =>
+    page.messages.some(m => m.id === newMessage.id)
+  );
+  if (messageExists) return oldData;
+
+  // Append to last page
+  newPages[lastPageIndex] = {
+    ...newPages[lastPageIndex],
+    messages: [...newPages[lastPageIndex].messages, newMessage],
+  };
+
+  return { ...oldData, pages: newPages };
+}
+```
+
+### Optimistic Mutations for Sending
+
+```typescript
+// src/hooks/useSendMessage.ts
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+
+interface OptimisticMessage extends Message {
+  isSending: boolean;
+  tempId: string;
+}
+
+export function useSendMessage(bookingId: string, currentUserId: string) {
+  const queryClient = useQueryClient();
+  const queryKey = ['messages', bookingId];
+
+  return useMutation({
+    mutationFn: async (text: string): Promise<Message> => {
+      const response = await fetch(`/api/bookings/${bookingId}/messages`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text }),
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to send message');
+      }
+      return response.json();
+    },
+
+    // Optimistic update: Show message immediately
+    onMutate: async (text) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey });
+
+      // Snapshot previous value
+      const previousData = queryClient.getQueryData(queryKey);
+
+      // Create optimistic message
+      const tempId = `temp_${Date.now()}`;
+      const optimisticMessage: OptimisticMessage = {
+        id: tempId,
+        tempId,
+        bookingId,
+        senderId: currentUserId,
+        text,
+        createdAt: new Date().toISOString(),
+        isSending: true,
+      };
+
+      // Optimistically update cache
+      queryClient.setQueryData(queryKey, (old: InfiniteData<MessagePage> | undefined) => {
+        if (!old) return old;
+        return updateCacheWithNewMessage(old, optimisticMessage);
+      });
+
+      return { previousData, tempId };
+    },
+
+    // Rollback on error
+    onError: (err, text, context) => {
+      if (context?.previousData) {
+        queryClient.setQueryData(queryKey, context.previousData);
+      }
+    },
+
+    // Replace optimistic message with real one
+    onSuccess: (savedMessage, text, context) => {
+      if (!context?.tempId) return;
+
+      queryClient.setQueryData(queryKey, (old: InfiniteData<MessagePage> | undefined) => {
+        if (!old) return old;
+        return replaceOptimisticMessage(old, context.tempId, savedMessage);
+      });
+    },
+  });
+}
+
+function replaceOptimisticMessage(
+  data: InfiniteData<MessagePage>,
+  tempId: string,
+  realMessage: Message
+): InfiniteData<MessagePage> {
+  return {
+    ...data,
+    pages: data.pages.map(page => ({
+      ...page,
+      messages: page.messages.map(m =>
+        (m as OptimisticMessage).tempId === tempId
+          ? { ...realMessage, isSending: false }
+          : m
+      ),
+    })),
+  };
+}
+```
+
+### Cache Key Strategy
+
+| Query Key | Purpose | staleTime |
+|-----------|---------|-----------|
+| `['messages', bookingId]` | Message history per booking | `Infinity` |
+| `['conversations', userId]` | Conversation list | `60000` (1 min) |
+| `['unread-count', userId]` | Unread message count | `30000` (30 sec) |
+
+### Integration with UI Components
+
+```typescript
+// In ChatContainer.tsx
+function ChatContainer({ bookingId }: { bookingId: string }) {
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isLoading,
+    error
+  } = useBookingMessages(bookingId);
+
+  const messages = data?.pages.flatMap(page => page.messages) ?? [];
+
+  if (isLoading) return <LoadingSpinner />;
+  if (error) return <ErrorState error={error} />;
+
+  return (
+    <MessageList
+      messages={messages}
+      onLoadMore={() => hasNextPage && fetchNextPage()}
+    />
+  );
+}
+
+// In MessageInput.tsx
+function MessageInput({ bookingId, currentUserId }: Props) {
+  const { mutateAsync, isPending } = useSendMessage(bookingId, currentUserId);
+  const [text, setText] = useState('');
+
+  const handleSend = async () => {
+    if (!text.trim() || isPending) return;
+    await mutateAsync(text);
+    setText('');
+  };
+
+  return (
+    <div>
+      <textarea value={text} onChange={(e) => setText(e.target.value)} />
+      <button onClick={handleSend} disabled={isPending || !text.trim()}>
+        {isPending ? 'Sending...' : 'Send'}
+      </button>
+    </div>
+  );
+}
+```
 
 ## Time Window Logic
 
@@ -526,52 +824,42 @@ const virtualizer = useVirtualizer({
 
 ### Optimistic Updates
 
-Send message shows immediately in UI:
+Optimistic updates are handled by TanStack Query's `useMutation` with `onMutate`, `onError`, and `onSuccess` callbacks. See the **TanStack Query Caching Layer** section above for the complete implementation using `useSendMessage` hook.
 
-```typescript
-const sendMessage = async (text: string) => {
-  // Optimistic update
-  const tempMessage = {
-    id: `temp_${Date.now()}`,
-    text,
-    senderId: currentUser.id,
-    createdAt: new Date().toISOString(),
-    pending: true,
-  };
-  setMessages((prev) => [...prev, tempMessage]);
-
-  try {
-    const savedMessage = await api.sendMessage(bookingId, text);
-    // Replace temp with real message
-    setMessages((prev) =>
-      prev.map((m) => (m.id === tempMessage.id ? savedMessage : m))
-    );
-  } catch (error) {
-    // Remove temp message, show error
-    setMessages((prev) => prev.filter((m) => m.id !== tempMessage.id));
-    showError(error);
-  }
-};
-```
+Key benefits:
+- Automatic rollback on error via cached `previousData`
+- Visual feedback via `isSending` state on optimistic messages
+- Deduplication when Realtime event arrives for the same message
 
 ## Migration Plan
 
-1. **Phase 1**: Backend (no breaking changes)
+1. **Phase 0**: Prerequisites
+   - Install `@tanstack/react-query` package
+   - Create `QueryProvider` component
+   - Wrap `app/layout.tsx` with `QueryProvider`
+
+2. **Phase 1**: Backend (no breaking changes)
    - Implement services, repository, API routes
    - Add RLS policies to Supabase
    - All behind feature flag initially
 
-2. **Phase 2**: Frontend (gradual rollout)
-   - Deploy shared components
+3. **Phase 2**: Caching + Realtime Layer
+   - Create `useBookingMessages` hook with `useInfiniteQuery`
+   - Create `useSendMessage` hook with optimistic mutations
+   - Integrate Supabase Realtime with cache updates
+   - Write unit tests for hooks
+
+4. **Phase 3**: Frontend (gradual rollout)
+   - Deploy shared components using the hooks
    - Replace client messages placeholder
    - Create contractor messages page
 
-3. **Phase 3**: Integration
+5. **Phase 4**: Integration
    - Add chat to booking details
    - Update dashboard metrics
    - Enable for all users
 
-4. **Phase 4**: Polish
+6. **Phase 5**: Polish
    - Add email notifications
    - Performance optimization
    - Monitoring and logging

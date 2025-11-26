@@ -3443,26 +3443,26 @@ npm run test:coverage
 **Propuesta relacionada:** `/openspec/changes/2025-11-25-implement-realtime-messaging/proposal.md`
 
 **Criterios de aceptación generales:**
-- Cobertura de código ≥ 70% en módulo `src/modules/messaging`
-- Mensajes se entregan en tiempo real (< 500ms latencia vía Supabase Realtime)
-- XSS prevention funciona correctamente
-- Rate limiting funciona (10 msg/min)
-- Time window de 2h post-COMPLETED se respeta
-- Authorization verifica participantes en todos los endpoints
+- Cobertura de código ≥ 70% en módulo `src/modules/messaging` ✅ **CUMPLIDO**
+- Mensajes se entregan en tiempo real (< 500ms latencia vía Supabase Realtime) ✅ **VERIFICADO**
+- XSS prevention funciona correctamente ✅ **VERIFICADO**
+- Rate limiting funciona (10 msg/min) ✅ **VERIFICADO**
+- Time window de 2h post-COMPLETED se respeta ✅ **VERIFICADO**
+- Authorization verifica participantes en todos los endpoints ✅ **VERIFICADO**
 
 **Casos de prueba críticos:**
 
 | ID | Descripción | Tipo | Requisito | Prioridad | Estado |
 |----|-------------|------|-----------|-----------|--------|
-| TC-MSG-001 | Send message successfully | Integración | RF-008 | Alta | Pendiente |
-| TC-MSG-002 | Message sanitized for XSS (script tags removed) | Unitaria | RNF-3.5.3 | Alta | Pendiente |
-| TC-MSG-003 | Rate limit: 10 messages/minute enforced | Integración | RF-008 | Alta | Pendiente |
-| TC-MSG-004 | Only booking participants can send messages | Integración | RF-008 | Alta | Pendiente |
-| TC-MSG-005 | Non-participant returns 403 | Integración | RF-008 | Alta | Pendiente |
-| TC-MSG-006 | Messaging available when booking CONFIRMED | Integración | RF-008 | Alta | Pendiente |
-| TC-MSG-007 | Messaging blocked after 2h post-COMPLETED | Integración | RF-008 | Alta | Pendiente |
-| TC-MSG-008 | Supabase Realtime receives new messages | Integración | RF-008 | Alta | Pendiente |
-| TC-MSG-009 | Chat integrated in booking detail | E2E | RF-008 | Alta | Pendiente |
+| TC-MSG-001 | Send message successfully | Integración | RF-008 | Alta | PASS |
+| TC-MSG-002 | Message sanitized for XSS (script tags removed) | Unitaria | RNF-3.5.3 | Alta | PASS |
+| TC-MSG-003 | Rate limit: 10 messages/minute enforced | Integración | RF-008 | Alta | PASS |
+| TC-MSG-004 | Only booking participants can send messages | Integración | RF-008 | Alta | PASS |
+| TC-MSG-005 | Non-participant returns 403 | Integración | RF-008 | Alta | PASS |
+| TC-MSG-006 | Messaging available when booking CONFIRMED | Integración | RF-008 | Alta | PASS |
+| TC-MSG-007 | Messaging blocked after 2h post-COMPLETED | Integración | RF-008 | Alta | PASS |
+| TC-MSG-008 | Supabase Realtime receives new messages | Integración | RF-008 | Alta | PASS |
+| TC-MSG-009 | Chat integrated in booking detail | E2E | RF-008 | Alta | PASS |
 
 ---
 
@@ -3485,7 +3485,7 @@ npm run test:coverage
 - ✅ Message insertado en BD
 - ✅ `text` sanitizado
 
-**Estado:** Pendiente
+**Estado:** PASS
 
 ---
 

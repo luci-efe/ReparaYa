@@ -1,14 +1,14 @@
 # Spec Delta: Messaging (reservation-lifecycle-messaging)
 
-This spec delta extends the existing `reservation-lifecycle-messaging` specification to add Supabase Realtime implementation details, time window restrictions, and refined API contracts.
+This spec delta extends the existing `reservation-lifecycle-messaging` specification.
 
-## MODIFIED Requirements
+## ADDED Requirements
 
 ### Requirement: Real-Time Message Delivery
 The system SHALL deliver messages in real-time using Supabase Realtime WebSocket subscriptions.
 
-**Previous:** MVP with HTTP polling, designed for future SSE/WebSockets
-**Updated:** Supabase Realtime with PostgreSQL LISTEN/NOTIFY for instant delivery
+**Previous:** MVP with HTTP polling
+**Updated:** Supabase Realtime with PostgreSQL LISTEN/NOTIFY
 
 #### Scenario: Message delivered in real-time
 **Given** a client and contractor are viewing the same booking chat
@@ -25,13 +25,8 @@ The system SHALL deliver messages in real-time using Supabase Realtime WebSocket
 **When** they navigate away
 **Then** the Supabase Realtime subscription is cleaned up
 
----
-
 ### Requirement: Messaging Time Window
 The system SHALL restrict messaging to confirmed bookings and MUST close the messaging window 2 hours after booking completion.
-
-**Previous:** Not explicitly defined
-**Updated:** Messaging available from CONFIRMED until 2 hours after COMPLETED
 
 #### Scenario: Messaging available for confirmed booking
 **Given** a booking with status CONFIRMED
@@ -54,20 +49,6 @@ The system SHALL restrict messaging to confirmed bookings and MUST close the mes
 **And** more than 2 hours have passed since completion
 **When** a participant tries to send a message
 **Then** the request is rejected with 403 and message "Messaging window expired"
-
-#### Scenario: Messaging blocked for pending payment
-**Given** a booking with status PENDING_PAYMENT
-**When** a participant tries to send a message
-**Then** the request is rejected with 403 and message "Messaging not available until booking is confirmed"
-
-#### Scenario: Messaging blocked for cancelled booking
-**Given** a booking with status CANCELLED
-**When** a participant tries to send a message
-**Then** the request is rejected with 403 and message "Messaging not available for cancelled bookings"
-
----
-
-## ADDED Requirements
 
 ### Requirement: Conversation List
 The system SHALL display a list of conversations for users. Users MUST be able to view all their active conversations grouped by booking.
@@ -92,101 +73,48 @@ The system SHALL display a list of conversations for users. Users MUST be able t
   - Time since last message
   - Unread indicator if new messages
 
-#### Scenario: Empty conversation list
-**Given** a user with no bookings or no messages
-**When** they navigate to the messages page
-**Then** they see an empty state with message "No conversations yet"
-
----
-
 ### Requirement: Dashboard Unread Count
 The dashboard SHALL display unread message count. Users MUST see their current unread message count for quick visibility.
 
-#### Scenario: Client dashboard shows unread count
-**Given** a client with 3 unread messages across active bookings
-**When** they view the client dashboard
-**Then** the "Mensajes Sin Leer" metric shows "3"
-
-#### Scenario: Contractor dashboard shows unread count
-**Given** a contractor with 5 unread messages across active bookings
-**When** they view the contractor dashboard
-**Then** the messaging metric shows "5"
-
-#### Scenario: Unread count updates on message read
-**Given** a user with unread messages
-**When** they open a conversation and view the messages
-**Then** the unread count decreases accordingly
-
----
+#### Scenario: Dashboard displays unread count
+**Given** a user with 3 unread messages
+**When** they view the dashboard
+**Then** the unread message counter shows "3"
 
 ### Requirement: Chat Integration in Booking Detail
 Chat SHALL be accessible directly from booking detail pages. Users MUST be able to view and send messages from the booking context.
 
-#### Scenario: Client accesses chat from booking detail
-**Given** a client viewing their booking detail at /clients/bookings/[id]
-**And** the booking has messaging available
-**When** they click on the chat tab/section
-**Then** they see the full conversation with that contractor
-
-#### Scenario: Contractor accesses chat from booking detail
-**Given** a contractor viewing a booking detail at /contractors/bookings/[id]
-**And** the booking has messaging available
-**When** they click on the chat tab/section
-**Then** they see the full conversation with that client
-
-#### Scenario: Expired window shown in booking detail
-**Given** a user viewing a COMPLETED booking older than 2 hours
-**When** they view the chat section
-**Then** they see the message history (read-only)
-**And** a notice "Messaging window has expired"
-**And** the message input is disabled
-
----
+#### Scenario: Access chat from booking detail
+**Given** a user viewing a booking detail page
+**When** they click the "Messages" tab
+**Then** the chat interface is displayed with history
 
 ### Requirement: Message Pagination
 Messages SHALL be loaded with cursor-based pagination. The system MUST support efficient loading of large conversation histories.
 
-#### Scenario: Initial message load
-**Given** a booking with 100 messages
-**When** a user opens the chat
-**Then** the 50 most recent messages are loaded first
+#### Scenario: Load initial messages
+**Given** a chat with 100 messages
+**When** the chat loads
+**Then** the most recent 50 messages are displayed
 
-#### Scenario: Load older messages
-**Given** a chat with more than 50 messages
-**When** the user scrolls up past the oldest loaded message
-**Then** the next 50 older messages are loaded
-
-#### Scenario: Pagination with cursor
-**Given** API request GET /api/bookings/:id/messages?cursor=msg_50&limit=50
-**When** processed by the server
-**Then** returns messages older than msg_50, up to 50 messages
-
----
+#### Scenario: Load more messages
+**Given** a chat with loaded messages
+**When** the user scrolls to the top
+**Then** the next batch of 50 messages is loaded
 
 ### Requirement: Optimistic UI Updates
 The UI SHALL implement optimistic updates for message sending. Messages MUST appear instantly in the sender's UI before server confirmation.
 
-#### Scenario: Optimistic message display
-**Given** a user typing a message
-**When** they click send
-**Then** the message appears immediately in their message list (with pending indicator)
+#### Scenario: Instant message display
+**Given** a user sends a message
+**When** they press enter
+**Then** the message appears immediately in the list with a "sending" state
 
-#### Scenario: Optimistic update confirmed
-**Given** a message was sent optimistically
-**When** the server confirms the message
-**Then** the pending indicator is removed
+## MODIFIED Interfaces y contratos
 
-#### Scenario: Optimistic update failed
-**Given** a message was sent optimistically
-**When** the server returns an error
-**Then** the optimistic message is removed
-**And** an error notification is shown
+### Endpoints
 
----
-
-## MODIFIED Interfaces
-
-### Endpoint: POST /api/bookings/:bookingId/messages
+#### POST /api/bookings/:bookingId/messages
 
 **Request Body:**
 ```json
@@ -214,9 +142,7 @@ The UI SHALL implement optimistic updates for message sending. Messages MUST app
 - `403 Forbidden` - Messaging window expired/not started
 - `429 Too Many Requests` - Rate limit exceeded (10 msg/min)
 
----
-
-### Endpoint: GET /api/bookings/:bookingId/messages
+#### GET /api/bookings/:bookingId/messages
 
 **Query Parameters:**
 - `cursor` (optional): Message ID for cursor-based pagination
@@ -245,9 +171,7 @@ The UI SHALL implement optimistic updates for message sending. Messages MUST app
 }
 ```
 
----
-
-### Endpoint: GET /api/users/me/messages (NEW)
+#### GET /api/users/me/messages (NEW)
 
 Returns conversation list for the current user.
 
@@ -279,9 +203,7 @@ Returns conversation list for the current user.
 }
 ```
 
----
-
-### Endpoint: GET /api/users/me/messages/unread-count (NEW)
+#### GET /api/users/me/messages/unread-count (NEW)
 
 Returns total unread message count for dashboard.
 
@@ -291,8 +213,6 @@ Returns total unread message count for dashboard.
   "unreadCount": "number"
 }
 ```
-
----
 
 ## ADDED Integrations
 
@@ -310,39 +230,35 @@ Returns total unread message count for dashboard.
 }
 ```
 
-**Payload Format:**
-```typescript
-{
-  eventType: 'INSERT',
-  new: {
-    id: string,
-    bookingId: string,
-    senderId: string,
-    text: string,
-    createdAt: string
-  },
-  old: null
-}
-```
+## MODIFIED Testing & QA
 
----
+### Tipos de pruebas
 
-## Testing & QA Updates
+1. **Unitarias**:
+   - Sanitización de contenido
+   - Validaciones de longitud
+   - Hooks de mensajería (useBookingMessages, useSendMessage)
 
-### Additional Test Cases
+2. **Integración**:
+   - Envío y recepción de mensajes
+   - Notificaciones por email
+   - Rate limiting
+   - Time windows
+   - Authorization rules
 
-| ID | Description | Type | Priority |
-|----|-------------|------|----------|
-| TC-RF-008-04 | Real-time message delivery < 500ms | E2E | Alta |
-| TC-RF-008-05 | Messaging blocked after 2h post-completion | Integración | Alta |
-| TC-RF-008-06 | Conversation list displays correctly | E2E | Alta |
-| TC-RF-008-07 | Unread count accurate on dashboard | E2E | Media |
-| TC-RF-008-08 | Pagination loads older messages | Integración | Media |
-| TC-RF-008-09 | Optimistic UI update works | E2E | Media |
-| TC-RF-008-10 | Supabase subscription cleanup on unmount | Unitaria | Media |
+3. **E2E**:
+   - Flujo de chat completo en una reserva
+   - Real-time updates
+   - Optimistic UI
 
-### Performance Criteria
-- Message delivery latency: P95 < 500ms
-- Message send API: P95 < 600ms (unchanged)
-- Conversation list load: P95 < 1s
-- Initial chat load (50 messages): P95 < 800ms
+### Casos de prueba relacionados
+
+- `TC-RF-008-01`: Envío de mensaje exitoso
+- `TC-RF-008-02`: Sanitización anti-XSS
+- `TC-RF-008-03`: Retención de mensajes
+- `TC-RF-008-04`: Real-time message delivery < 500ms
+- `TC-RF-008-05`: Messaging blocked after 2h post-completion
+- `TC-RF-008-06`: Conversation list displays correctly
+- `TC-RF-008-07`: Unread count accurate on dashboard
+- `TC-RF-008-08`: Pagination loads older messages
+- `TC-RF-008-09`: Optimistic UI update works

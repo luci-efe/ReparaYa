@@ -31,11 +31,7 @@ export const prisma =
         : ["error"],
     // Desactivar prepared statements para compatibilidad con PgBouncer/poolers
     // Esto previene el error "prepared statement 's0' already exists" en Vercel
-    datasourceUrl: process.env.DATABASE_URL
-      ? `${process.env.DATABASE_URL}${
-          process.env.DATABASE_URL.includes("?") ? "&" : "?"
-        }pgbouncer=true&statement_cache_size=0`
-      : undefined,
+    datasourceUrl: process.env.DATABASE_URL,
   });
 
 if (process.env.NODE_ENV !== "production") {
