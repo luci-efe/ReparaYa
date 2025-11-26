@@ -14,23 +14,42 @@ describe('SanitizationService', () => {
             expect(sanitizationService.sanitizeText(input)).toBe(expected);
         });
 
-        it('should handle encoded HTML entities', () => {
-            const input = '&lt;script&gt;alert("xss")&lt;/script&gt;';
+        it('should handle nested/malformed tags', () => {
+            const input = '<script<script>alert(1)</script>';
             const result = sanitizationService.sanitizeText(input);
             expect(result).not.toContain('<');
             expect(result).not.toContain('>');
         });
 
-        it('should remove javascript: URIs', () => {
-            const input = 'Click javascript:alert(1)';
-            const result = sanitizationService.sanitizeText(input);
-            expect(result).not.toContain('javascript:');
+        it('should remove javascript: URIs with whitespace variations', () => {
+            const inputs = [
+                'Click javascript:alert(1)',
+                'Click jAvAsCrIpT:alert(1)',
+                'Click java\tscript:alert(1)',
+            ];
+            for (const input of inputs) {
+                const result = sanitizationService.sanitizeText(input);
+                expect(result.toLowerCase()).not.toContain('javascript:');
+            }
         });
 
         it('should remove data: URIs', () => {
             const input = 'Image data:image/png;base64,test';
             const result = sanitizationService.sanitizeText(input);
-            expect(result).not.toContain('data:');
+            expect(result.toLowerCase()).not.toContain('data:');
+        });
+
+        it('should remove on* event handlers', () => {
+            const input = 'onclick=alert(1) onerror=alert(2)';
+            const result = sanitizationService.sanitizeText(input);
+            expect(result).not.toMatch(/on\w+\s*=/i);
+        });
+
+        it('should keep encoded entities as-is (safe for text display)', () => {
+            const input = '&lt;safe&gt;';
+            const result = sanitizationService.sanitizeText(input);
+            // Entities are NOT decoded - they are safe as text
+            expect(result).toBe('&lt;safe&gt;');
         });
     });
 

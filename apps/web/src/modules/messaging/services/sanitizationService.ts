@@ -1,33 +1,37 @@
 export class SanitizationService {
     /**
      * Sanitizes text to remove HTML tags and prevent XSS.
-     * Uses multiple layers of protection:
-     * 1. Removes all HTML tags
-     * 2. Decodes HTML entities to prevent encoded attacks
-     * 3. Validates resulting text for safety
+     * Uses multiple layers of protection with proper ordering:
+     * 1. Strip all HTML tags first (before decoding entities)
+     * 2. Remove dangerous URI schemes (with case-insensitive patterns)
+     * 3. Remove remaining angle brackets
+     * 4. Decode safe entities only at display time (not here)
      */
     sanitizeText(text: string): string {
-        // 1. Decode HTML entities to catch encoded attacks
-        let cleanText = text
-            .replace(/&lt;/gi, '<')
-            .replace(/&gt;/gi, '>')
-            .replace(/&amp;/gi, '&')
-            .replace(/&quot;/gi, '"')
-            .replace(/&#39;/gi, "'")
-            .replace(/&#x27;/gi, "'")
-            .replace(/&#x2F;/gi, '/');
+        let cleanText = text;
 
-        // 2. Strip all HTML tags (including malformed ones)
-        // This regex handles various tag formats including self-closing, malformed, and nested
-        cleanText = cleanText.replace(/<[^>]*>?/gm, '');
+        // 1. Remove dangerous URI schemes first (case-insensitive, handles whitespace)
+        // Must be done before any decoding to prevent bypass
+        cleanText = cleanText.replace(/j[\s]*a[\s]*v[\s]*a[\s]*s[\s]*c[\s]*r[\s]*i[\s]*p[\s]*t[\s]*:/gi, '');
+        cleanText = cleanText.replace(/d[\s]*a[\s]*t[\s]*a[\s]*:/gi, '');
+        cleanText = cleanText.replace(/v[\s]*b[\s]*s[\s]*c[\s]*r[\s]*i[\s]*p[\s]*t[\s]*:/gi, '');
+
+        // 2. Strip all HTML tags (multiple passes to catch nested/malformed tags)
+        // This handles cases like <script<script> or unclosed tags
+        let previousLength;
+        do {
+            previousLength = cleanText.length;
+            cleanText = cleanText.replace(/<[^>]*>?/gm, '');
+        } while (cleanText.length !== previousLength);
         
-        // 3. Remove any remaining angle brackets that might have slipped through
+        // 3. Remove any remaining angle brackets that could be used for injection
         cleanText = cleanText.replace(/[<>]/g, '');
 
-        // 4. Remove dangerous javascript: and data: URI schemes
-        cleanText = cleanText.replace(/javascript:/gi, '');
-        cleanText = cleanText.replace(/data:/gi, '');
-        cleanText = cleanText.replace(/vbscript:/gi, '');
+        // 4. Remove on* event handler patterns that might have survived (multiple passes)
+        do {
+            previousLength = cleanText.length;
+            cleanText = cleanText.replace(/\bon\w+\s*=/gi, '');
+        } while (cleanText.length !== previousLength);
 
         return cleanText.trim();
     }
