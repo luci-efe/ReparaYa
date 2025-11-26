@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { auth } from '@clerk/nextjs/server';
 import { clientRatingService, createClientRatingSchema } from '@/modules/ratings';
+import { DuplicateRatingError, RatingNotAuthorizedError, BookingNotCompletedError } from '@/modules/ratings/errors';
 import { z } from 'zod';
 
 export async function POST(
@@ -42,7 +43,15 @@ export async function POST(
         if (error instanceof z.ZodError) {
             return NextResponse.json({ error: error.errors }, { status: 400 });
         }
-        // Handle specific rating errors (duplicate, not authorized, etc.)
+        if (error instanceof DuplicateRatingError) {
+            return NextResponse.json({ error: error.message }, { status: 409 });
+        }
+        if (error instanceof RatingNotAuthorizedError) {
+            return NextResponse.json({ error: error.message }, { status: 403 });
+        }
+        if (error instanceof BookingNotCompletedError) {
+            return NextResponse.json({ error: error.message }, { status: 400 });
+        }
         return NextResponse.json(
             { error: 'Internal Server Error' },
             { status: 500 }

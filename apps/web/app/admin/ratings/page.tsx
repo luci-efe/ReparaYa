@@ -30,8 +30,8 @@ export default function AdminRatingsPage() {
                 const data = await res.json();
                 // Combine and tag types
                 const combined = [
-                    ...data.clientRatings.map((r: any) => ({ ...r, type: 'CLIENT' })),
-                    ...data.contractorRatings.map((r: any) => ({ ...r, type: 'CONTRACTOR' })),
+                    ...data.clientRatings.map((r: PendingRating) => ({ ...r, type: 'CLIENT' as const })),
+                    ...data.contractorRatings.map((r: PendingRating) => ({ ...r, type: 'CONTRACTOR' as const })),
                 ].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
                 setRatings(combined);
             }
@@ -107,7 +107,7 @@ export default function AdminRatingsPage() {
                             </div>
 
                             <div className="bg-gray-50 p-4 rounded-md mb-4">
-                                <p className="text-gray-800 italic">"{rating.comment}"</p>
+                                <p className="text-gray-800 italic">&quot;{rating.comment}&quot;</p>
                             </div>
 
                             <div className="flex gap-3 justify-end">

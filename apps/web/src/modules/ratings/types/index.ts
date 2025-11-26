@@ -1,4 +1,4 @@
-import { ClientRating, ContractorRating, UserRatingStats, ModerationStatus } from '@prisma/client';
+import { ModerationStatus } from '@prisma/client';
 
 export type CreateClientRatingDTO = {
     bookingId: string;

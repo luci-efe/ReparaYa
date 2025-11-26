@@ -109,7 +109,7 @@ export function ClientMetricsOverview() {
                 <MetricCard
                     key={metric.title}
                     title={metric.title}
-                    value={metric.value as any}
+                    value={metric.value}
                     icon={metric.icon}
                 />
             ))}

@@ -10,7 +10,7 @@ interface RatingCardProps {
     role?: 'CLIENT' | 'CONTRACTOR';
 }
 
-export const RatingCard: React.FC<RatingCardProps> = ({ rating, authorName, role }) => {
+export const RatingCard: React.FC<RatingCardProps> = ({ rating, authorName, role: _role }) => {
     const displayName = authorName || `${rating.author.firstName} ${rating.author.lastName}`;
 
     return (

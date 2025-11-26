@@ -5,7 +5,16 @@ import { UserRatingBadge } from '@/components/ratings/UserRatingBadge';
 import { RatingsList } from '@/components/ratings/RatingsList';
 import { clientRatingService } from '@/modules/ratings/services/clientRatingService';
 import { ServiceCard } from '@/components/services/ServiceCard';
-import { RatingResponse } from '@/modules/ratings/types';
+import { ClientRating } from '@prisma/client';
+
+interface RatingWithClient extends ClientRating {
+    client: {
+        id: string;
+        firstName: string;
+        lastName: string;
+        avatarUrl: string | null;
+    };
+}
 
 export const dynamic = 'force-dynamic';
 
@@ -44,7 +53,7 @@ export default async function ContractorProfilePage({
 
     const { ratings: rawRatings, total } = await clientRatingService.getForContractor(contractor.id);
 
-    const ratings = rawRatings.map(r => ({
+    const ratings = (rawRatings as RatingWithClient[]).map(r => ({
         ...r,
         author: r.client,
     }));
@@ -94,14 +103,6 @@ export default async function ContractorProfilePage({
                                 <p className="text-sm text-gray-600 mb-1">
                                     <span className="font-medium">Email:</span> {contractor.email}
                                 </p>
-                                {contractor.contractorProfile?.website && (
-                                    <p className="text-sm text-gray-600 mb-1">
-                                        <span className="font-medium">Web:</span>{' '}
-                                        <a href={contractor.contractorProfile.website} target="_blank" rel="noopener noreferrer" className="text-emerald-600 hover:underline">
-                                            {contractor.contractorProfile.website}
-                                        </a>
-                                    </p>
-                                )}
                             </div>
                         </div>
                     </div>
