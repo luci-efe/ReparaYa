@@ -6,21 +6,23 @@ import {
     contractorRatingService,
     visibilityService,
 } from '@/modules/ratings';
-import { Booking, ClientRating } from '@prisma/client';
+import { Booking, ClientRating, ContractorRating } from '@prisma/client';
 
-interface RatingWithAuthor extends ClientRating {
-    client?: {
-        id: string;
-        firstName: string;
-        lastName: string;
-        avatarUrl: string | null;
-    };
-    contractor?: {
-        id: string;
-        firstName: string;
-        lastName: string;
-        avatarUrl: string | null;
-    };
+interface AuthorInfo {
+    id: string;
+    firstName: string;
+    lastName: string;
+    avatarUrl: string | null;
+}
+
+// Client ratings include the client (author) information
+interface ClientRatingWithAuthor extends ClientRating {
+    client?: AuthorInfo;
+}
+
+// Contractor ratings include the contractor (author) information
+interface ContractorRatingWithAuthor extends ContractorRating {
+    contractor?: AuthorInfo;
 }
 
 export async function GET(
@@ -52,8 +54,8 @@ export async function GET(
             return NextResponse.json({ error: 'User not found' }, { status: 404 });
         }
 
-        const clientRating = await clientRatingService.getByBookingId(bookingId);
-        const contractorRating = await contractorRatingService.getByBookingId(bookingId);
+        const clientRating = await clientRatingService.getByBookingId(bookingId) as ClientRatingWithAuthor | null;
+        const contractorRating = await contractorRatingService.getByBookingId(bookingId) as ContractorRatingWithAuthor | null;
 
         const canSee = visibilityService.canSeeRating(
             booking as Booking & { completedAt: Date | null },
@@ -62,15 +64,12 @@ export async function GET(
             contractorRating
         );
 
-        // Format response based on visibility
-        const formatRating = (rating: RatingWithAuthor | null, type: 'CLIENT' | 'CONTRACTOR') => {
+        // Format client rating based on visibility
+        const formatClientRating = (rating: ClientRatingWithAuthor | null) => {
             if (!rating) return null;
 
-            // Check if user is the author of this rating
-            const isAuthor = (type === 'CLIENT' && user.id === rating.clientId) ||
-                (type === 'CONTRACTOR' && user.id === rating.contractorId);
+            const isAuthor = user.id === rating.clientId;
 
-            // If hidden and not author, return limited data
             if (!canSee && !isAuthor) {
                 return {
                     id: rating.id,
@@ -79,16 +78,35 @@ export async function GET(
                 };
             }
 
-            // Map to RatingResponse structure
             return {
                 ...rating,
-                author: type === 'CLIENT' ? rating.client : rating.contractor,
+                author: rating.client,
+            };
+        };
+
+        // Format contractor rating based on visibility
+        const formatContractorRating = (rating: ContractorRatingWithAuthor | null) => {
+            if (!rating) return null;
+
+            const isAuthor = user.id === rating.contractorId;
+
+            if (!canSee && !isAuthor) {
+                return {
+                    id: rating.id,
+                    isHidden: true,
+                    createdAt: rating.createdAt
+                };
+            }
+
+            return {
+                ...rating,
+                author: rating.contractor,
             };
         };
 
         const response = {
-            clientRating: formatRating(clientRating as RatingWithAuthor | null, 'CLIENT'),
-            contractorRating: formatRating(contractorRating as RatingWithAuthor | null, 'CONTRACTOR'),
+            clientRating: formatClientRating(clientRating),
+            contractorRating: formatContractorRating(contractorRating),
         };
 
         return NextResponse.json(response);

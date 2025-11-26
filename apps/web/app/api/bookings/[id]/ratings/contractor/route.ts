@@ -37,7 +37,8 @@ export async function POST(
             validatedData
         );
 
-        // Return the rating with the author info for consistency
+        // The user creating this rating is the contractor (author of the ContractorRating)
+        // Return the rating with the authenticated user as the author for API consistency
         return NextResponse.json({
             ...rating,
             author: {
