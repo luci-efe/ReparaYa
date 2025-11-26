@@ -26,30 +26,49 @@ const globalForPrisma = globalThis as unknown as {
  * Configura la URL de conexión para compatibilidad con PgBouncer/poolers.
  * Agrega los parámetros necesarios para desactivar prepared statements
  * que causan el error "prepared statement 's0' already exists" en Vercel.
+ *
+ * @param url - Optional URL to configure (defaults to DATABASE_URL env var)
+ * @returns Configured URL with pgbouncer parameters, or undefined if no URL provided
  */
-function getDatasourceUrl(): string | undefined {
-  const baseUrl = process.env.DATABASE_URL;
+export function getDatasourceUrl(url?: string): string | undefined {
+  const baseUrl = url ?? process.env.DATABASE_URL;
   if (!baseUrl) return undefined;
 
   try {
-    const url = new URL(baseUrl);
+    const parsedUrl = new URL(baseUrl);
 
-    // Check if pgbouncer parameter is already present (any value)
-    if (url.searchParams.has("pgbouncer")) {
+    // Check if pgbouncer is already set to "true" - only skip if correctly configured
+    if (parsedUrl.searchParams.get("pgbouncer") === "true") {
+      // Ensure statement_cache_size is also set
+      if (!parsedUrl.searchParams.has("statement_cache_size")) {
+        parsedUrl.searchParams.set("statement_cache_size", "0");
+        return parsedUrl.toString();
+      }
       return baseUrl;
     }
 
-    // Add PgBouncer parameters to disable prepared statements
-    url.searchParams.set("pgbouncer", "true");
-    url.searchParams.set("statement_cache_size", "0");
+    // Set/override PgBouncer parameters to ensure correct values
+    parsedUrl.searchParams.set("pgbouncer", "true");
+    parsedUrl.searchParams.set("statement_cache_size", "0");
 
-    return url.toString();
+    return parsedUrl.toString();
   } catch {
     // If URL parsing fails, fall back to string manipulation
     // This handles edge cases like URLs with special characters
-    if (baseUrl.toLowerCase().includes("pgbouncer=")) {
+    const lowerUrl = baseUrl.toLowerCase();
+
+    // Check if pgbouncer=true is already present (correctly configured)
+    if (lowerUrl.includes("pgbouncer=true")) {
+      // Ensure statement_cache_size is also set
+      if (!lowerUrl.includes("statement_cache_size=")) {
+        const separator = baseUrl.includes("?") ? "&" : "?";
+        return `${baseUrl}${separator}statement_cache_size=0`;
+      }
       return baseUrl;
     }
+
+    // If pgbouncer is set to something other than "true", we can't safely modify
+    // the string without URL parsing, so just append our parameters
     const separator = baseUrl.includes("?") ? "&" : "?";
     return `${baseUrl}${separator}pgbouncer=true&statement_cache_size=0`;
   }
