@@ -6,9 +6,25 @@ import {
     contractorRatingService,
     visibilityService,
 } from '@/modules/ratings';
+import { Booking, ClientRating } from '@prisma/client';
+
+interface RatingWithAuthor extends ClientRating {
+    client?: {
+        id: string;
+        firstName: string;
+        lastName: string;
+        avatarUrl: string | null;
+    };
+    contractor?: {
+        id: string;
+        firstName: string;
+        lastName: string;
+        avatarUrl: string | null;
+    };
+}
 
 export async function GET(
-    req: NextRequest,
+    _req: NextRequest,
     { params }: { params: { id: string } }
 ) {
     try {
@@ -40,15 +56,14 @@ export async function GET(
         const contractorRating = await contractorRatingService.getByBookingId(bookingId);
 
         const canSee = visibilityService.canSeeRating(
-            booking as any,
+            booking as Booking & { completedAt: Date | null },
             user.id,
             clientRating,
             contractorRating
         );
 
         // Format response based on visibility
-        // Format response based on visibility
-        const formatRating = (rating: any, type: 'CLIENT' | 'CONTRACTOR') => {
+        const formatRating = (rating: RatingWithAuthor | null, type: 'CLIENT' | 'CONTRACTOR') => {
             if (!rating) return null;
 
             // Check if user is the author of this rating
@@ -72,8 +87,8 @@ export async function GET(
         };
 
         const response = {
-            clientRating: formatRating(clientRating, 'CLIENT'),
-            contractorRating: formatRating(contractorRating, 'CONTRACTOR'),
+            clientRating: formatRating(clientRating as RatingWithAuthor | null, 'CLIENT'),
+            contractorRating: formatRating(contractorRating as RatingWithAuthor | null, 'CONTRACTOR'),
         };
 
         return NextResponse.json(response);

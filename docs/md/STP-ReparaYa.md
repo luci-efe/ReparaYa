@@ -6332,7 +6332,7 @@ npm run test:coverage
 |----|-------------|------|-----------|-----------|--------|
 | TC-RATE-001 | Cliente puede calificar contratista tras completar servicio | E2E | RF-RAT-001 | Alta | PASS |
 | TC-RATE-002 | Contratista puede calificar cliente tras completar servicio | E2E | RF-RAT-002 | Alta | PASS |
-| TC-RATE-003 | Calificaciones ocultas hasta reciprocidad o 14 días | Integración | RF-RAT-003 | Alta | PASS |
+| TC-RATE-003 | Calificaciones ocultas hasta reciprocidad o 7 días | Integración | RF-RAT-003 | Alta | PASS |
 | TC-RATE-004 | Admin puede moderar calificaciones pendientes | Integración | RF-RAT-004 | Media | PASS |
 | TC-RATE-005 | Recálculo de stats al aprobar calificación | Unitaria | RF-RAT-005 | Alta | PASS |
 | TC-RATE-006 | Usuario no puede calificar dos veces | Unitaria | BR-RAT-001 | Media | PASS |

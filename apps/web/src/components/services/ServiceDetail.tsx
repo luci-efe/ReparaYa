@@ -12,7 +12,6 @@ import type { Decimal } from '@prisma/client/runtime/library';
 import { UserRatingBadge } from '@/components/ratings/UserRatingBadge';
 import { RatingsList } from '@/components/ratings/RatingsList';
 import { RatingResponse } from '@/modules/ratings/types';
-import { useUserRatingStats } from '@/hooks/useUserRatingStats';
 
 interface ServiceDetailData {
     id: string;

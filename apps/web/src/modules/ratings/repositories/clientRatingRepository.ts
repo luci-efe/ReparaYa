@@ -1,6 +1,6 @@
 import { prisma } from '@/lib/db';
 import { CreateClientRatingDTO } from '../types';
-import { ClientRating, Prisma } from '@prisma/client';
+import { ClientRating } from '@prisma/client';
 
 export const clientRatingRepository = {
     async create(data: CreateClientRatingDTO): Promise<ClientRating> {
