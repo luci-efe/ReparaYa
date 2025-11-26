@@ -1,5 +1,5 @@
 import { TimeWindowService } from '../services/timeWindowService';
-import { Booking, BookingStatus, Prisma } from '@prisma/client';
+import { Booking, BookingStatus } from '@prisma/client';
 import { MessagingWindowExpiredError } from '../errors';
 import { MessagingWindowStatus } from '../types';
 

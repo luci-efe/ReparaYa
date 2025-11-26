@@ -3,12 +3,14 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { ChatContainer } from '../ChatContainer';
 import { useBookingMessages } from '@/hooks/useBookingMessages';
 import { useSendMessage } from '@/hooks/useSendMessage';
+import { useInternalUser } from '@/hooks/useInternalUser';
 import { useUser } from '@clerk/nextjs';
 import '@testing-library/jest-dom';
 
 // Mock hooks
 jest.mock('@/hooks/useBookingMessages');
 jest.mock('@/hooks/useSendMessage');
+jest.mock('@/hooks/useInternalUser');
 jest.mock('@clerk/nextjs');
 jest.mock('@/lib/supabase/client', () => ({
     supabase: {
@@ -42,6 +44,10 @@ describe('ChatContainer', () => {
 
         (useUser as jest.Mock).mockReturnValue({
             user: { id: 'user-1' },
+        });
+
+        (useInternalUser as jest.Mock).mockReturnValue({
+            data: { id: 'internal-user-1', clerkUserId: 'user-1' },
         });
 
         (useSendMessage as jest.Mock).mockReturnValue({

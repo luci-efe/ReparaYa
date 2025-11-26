@@ -9,6 +9,8 @@ import { describe, it, expect, beforeEach } from '@jest/globals';
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { MetricsOverview } from '../MetricsOverview';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import React from 'react';
 
 // Mock Card component
 jest.mock('@/components/ui', () => ({
@@ -16,6 +18,27 @@ jest.mock('@/components/ui', () => ({
     <div data-testid="card" className={className}>{children}</div>
   ),
 }));
+
+// Mock fetch
+global.fetch = jest.fn(() =>
+  Promise.resolve({
+    ok: true,
+    json: () => Promise.resolve({ unreadCount: 0 }),
+  })
+) as jest.Mock;
+
+const createWrapper = () => {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+      },
+    },
+  });
+  return ({ children }: { children: React.ReactNode }) => (
+    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+  );
+};
 
 describe('MetricsOverview', () => {
   beforeEach(() => {
@@ -25,7 +48,7 @@ describe('MetricsOverview', () => {
   describe('TC-CDASH-010: Display placeholder metrics (empty state)', () => {
     it('should render section heading', () => {
       // Arrange & Act
-      render(<MetricsOverview />);
+      render(<MetricsOverview />, { wrapper: createWrapper() });
 
       // Assert
       const heading = screen.getByRole('heading', { name: /resumen de actividad/i });
@@ -35,7 +58,7 @@ describe('MetricsOverview', () => {
 
     it('should render all four metric cards', () => {
       // Arrange & Act
-      render(<MetricsOverview />);
+      render(<MetricsOverview />, { wrapper: createWrapper() });
 
       // Assert
       const cards = screen.getAllByTestId('card');
@@ -44,7 +67,7 @@ describe('MetricsOverview', () => {
 
     it('should display "Servicios Activos" with initial value 0', () => {
       // Arrange & Act
-      render(<MetricsOverview />);
+      render(<MetricsOverview />, { wrapper: createWrapper() });
 
       // Assert
       expect(screen.getByText('Servicios Activos')).toBeInTheDocument();
@@ -54,7 +77,7 @@ describe('MetricsOverview', () => {
 
     it('should display "Reservas Pendientes" with initial value 0', () => {
       // Arrange & Act
-      render(<MetricsOverview />);
+      render(<MetricsOverview />, { wrapper: createWrapper() });
 
       // Assert
       expect(screen.getByText('Reservas Pendientes')).toBeInTheDocument();
@@ -64,7 +87,7 @@ describe('MetricsOverview', () => {
 
     it('should display "Mensajes Sin Leer" with initial value 0', () => {
       // Arrange & Act
-      render(<MetricsOverview />);
+      render(<MetricsOverview />, { wrapper: createWrapper() });
 
       // Assert
       expect(screen.getByText('Mensajes Sin Leer')).toBeInTheDocument();
@@ -72,7 +95,7 @@ describe('MetricsOverview', () => {
 
     it('should display "Calificación Promedio" with N/A value', () => {
       // Arrange & Act
-      render(<MetricsOverview />);
+      render(<MetricsOverview />, { wrapper: createWrapper() });
 
       // Assert
       expect(screen.getByText('Calificación Promedio')).toBeInTheDocument();
@@ -83,7 +106,7 @@ describe('MetricsOverview', () => {
   describe('Metrics Card Structure', () => {
     it('each metric should have a label and value', () => {
       // Arrange
-      const { container: _container } = render(<MetricsOverview />);
+      const { container: _container } = render(<MetricsOverview />, { wrapper: createWrapper() });
 
       // Assert
       const labels = _container.querySelectorAll('p.text-sm.text-gray-600');
@@ -95,7 +118,7 @@ describe('MetricsOverview', () => {
 
     it('each metric should have an icon', () => {
       // Arrange
-      const { container: _container } = render(<MetricsOverview />);
+      const { container: _container } = render(<MetricsOverview />, { wrapper: createWrapper() });
 
       // Assert
       const cards = screen.getAllByTestId('card');
@@ -107,7 +130,7 @@ describe('MetricsOverview', () => {
 
     it('each metric should display value with correct typography', () => {
       // Arrange
-      const { container: _container } = render(<MetricsOverview />);
+      const { container: _container } = render(<MetricsOverview />, { wrapper: createWrapper() });
 
       // Assert
       const values = _container.querySelectorAll('p.text-2xl.font-bold.text-gray-900');
@@ -116,7 +139,7 @@ describe('MetricsOverview', () => {
 
     it('each metric should display label with correct typography', () => {
       // Arrange
-      const { container: _container } = render(<MetricsOverview />);
+      const { container: _container } = render(<MetricsOverview />, { wrapper: createWrapper() });
 
       // Assert
       const labels = _container.querySelectorAll('p.text-sm.text-gray-600.truncate');
@@ -127,7 +150,7 @@ describe('MetricsOverview', () => {
   describe('Accessibility (TC-CDASH-012)', () => {
     it('all icons should have aria-hidden attribute', () => {
       // Arrange
-      const { container: _container } = render(<MetricsOverview />);
+      const { container: _container } = render(<MetricsOverview />, { wrapper: createWrapper() });
 
       // Assert
       const icons = _container.querySelectorAll('svg[aria-hidden="true"]');
@@ -136,7 +159,7 @@ describe('MetricsOverview', () => {
 
     it('heading should have proper semantic level', () => {
       // Arrange & Act
-      render(<MetricsOverview />);
+      render(<MetricsOverview />, { wrapper: createWrapper() });
 
       // Assert
       const heading = screen.getByRole('heading', { level: 2 });
@@ -145,7 +168,7 @@ describe('MetricsOverview', () => {
 
     it('metric labels should truncate with ellipsis on overflow', () => {
       // Arrange
-      const { container: _container } = render(<MetricsOverview />);
+      const { container: _container } = render(<MetricsOverview />, { wrapper: createWrapper() });
 
       // Assert
       const labels = _container.querySelectorAll('p.truncate');
@@ -156,7 +179,7 @@ describe('MetricsOverview', () => {
   describe('Visual Styling and Colors', () => {
     it('Servicios Activos should have blue color scheme', () => {
       // Arrange
-      const { container: _container } = render(<MetricsOverview />);
+      const { container: _container } = render(<MetricsOverview />, { wrapper: createWrapper() });
 
       // Assert
       const card = screen.getByText('Servicios Activos').closest('[data-testid="card"]');
@@ -166,7 +189,7 @@ describe('MetricsOverview', () => {
 
     it('Reservas Pendientes should have orange color scheme', () => {
       // Arrange
-      const { container: _container } = render(<MetricsOverview />);
+      const { container: _container } = render(<MetricsOverview />, { wrapper: createWrapper() });
 
       // Assert
       const card = screen.getByText('Reservas Pendientes').closest('[data-testid="card"]');
@@ -176,7 +199,7 @@ describe('MetricsOverview', () => {
 
     it('Mensajes Sin Leer should have purple color scheme', () => {
       // Arrange
-      const { container: _container } = render(<MetricsOverview />);
+      const { container: _container } = render(<MetricsOverview />, { wrapper: createWrapper() });
 
       // Assert
       const card = screen.getByText('Mensajes Sin Leer').closest('[data-testid="card"]');
@@ -186,7 +209,7 @@ describe('MetricsOverview', () => {
 
     it('Calificación Promedio should have yellow color scheme', () => {
       // Arrange
-      const { container: _container } = render(<MetricsOverview />);
+      const { container: _container } = render(<MetricsOverview />, { wrapper: createWrapper() });
 
       // Assert
       const card = screen.getByText('Calificación Promedio').closest('[data-testid="card"]');
@@ -196,7 +219,7 @@ describe('MetricsOverview', () => {
 
     it('icon containers should have proper padding and rounded corners', () => {
       // Arrange
-      const { container: _container } = render(<MetricsOverview />);
+      const { container: _container } = render(<MetricsOverview />, { wrapper: createWrapper() });
 
       // Assert
       const iconContainers = _container.querySelectorAll('.p-3.rounded-lg.flex-shrink-0');
@@ -205,7 +228,7 @@ describe('MetricsOverview', () => {
 
     it('heading should have correct styling', () => {
       // Arrange & Act
-      render(<MetricsOverview />);
+      render(<MetricsOverview />, { wrapper: createWrapper() });
 
       const heading = screen.getByRole('heading', { name: /resumen de actividad/i });
 
@@ -217,7 +240,7 @@ describe('MetricsOverview', () => {
   describe('Layout Structure', () => {
     it('should render in responsive grid layout', () => {
       // Arrange
-      const { container: _container } = render(<MetricsOverview />);
+      const { container: _container } = render(<MetricsOverview />, { wrapper: createWrapper() });
 
       // Assert
       const grid = _container.querySelector('.grid.grid-cols-1.sm\\:grid-cols-2.lg\\:grid-cols-4.gap-4');
@@ -226,7 +249,7 @@ describe('MetricsOverview', () => {
 
     it('each card should have flexbox layout', () => {
       // Arrange
-      render(<MetricsOverview />);
+      render(<MetricsOverview />, { wrapper: createWrapper() });
 
       // Assert
       const cards = screen.getAllByTestId('card');
@@ -238,7 +261,7 @@ describe('MetricsOverview', () => {
 
     it('metric content should be in flex-1 container', () => {
       // Arrange
-      const { container: _container } = render(<MetricsOverview />);
+      const { container: _container } = render(<MetricsOverview />, { wrapper: createWrapper() });
 
       // Assert
       const contentContainers = _container.querySelectorAll('.flex-1.min-w-0');
@@ -247,7 +270,7 @@ describe('MetricsOverview', () => {
 
     it('cards should have h-full class for equal heights', () => {
       // Arrange
-      render(<MetricsOverview />);
+      render(<MetricsOverview />, { wrapper: createWrapper() });
 
       // Assert
       const cards = screen.getAllByTestId('card');
@@ -260,7 +283,7 @@ describe('MetricsOverview', () => {
   describe('Icons Rendering', () => {
     it('Servicios Activos should render briefcase icon', () => {
       // Arrange
-      const { container: _container } = render(<MetricsOverview />);
+      const { container: _container } = render(<MetricsOverview />, { wrapper: createWrapper() });
 
       // Assert
       const card = screen.getByText('Servicios Activos').closest('[data-testid="card"]');
@@ -270,7 +293,7 @@ describe('MetricsOverview', () => {
 
     it('Reservas Pendientes should render clipboard icon', () => {
       // Arrange
-      const { container: _container } = render(<MetricsOverview />);
+      const { container: _container } = render(<MetricsOverview />, { wrapper: createWrapper() });
 
       // Assert
       const card = screen.getByText('Reservas Pendientes').closest('[data-testid="card"]');
@@ -280,7 +303,7 @@ describe('MetricsOverview', () => {
 
     it('Mensajes Sin Leer should render message icon', () => {
       // Arrange
-      const { container: _container } = render(<MetricsOverview />);
+      const { container: _container } = render(<MetricsOverview />, { wrapper: createWrapper() });
 
       // Assert
       const card = screen.getByText('Mensajes Sin Leer').closest('[data-testid="card"]');
@@ -290,7 +313,7 @@ describe('MetricsOverview', () => {
 
     it('Calificación Promedio should render star icon', () => {
       // Arrange
-      const { container: _container } = render(<MetricsOverview />);
+      const { container: _container } = render(<MetricsOverview />, { wrapper: createWrapper() });
 
       // Assert
       const card = screen.getByText('Calificación Promedio').closest('[data-testid="card"]');
@@ -300,7 +323,7 @@ describe('MetricsOverview', () => {
 
     it('all icons should have proper size classes', () => {
       // Arrange
-      const { container: _container } = render(<MetricsOverview />);
+      const { container: _container } = render(<MetricsOverview />, { wrapper: createWrapper() });
 
       // Assert
       const icons = _container.querySelectorAll('.p-3.rounded-lg svg');
@@ -311,7 +334,7 @@ describe('MetricsOverview', () => {
 
     it('all icons should have viewBox attribute', () => {
       // Arrange
-      const { container: _container } = render(<MetricsOverview />);
+      const { container: _container } = render(<MetricsOverview />, { wrapper: createWrapper() });
 
       // Assert
       const icons = _container.querySelectorAll('svg');
@@ -324,7 +347,7 @@ describe('MetricsOverview', () => {
   describe('Content Accuracy', () => {
     it('should display correct metric labels', () => {
       // Arrange & Act
-      render(<MetricsOverview />);
+      render(<MetricsOverview />, { wrapper: createWrapper() });
 
       // Assert
       const expectedLabels = [
@@ -341,7 +364,7 @@ describe('MetricsOverview', () => {
 
     it('numerical metrics should display 0 as default', () => {
       // Arrange & Act
-      render(<MetricsOverview />);
+      render(<MetricsOverview />, { wrapper: createWrapper() });
 
       // Assert
       // Should have three metrics with value 0
@@ -351,7 +374,7 @@ describe('MetricsOverview', () => {
 
     it('rating metric should display N/A when no ratings exist', () => {
       // Arrange & Act
-      render(<MetricsOverview />);
+      render(<MetricsOverview />, { wrapper: createWrapper() });
 
       // Assert
       expect(screen.getByText('N/A')).toBeInTheDocument();
@@ -361,7 +384,7 @@ describe('MetricsOverview', () => {
   describe('Edge Cases', () => {
     it('should render consistently with no props', () => {
       // Arrange & Act
-      render(<MetricsOverview />);
+      render(<MetricsOverview />, { wrapper: createWrapper() });
 
       // Assert
       expect(screen.getByRole('heading', { name: /resumen de actividad/i })).toBeInTheDocument();
@@ -370,7 +393,7 @@ describe('MetricsOverview', () => {
 
     it('should handle long metric labels with truncation', () => {
       // Arrange
-      const { container: _container } = render(<MetricsOverview />);
+      const { container: _container } = render(<MetricsOverview />, { wrapper: createWrapper() });
 
       // Assert
       const labels = _container.querySelectorAll('p.truncate');
@@ -381,7 +404,7 @@ describe('MetricsOverview', () => {
 
     it('should maintain proper spacing between metrics', () => {
       // Arrange
-      const { container: _container } = render(<MetricsOverview />);
+      const { container: _container } = render(<MetricsOverview />, { wrapper: createWrapper() });
 
       // Assert
       const grid = _container.querySelector('.gap-4');
@@ -392,7 +415,7 @@ describe('MetricsOverview', () => {
   describe('Responsive Behavior', () => {
     it('should have single column on mobile', () => {
       // Arrange
-      const { container: _container } = render(<MetricsOverview />);
+      const { container: _container } = render(<MetricsOverview />, { wrapper: createWrapper() });
 
       // Assert
       const grid = _container.querySelector('.grid-cols-1');
@@ -401,7 +424,7 @@ describe('MetricsOverview', () => {
 
     it('should have 2 columns on small screens', () => {
       // Arrange
-      const { container: _container } = render(<MetricsOverview />);
+      const { container: _container } = render(<MetricsOverview />, { wrapper: createWrapper() });
 
       // Assert
       const grid = _container.querySelector('.sm\\:grid-cols-2');
@@ -410,7 +433,7 @@ describe('MetricsOverview', () => {
 
     it('should have 4 columns on large screens', () => {
       // Arrange
-      const { container: _container } = render(<MetricsOverview />);
+      const { container: _container } = render(<MetricsOverview />, { wrapper: createWrapper() });
 
       // Assert
       const grid = _container.querySelector('.lg\\:grid-cols-4');
@@ -421,7 +444,7 @@ describe('MetricsOverview', () => {
   describe('Component Integration', () => {
     it('should pass correct props to MetricCard sub-component', () => {
       // Arrange & Act
-      render(<MetricsOverview />);
+      render(<MetricsOverview />, { wrapper: createWrapper() });
 
       // Assert - Verify all metric labels render correctly
       expect(screen.getByText('Servicios Activos')).toBeInTheDocument();

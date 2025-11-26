@@ -1,5 +1,4 @@
 import { MessageService } from '../services/messageService';
-import { z } from 'zod';
 import { messageRepository } from '../repositories/messageRepository';
 import { sanitizationService } from '../services/sanitizationService';
 import { timeWindowService } from '../services/timeWindowService';
@@ -7,8 +6,6 @@ import { prisma } from '@/lib/db';
 import {
     UnauthorizedMessageAccessError,
     MessagingWindowExpiredError,
-    RateLimitExceededError,
-    MessageTooLongError
 } from '../errors';
 
 // Mock dependencies

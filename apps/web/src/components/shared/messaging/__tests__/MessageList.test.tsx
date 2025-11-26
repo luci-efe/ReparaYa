@@ -1,5 +1,5 @@
 /** @jest-environment jsdom */
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { MessageList } from '../MessageList';
 import '@testing-library/jest-dom';
 
@@ -55,7 +55,7 @@ describe('MessageList', () => {
         // Mock currentClerkId to match user-1
         // Note: The component logic compares senderId with currentClerkId.
         // In the test data, senderId is 'user-1'.
-        render(<MessageList messages={mockMessages} currentClerkId="user-1" />);
+        render(<MessageList messages={mockMessages} currentUserId="user-1" />);
 
         // Message 1 (user-1) should be "sent by me" -> bg-blue-600
         // Message 2 (user-2) should be "received" -> bg-white
