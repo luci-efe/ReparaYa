@@ -67,8 +67,9 @@ export function getDatasourceUrl(url?: string): string | undefined {
       return baseUrl;
     }
 
-    // If pgbouncer is set to something other than "true", we can't safely modify
-    // the string without URL parsing, so just append our parameters
+    // Fallback: append parameters. Note: if pgbouncer is set to another value,
+    // this may create duplicate parameters, but URL parsing should handle most cases.
+    // This fallback only triggers for malformed URLs that fail URL() constructor.
     const separator = baseUrl.includes("?") ? "&" : "?";
     return `${baseUrl}${separator}pgbouncer=true&statement_cache_size=0`;
   }
