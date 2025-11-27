@@ -9,14 +9,19 @@ terraform {
       source  = "hashicorp/aws"
       version = "~> 5.0"
     }
+    vercel = {
+      source  = "vercel/vercel"
+      version = "~> 1.0"
+    }
   }
 
-  # TODO: Configurar backend remoto (S3) para state cuando se tenga AWS
-  # backend "s3" {
-  #   bucket = "reparaya-terraform-state"
-  #   key    = "dev/terraform.tfstate"
-  #   region = "us-west-2"
-  # }
+  backend "s3" {
+    bucket         = "reparaya-terraform-state"
+    key            = "dev/terraform.tfstate"
+    region         = "us-west-2"
+    dynamodb_table = "reparaya-terraform-locks"
+    encrypt        = true
+  }
 }
 
 provider "aws" {
@@ -34,7 +39,17 @@ provider "aws" {
   }
 }
 
-# TODO: Descomentar y configurar cuando se creen los recursos
-# module "s3" {
-#   source = "./aws"
-# }
+provider "vercel" {
+  api_token = var.vercel_api_token
+}
+
+module "aws_resources" {
+  source = "./aws"
+
+  environment                    = var.environment
+  project_name                   = var.project_name
+  s3_media_bucket_name           = var.s3_media_bucket_name
+  ses_sender_email               = var.ses_sender_email
+  location_place_index_name      = var.location_place_index_name
+  location_route_calculator_name = var.location_route_calculator_name
+}
